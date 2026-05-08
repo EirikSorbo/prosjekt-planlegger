@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laglederen</title>
+  <meta name="theme-color" content="#2c7a4b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Laglederen">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232c7a4b'/><text y='.9em' font-size='80' x='10'>⚽</text></svg>" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="">
+  <script>
+    window.addEventListener('load', function() {
+      const s = 512;
+      const c = document.createElement('canvas');
+      c.width = c.height = s;
+      const ctx = c.getContext('2d');
+      const r = 115;
+      ctx.beginPath();
+      ctx.moveTo(r, 0); ctx.lineTo(s-r, 0);
+      ctx.quadraticCurveTo(s, 0, s, r);
+      ctx.lineTo(s, s-r);
+      ctx.quadraticCurveTo(s, s, s-r, s);
+      ctx.lineTo(r, s);
+      ctx.quadraticCurveTo(0, s, 0, s-r);
+      ctx.lineTo(0, r);
+      ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.closePath();
+      ctx.fillStyle = '#2c7a4b';
+      ctx.fill();
+      ctx.font = '300px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚽', s/2, s/2 + 10);
+      const link = document.querySelector('link[rel="apple-touch-icon"]');
+      if (link) link.href = c.toDataURL('image/png');
+    });
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --grønn:       #2c7a4b;
+      --grønn-lys:   #eaf4ef;
+      --grønn-mørk:  #1e5535;
+      --grønn-mid:   #9fcfb3;
+      --tekst:       #1a2820;
+      --tekst-sek:   #5a7364;
+      --kant:        #d6e8dc;
+      --bg:          #f4f7f5;
+      --hvit:        #ffffff;
+      --kamp:        #d94f4f;
+      --cup:         #7f5cc0;
+      --dugnad:      #d48826;
+      --r:           12px;
+      --rs:          8px;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--tekst);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--hvit);
+      border-bottom: 1px solid var(--kant);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 58px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-handlinger {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .header-knapp {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--kant);
+      background: var(--hvit);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--tekst-sek);
+      font-size: 18px;
+      line-height: 1;
+      transition: all .15s;
+    }
+    .header-knapp:hover { background: var(--grønn-lys); color: var(--grønn); border-color: var(--grønn-mid); }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 19px;
+      color: var(--grønn);
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-ikon {
+      width: 28px;
+      height: 28px;
+      background: var(--grønn);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    .dato-idag {
+      font-size: 13px;
+      color: var(--tekst-sek);
+      font-weight: 600;
+    }
+
+    /* ── Tabs ── */
+    .faner {
+      display: flex;
+      justify-content: center;
+      background: var(--hvit);
+      border-bottom: 1px solid var(--kant);
+      padding: 0 20px;
+      position: sticky;
+      top: 58px;
+      z-index: 99;
+    }
+
+    .fane {
+      padding: 14px 18px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.6px;
+      color: var(--tekst-sek);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+      text-transform: uppercase;
+    }
+
+    .fane:hover { color: var(--grønn); }
+    .fane.aktiv { color: var(--grønn); border-bottom-color: var(--grønn); }
+
+    /* ── Main ── */
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 12px 64px;
+    }
+
+    .panel { display: none; }
+    .panel.aktiv { display: block; }
+
+    /* ── Shared ── */
+    .seksjon-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .seksjon-tittel {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--tekst);
+    }
+
+    .legg-til-knapp {
+      background: var(--grønn);
+      color: white;
+      border: none;
+      border-radius: var(--rs);
+      padding: 9px 16px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      transition: background .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legg-til-knapp:hover { background: var(--grønn-mørk); }
+
+    .kort-container {
+      background: var(--hvit);
+      border-radius: var(--r);
+      border: 1px solid var(--kant);
+      overflow: hidden;
+    }
+
+    .tom-melding {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--tekst-sek);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .maaned-label {
+      padding: 12px 20px 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--tekst-sek);
+      background: var(--grønn-lys);
+      border-bottom: 1px solid var(--kant);
+    }
+
+    /* ── Activity card ── */
+    .aktivitet-kort {
+      padding: 13px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--kant);
+      cursor: pointer;
+      transition: background .1s;
+    }
+    .aktivitet-kort:last-child { border-bottom: none; }
+    .aktivitet-kort.hover-kamp:hover   { background: #fdeaea; }
+    .aktivitet-kort.hover-cup:hover    { background: #eee8f8; }
+    .aktivitet-kort.hover-dugnad:hover { background: #fdf3e3; }
+
+    .type-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      color: white;
+      flex-shrink: 0;
+    }
+    .type-badge.kamp    { background: var(--kamp); }
+    .type-badge.cup     { background: var(--cup); }
+    .type-badge.dugnad  { background: var(--dugnad); }
+
+    .aktivitet-info { flex: 1; min-width: 0; }
+    .aktivitet-tittel {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--tekst);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .aktivitet-meta { font-size: 12px; color: var(--tekst-sek); margin-top: 2px; }
+
+    .ikon-knapp {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--rs);
+      border: 1px solid var(--kant);
+      background: var(--hvit);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--tekst-sek);
+      font-size: 13px;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .ikon-knapp:hover { background: var(--grønn-lys); color: var(--grønn); border-color: var(--grønn-mid); }
+
+    /* ── Calendar ── */
+    .kalender-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .maaned-tittel {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: var(--tekst);
+      text-transform: capitalize;
+    }
+
+    .nav-knapp {
+      background: var(--hvit);
+      border: 1px solid var(--kant);
+      border-radius: var(--rs);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--tekst-sek);
+      font-size: 18px;
+      transition: all .15s;
+      line-height: 1;
+    }
+    .nav-knapp:hover { background: var(--grønn-lys); color: var(--grønn); border-color: var(--grønn-mid); }
+
+    .kalender-grid {
+      background: var(--hvit);
+      border-radius: var(--r);
+      border: 1px solid var(--kant);
+      overflow: hidden;
+    }
+
+    .dag-navn-rad {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--grønn-lys);
+      border-bottom: 1px solid var(--kant);
+    }
+
+    .dag-navn {
+      padding: 9px 4px;
+      text-align: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--grønn);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .dager-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .dag-celle {
+      min-height: 76px;
+      padding: 7px 6px 6px;
+      border-right: 1px solid var(--kant);
+      border-bottom: 1px solid var(--kant);
+      cursor: pointer;
+      transition: background .1s;
+      position: relative;
+    }
+    .dag-celle:nth-child(7n) { border-right: none; }
+    .dag-celle:hover { background: var(--grønn-lys); }
+    .dag-celle.annen-maaned { opacity: 0.3; pointer-events: none; }
+
+    .dag-nr {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--tekst);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      margin-bottom: 4px;
+    }
+
+    .dag-celle.i-dag .dag-nr {
+      background: var(--grønn);
+      color: white;
+    }
+
+    .dag-celle.valgt { background: var(--grønn-lys); }
+    .dag-celle.valgt .dag-nr { outline: 2px solid var(--grønn); }
+
+    .prikke-rad {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .prikk {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Selected day panel */
+    .valgt-dag-panel {
+      margin-top: 14px;
+      background: var(--hvit);
+      border-radius: var(--r);
+      border: 1px solid var(--kant);
+      overflow: hidden;
+      display: none;
+    }
+    .valgt-dag-panel.vis { display: block; }
+
+    .valgt-dag-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--kant);
+      background: var(--grønn-lys);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .valgt-dag-tittel {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--grønn-mørk);
+    }
+
+    .dag-seksjon-header {
+      padding: 10px 20px 8px;
+      background: var(--grønn-lys);
+      border-bottom: 1px solid var(--kant);
+      border-top: 1px solid var(--kant);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dag-seksjon-header:first-child { border-top: none; }
+    .dag-seksjon-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--tekst-sek);
+    }
+    .dag-seksjon-legg-til {
+      background: none;
+      border: 1px solid var(--grønn-mid);
+      border-radius: var(--rs);
+      padding: 3px 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--grønn);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .dag-seksjon-legg-til:hover { background: var(--grønn-lys); }
+
+    /* ── Tasks ── */
+    .filter-rad {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .filter-pill {
+      padding: 6px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--kant);
+      background: var(--hvit);
+      color: var(--tekst-sek);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: 'Syne', sans-serif;
+      letter-spacing: 0.2px;
+    }
+    .filter-pill:hover { border-color: var(--grønn-mid); color: var(--grønn); }
+    .filter-pill.aktiv { background: var(--grønn); color: white; border-color: var(--grønn); }
+
+    /* Kategori-farger – alltid synlig (border + tekst), fylt når aktiv */
+    .filter-pill.farge-kamp    { border-color: var(--kamp);   color: var(--kamp); }
+    .filter-pill.farge-cup     { border-color: var(--cup);    color: var(--cup); }
+    .filter-pill.farge-dugnad  { border-color: var(--dugnad); color: var(--dugnad); }
+    .filter-pill.farge-generelt{ border-color: #64b5a0;       color: #3d8c78; }
+    .filter-pill.aktiv-kamp    { background: var(--kamp);     color: white; border-color: var(--kamp); }
+    .filter-pill.aktiv-cup     { background: var(--cup);      color: white; border-color: var(--cup); }
+    .filter-pill.aktiv-dugnad  { background: var(--dugnad);   color: white; border-color: var(--dugnad); }
+    .filter-pill.aktiv-generelt{ background: #64b5a0;         color: white; border-color: #64b5a0; }
+    .filter-pill.fullforte      { background: #f0f0f0; color: #888; border-color: #ccc; }
+    .filter-pill.fullforte.aktiv{ background: #999;    color: white; border-color: #999; }
+
+    /* ── Beskrivelse-knapp og panel ── */
+    .info-knapp {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--kant);
+      background: var(--hvit);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--tekst-sek);
+      font-size: 12px;
+      font-weight: 800;
+      font-family: 'Syne', sans-serif;
+      transition: all .15s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .info-knapp.knapp-kamp   { border-color: var(--kamp);   color: var(--kamp); }
+    .info-knapp.knapp-cup    { border-color: var(--cup);    color: var(--cup); }
+    .info-knapp.knapp-dugnad { border-color: var(--dugnad); color: var(--dugnad); }
+    .info-knapp.knapp-fri    { border-color: #64b5a0;       color: #3d8c78; }
+    .info-knapp:hover { opacity: 0.75; }
+    .info-knapp.aktiv.knapp-kamp   { background: var(--kamp);   color: white; }
+    .info-knapp.aktiv.knapp-cup    { background: var(--cup);    color: white; }
+    .info-knapp.aktiv.knapp-dugnad { background: var(--dugnad); color: white; }
+    .info-knapp.aktiv.knapp-fri    { background: #64b5a0;       color: white; }
+
+    .besk-panel {
+      display: none;
+      padding: 10px 20px 12px 20px;
+      font-size: 13px;
+      color: var(--tekst-sek);
+      line-height: 1.6;
+      border-top: 1px solid var(--kant);
+      background: var(--hvit);
+    }
+    .besk-panel.vis { display: block; }
+
+    /* ── Oppgave type-stripe ── */
+    .oppgave-kort {
+      padding: 13px 20px 13px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      border-bottom: 1px solid var(--kant);
+      transition: background .1s;
+      border-left: 4px solid transparent;
+    }
+    .oppgave-kort.stripe-kamp    { border-left-color: var(--kamp); }
+    .oppgave-kort.stripe-cup     { border-left-color: var(--cup); }
+    .oppgave-kort.stripe-dugnad  { border-left-color: var(--dugnad); }
+    .oppgave-kort.stripe-fri     { border-left-color: #64b5a0; }
+    .oppgave-kort:last-child { border-bottom: none; }
+    .oppgave-kort.stripe-kamp:hover   { background: #fdeaea; }
+    .oppgave-kort.stripe-cup:hover    { background: #eee8f8; }
+    .oppgave-kort.stripe-dugnad:hover { background: #fdf3e3; }
+    .oppgave-kort.stripe-fri:hover    { background: #e8f6f2; }
+    .oppgave-kort.fullfort { opacity: 0.55; }
+
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--kant);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all .15s;
+      background: var(--hvit);
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+    }
+    .checkbox:hover { border-color: var(--grønn); }
+    .checkbox.sjekket { background: var(--grønn); border-color: var(--grønn); }
+
+    .oppgave-info { flex: 1; min-width: 0; }
+
+    .oppgave-besk {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--tekst);
+    }
+    .oppgave-kort.fullfort .oppgave-besk {
+      text-decoration: line-through;
+    }
+
+    .oppgave-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 5px;
+      align-items: center;
+    }
+
+    .frist-tekst {
+      font-size: 12px;
+      color: var(--tekst-sek);
+    }
+    .frist-tekst.forfalt { color: var(--kamp); font-weight: 600; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 35, 25, 0.45);
+      z-index: 200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.vis { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--hvit);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      overflow: visible;
+      transform: translateY(12px) scale(0.99);
+      transition: transform .2s;
+      border: 1px solid var(--kant);
+      margin: auto 0;
+      flex-shrink: 0;
+    }
+    .modal-overlay.vis .modal { transform: translateY(0) scale(1); }
+
+    .modal-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--kant);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-tittel {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--tekst);
+    }
+
+    .lukk-knapp {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--tekst-sek);
+      font-size: 22px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      line-height: 1;
+      transition: all .15s;
+    }
+    .lukk-knapp:hover { background: var(--grønn-lys); color: var(--grønn); }
+
+    .modal-body {
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .felt { display: flex; flex-direction: column; gap: 5px; }
+
+    .felt label {
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--tekst-sek);
+    }
+
+    .felt input,
+    .felt select,
+    .felt textarea {
+      border: 1px solid var(--kant);
+      border-radius: var(--rs);
+      padding: 9px 11px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tekst);
+      background: var(--bg);
+      outline: none;
+      transition: border-color .15s, background .15s;
+    }
+    .felt input:focus,
+    .felt select:focus,
+    .felt textarea:focus {
+      border-color: var(--grønn);
+      background: var(--hvit);
+    }
+    .felt textarea { resize: vertical; min-height: 72px; }
+
+    .felt-rad { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .modal-footer {
+      padding: 14px 22px 18px;
+      border-top: 1px solid var(--kant);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .knapp-primær {
+      background: var(--grønn);
+      color: white;
+      border: none;
+      border-radius: var(--rs);
+      padding: 9px 20px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .knapp-primær:hover { background: var(--grønn-mørk); }
+
+    .knapp-sek {
+      background: var(--hvit);
+      color: var(--tekst-sek);
+      border: 1px solid var(--kant);
+      border-radius: var(--rs);
+      padding: 9px 16px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .knapp-sek:hover { border-color: var(--grønn-mid); color: var(--grønn); }
+
+    .knapp-slett {
+      background: none;
+      color: var(--kamp);
+      border: 1px solid #f0cece;
+      border-radius: var(--rs);
+      padding: 9px 14px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .knapp-slett:hover { background: #fdf2f2; }
+
+    .knapp-gruppe { display: flex; gap: 8px; }
+
+    /* ── Oppgave-indikator på aktivitetskort ── */
+    .oppgave-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: opacity .15s;
+      flex-shrink: 0;
+      white-space: nowrap;
+      color: white;
+    }
+    .oppgave-badge:hover { opacity: 0.8; }
+    .oppgave-badge.badge-kamp   { background: var(--kamp);   border-color: var(--kamp); }
+    .oppgave-badge.badge-cup    { background: var(--cup);    border-color: var(--cup); }
+    .oppgave-badge.badge-dugnad { background: var(--dugnad); border-color: var(--dugnad); }
+
+    /* ── Tilknyttet-chip: følger aktivitetstype ── */
+    .tilknyttet-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      color: white;
+    }
+    .tilknyttet-chip.chip-kamp   { background: var(--kamp);   border-color: var(--kamp); }
+    .tilknyttet-chip.chip-cup    { background: var(--cup);    border-color: var(--cup); }
+    .tilknyttet-chip.chip-dugnad { background: var(--dugnad); border-color: var(--dugnad); }
+    .tilknyttet-chip.chip-fri    { background: #64b5a0;       border-color: #64b5a0; }
+
+    /* ── Frist-velger i oppgavemodal ── */
+    .frist-valg {
+      border: 1px solid var(--kant);
+      border-radius: var(--rs);
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .frist-rad {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--kant);
+      transition: background .1s;
+    }
+    .frist-rad:last-child { border-bottom: none; }
+    .frist-rad:hover { background: var(--grønn-lys); }
+
+    .frist-sirkel {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--kant);
+      flex-shrink: 0;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .frist-rad.aktiv .frist-sirkel {
+      border-color: var(--grønn);
+      background: var(--grønn);
+    }
+    .frist-rad.aktiv .frist-sirkel::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .frist-tekst-rad {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tekst);
+    }
+    .frist-rad.aktiv .frist-tekst-rad {
+      color: var(--grønn-mørk);
+      font-weight: 700;
+    }
+
+    .frist-eg-felt {
+      margin-top: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .frist-eg-felt.vis { display: flex; }
+
+    /* ── Eksport modal ── */
+    .eksport-aktivitet-info {
+      background: var(--grønn-lys);
+      border: 1px solid var(--grønn-mid);
+      border-radius: var(--rs);
+      padding: 10px 14px;
+      color: var(--grønn-mørk);
+    }
+    .eksport-aktivitet-info strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .eksport-aktivitet-info span {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    .paaminnelse-valg {
+      border: 1px solid var(--kant);
+      border-radius: var(--rs);
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .paaminnelse-rad {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--kant);
+      transition: background .1s;
+    }
+    .paaminnelse-rad:last-child { border-bottom: none; }
+    .paaminnelse-rad:hover { background: var(--grønn-lys); }
+
+    .paaminnelse-sirkel {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--kant);
+      flex-shrink: 0;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .paaminnelse-rad.aktiv .paaminnelse-sirkel {
+      border-color: var(--grønn);
+      background: var(--grønn);
+    }
+    .paaminnelse-rad.aktiv .paaminnelse-sirkel::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .paaminnelse-tekst {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tekst);
+    }
+    .paaminnelse-rad.aktiv .paaminnelse-tekst {
+      color: var(--grønn-mørk);
+      font-weight: 700;
+    }
+
+    .egendefinert-felt {
+      margin-top: 10px;
+      display: none;
+    }
+    .egendefinert-felt.vis { display: flex; flex-direction: column; gap: 5px; }
+
+    /* ── Versjon ── */
+    .versjon {
+      text-align: center;
+      padding: 32px 0 16px;
+      font-size: 11px;
+      color: var(--kant);
+      font-family: "Syne", sans-serif;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="width:76px"></div>
+  <div class="logo">
+    <div class="logo-ikon">⚽</div>
+    Laglederen
+  </div>
+  <div class="header-handlinger">
+    <button class="header-knapp" onclick="eksporterData()" title="Eksporter">↓</button>
+    <button class="header-knapp" onclick="document.getElementById('importInput').click()" title="Importer">↑</button>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="importerData(this)"/>
+  </div>
+</header>
+
+<nav class="faner">
+  <button class="fane aktiv" onclick="byttFane('kalender', this)">Kalender</button>
+  <button class="fane" onclick="byttFane('liste', this)">Aktiviteter</button>
+  <button class="fane" onclick="byttFane('oppgaver', this)">Oppgaver</button>
+</nav>
+
+<main>
+
+  <!-- Kalender -->
+  <div id="panel-kalender" class="panel aktiv">
+    <div class="kalender-nav">
+      <button class="nav-knapp" onclick="forrigeManad()">&#8249;</button>
+      <div class="maaned-tittel" id="maanedTittel"></div>
+      <button class="nav-knapp" onclick="nesteManad()">&#8250;</button>
+    </div>
+    <div class="kalender-grid">
+      <div class="dag-navn-rad">
+        <div class="dag-navn">Man</div>
+        <div class="dag-navn">Tir</div>
+        <div class="dag-navn">Ons</div>
+        <div class="dag-navn">Tor</div>
+        <div class="dag-navn">Fre</div>
+        <div class="dag-navn">Lør</div>
+        <div class="dag-navn">Søn</div>
+      </div>
+      <div class="dager-grid" id="dagerGrid"></div>
+    </div>
+    <div class="valgt-dag-panel" id="valgtDagPanel">
+      <div class="valgt-dag-header">
+        <div class="valgt-dag-tittel" id="valgtDagTittel"></div>
+      </div>
+      <div id="valgtDagListe"></div>
+    </div>
+  </div>
+
+  <!-- Aktiviteter / liste -->
+  <div id="panel-liste" class="panel">
+    <div class="seksjon-header">
+      <div class="seksjon-tittel">Alle aktiviteter</div>
+      <button class="legg-til-knapp" onclick="åpneAktivitetModal()">+ Legg til aktivitet</button>
+    </div>
+    <div class="filter-rad" id="aktivitetFilterRad"></div>
+    <div class="kort-container" id="aktivitetListe"></div>
+  </div>
+
+  <!-- Oppgaver -->
+  <div id="panel-oppgaver" class="panel">
+    <div class="seksjon-header">
+      <div class="seksjon-tittel">Oppgaver</div>
+      <button class="legg-til-knapp" onclick="åpneOppgaveModal()">+ Legg til oppgave</button>
+    </div>
+    <div class="filter-rad" id="filterRad"></div>
+    <div class="kort-container" id="oppgaveListe"></div>
+  </div>
+
+  <div class="versjon">v.1.12</div>
+</main>
+
+<!-- Modal: Aktivitet -->
+<div class="modal-overlay" id="aktivitetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="aktivitetModalTittel">Ny aktivitet</div>
+      <button class="lukk-knapp" onclick="lukkModal('aktivitetModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="felt">
+        <label>Tittel</label>
+        <input type="text" id="feltTittel" placeholder="f.eks. Hjemmekamp mot Brann" />
+      </div>
+      <div class="felt">
+        <label>Type</label>
+        <select id="feltType">
+          <option value="kamp">Kamp</option>
+          <option value="cup">Cup</option>
+          <option value="dugnad">Dugnad</option>
+        </select>
+      </div>
+      <div class="felt-rad">
+        <div class="felt">
+          <label>Fra dato</label>
+          <input type="date" id="feltDato" oninput="synkDatoTil(this.value)" />
+        </div>
+        <div class="felt">
+          <label>Til dato (valgfritt)</label>
+          <input type="date" id="feltDatoTil" />
+        </div>
+      </div>
+      <div class="felt-rad">
+        <div class="felt">
+          <label>Fra kl.</label>
+          <input type="time" id="feltTid" />
+        </div>
+        <div class="felt">
+          <label>Til kl. (valgfritt)</label>
+          <input type="time" id="feltTidTil" />
+        </div>
+      </div>
+      <div class="felt">
+        <label>Beskrivelse (valgfritt)</label>
+        <textarea id="feltBesk" placeholder="Ekstra informasjon..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="knapp-slett" id="slettAktivitetKnapp" onclick="slettAktivitet()" style="display:none">Slett</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('aktivitetModal')">Avbryt</button>
+        <button class="knapp-primær" onclick="lagreAktivitet()">Lagre</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Oppgave -->
+<div class="modal-overlay" id="oppgaveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="oppgaveModalTittel">Ny oppgave</div>
+      <button class="lukk-knapp" onclick="lukkModal('oppgaveModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="felt">
+        <label>Tittel</label>
+        <input type="text" id="oppFeltBesk" placeholder="f.eks. Bestill dommer" />
+      </div>
+      <div class="felt">
+        <label>Notater (valgfritt)</label>
+        <textarea id="oppFeltNotat" placeholder="Ekstra informasjon..." style="min-height:64px;"></textarea>
+      </div>
+      <div class="felt">
+        <label>Frist</label>
+        <div class="frist-valg" id="fristValg">
+          <div class="frist-rad" data-valg="1dag" onclick="velgFrist(this)">
+            <div class="frist-sirkel"></div>
+            <div class="frist-tekst-rad">1 dag før</div>
+          </div>
+          <div class="frist-rad" data-valg="3dag" onclick="velgFrist(this)">
+            <div class="frist-sirkel"></div>
+            <div class="frist-tekst-rad">3 dager før</div>
+          </div>
+          <div class="frist-rad" data-valg="1uke" onclick="velgFrist(this)">
+            <div class="frist-sirkel"></div>
+            <div class="frist-tekst-rad">1 uke før</div>
+          </div>
+          <div class="frist-rad" data-valg="egendefinert" onclick="velgFrist(this)">
+            <div class="frist-sirkel"></div>
+            <div class="frist-tekst-rad">Egendefinert dato</div>
+          </div>
+          <div class="frist-rad" data-valg="ingen" onclick="velgFrist(this)">
+            <div class="frist-sirkel"></div>
+            <div class="frist-tekst-rad">Ingen frist</div>
+          </div>
+        </div>
+        <div class="frist-eg-felt" id="fristEgFelt">
+          <label>Velg dato</label>
+          <input type="date" id="oppFeltFrist" />
+        </div>
+        <div id="fristRelativInfo" style="font-size:12px;color:var(--tekst-sek);margin-top:6px;display:none;"></div>
+      </div>
+      <div class="felt">
+        <label>Koble til aktivitet (valgfritt)</label>
+        <select id="oppFeltAktivitet">
+          <option value="">— Frittstående —</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="knapp-slett" id="slettOppgaveKnapp" onclick="slettOppgave()" style="display:none">Slett</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('oppgaveModal')">Avbryt</button>
+        <button class="knapp-primær" onclick="lagreOppgave()">Lagre</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Eksporter til kalender -->
+<div class="modal-overlay" id="eksportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel">Legg til i kalender</div>
+      <button class="lukk-knapp" onclick="lukkModal('eksportModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="eksport-aktivitet-info" id="eksportAktivitetInfo">
+        <strong id="eksportTittel"></strong>
+        <span id="eksportDato"></span>
+      </div>
+      <div class="felt">
+        <label>Påminnelse</label>
+        <div class="paaminnelse-valg">
+          <div class="paaminnelse-rad aktiv" data-valg="1dag" onclick="velgPaaminnelse(this)">
+            <div class="paaminnelse-sirkel"></div>
+            <div class="paaminnelse-tekst">1 dag før</div>
+          </div>
+          <div class="paaminnelse-rad" data-valg="3dag" onclick="velgPaaminnelse(this)">
+            <div class="paaminnelse-sirkel"></div>
+            <div class="paaminnelse-tekst">3 dager før</div>
+          </div>
+          <div class="paaminnelse-rad" data-valg="1uke" onclick="velgPaaminnelse(this)">
+            <div class="paaminnelse-sirkel"></div>
+            <div class="paaminnelse-tekst">1 uke før</div>
+          </div>
+          <div class="paaminnelse-rad" data-valg="1mnd" onclick="velgPaaminnelse(this)">
+            <div class="paaminnelse-sirkel"></div>
+            <div class="paaminnelse-tekst">1 måned før</div>
+          </div>
+          <div class="paaminnelse-rad" data-valg="egendefinert" onclick="velgPaaminnelse(this)">
+            <div class="paaminnelse-sirkel"></div>
+            <div class="paaminnelse-tekst">Egendefinert dato</div>
+          </div>
+        </div>
+        <div class="egendefinert-felt" id="egendefinertFelt">
+          <label>Påminnelsesdato</label>
+          <input type="date" id="eksportEgDato" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div></div>
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('eksportModal')">Avbryt</button>
+        <button class="knapp-primær" onclick="eksporterICS()">Eksporter &#8594;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ──────────────────────────────
+     DATA
+  ────────────────────────────── */
+  let aktiviteter = [];
+  let oppgaver    = [];
+
+  let redigAktivitetId = null;
+  let redigOppgaveId   = null;
+  let valgtDato        = null;
+  let aktivFilter      = null;
+  let aktivitetFilter  = null;
+  let visAar           = new Date().getFullYear();
+  let visMaaned        = new Date().getMonth();
+
+  const TYPER = {
+    kamp:   { farge: '#d94f4f', tekst: 'Kamp' },
+    cup:    { farge: '#7f5cc0', tekst: 'Cup' },
+    dugnad: { farge: '#d48826', tekst: 'Dugnad' }
+  };
+
+  const MAANEDER = [
+    'januar','februar','mars','april','mai','juni',
+    'juli','august','september','oktober','november','desember'
+  ];
+
+  const UKEDAGER = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+  const UKEDAGER_K = ['søn','man','tir','ons','tor','fre','lør'];
+
+  /* ──────────────────────────────
+     LAGRING
+  ────────────────────────────── */
+  function lagre() {
+    localStorage.setItem('lp_a', JSON.stringify(aktiviteter));
+    localStorage.setItem('lp_o', JSON.stringify(oppgaver));
+  }
+
+  function hent() {
+    const a = localStorage.getItem('lp_a');
+    const o = localStorage.getItem('lp_o');
+    aktiviteter = a ? JSON.parse(a) : [];
+    oppgaver    = o ? JSON.parse(o) : [];
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+
+  /* ──────────────────────────────
+     FANER
+  ────────────────────────────── */
+  function byttFane(id, el) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('aktiv'));
+    document.querySelectorAll('.fane').forEach(f => f.classList.remove('aktiv'));
+    document.getElementById('panel-' + id).classList.add('aktiv');
+    el.classList.add('aktiv');
+    if (id === 'kalender') renderKalender();
+    if (id === 'liste')    renderListe();
+    if (id === 'oppgaver') renderOppgaver();
+  }
+
+  /* ──────────────────────────────
+     KALENDER
+  ────────────────────────────── */
+  function renderKalender() {
+    document.getElementById('maanedTittel').textContent =
+      MAANEDER[visMaaned] + ' ' + visAar;
+
+    const grid = document.getElementById('dagerGrid');
+    grid.innerHTML = '';
+
+    const iDag = new Date();
+    const forsteDag   = new Date(visAar, visMaaned, 1);
+    let startUkedag   = forsteDag.getDay();
+    startUkedag = startUkedag === 0 ? 6 : startUkedag - 1;
+
+    const dagerIMnd = new Date(visAar, visMaaned + 1, 0).getDate();
+    const dagerForr = new Date(visAar, visMaaned, 0).getDate();
+
+    // Forrige måned
+    for (let i = startUkedag - 1; i >= 0; i--) {
+      const d = dagerForr - i;
+      const mnd = visMaaned - 1 < 0 ? 11 : visMaaned - 1;
+      const aar = visMaaned - 1 < 0 ? visAar - 1 : visAar;
+      grid.appendChild(lagCelle(d, aar, mnd, true));
+    }
+
+    // Denne måneden
+    for (let d = 1; d <= dagerIMnd; d++) {
+      const erIDag =
+        d === iDag.getDate() &&
+        visMaaned === iDag.getMonth() &&
+        visAar    === iDag.getFullYear();
+      grid.appendChild(lagCelle(d, visAar, visMaaned, false, erIDag));
+    }
+
+    // Neste måned
+    const totalt = startUkedag + dagerIMnd;
+    const rest   = totalt % 7 === 0 ? 0 : 7 - (totalt % 7);
+    for (let d = 1; d <= rest; d++) {
+      const mnd = visMaaned + 1 > 11 ? 0  : visMaaned + 1;
+      const aar = visMaaned + 1 > 11 ? visAar + 1 : visAar;
+      grid.appendChild(lagCelle(d, aar, mnd, true));
+    }
+
+    if (valgtDato) renderValgtDag(valgtDato);
+  }
+
+  function lagCelle(dag, aar, mnd, annen, erIDag) {
+    const ds = `${aar}-${String(mnd+1).padStart(2,'0')}-${String(dag).padStart(2,'0')}`;
+    const dagAkt = aktiviteter.filter(a => a.dato === ds);
+    const dagOpp = oppgaver.filter(o => o.frist === ds);
+
+    const celle = document.createElement('div');
+    celle.className = 'dag-celle'
+      + (annen  ? ' annen-maaned' : '')
+      + (erIDag ? ' i-dag'        : '')
+      + (ds === valgtDato ? ' valgt' : '');
+
+    if (!annen) celle.onclick = (e) => velgDag(ds, e.currentTarget);
+
+    const nr = document.createElement('div');
+    nr.className = 'dag-nr';
+    nr.textContent = dag;
+    celle.appendChild(nr);
+
+    if (dagAkt.length > 0 || dagOpp.length > 0) {
+      const rad = document.createElement('div');
+      rad.className = 'prikke-rad';
+      dagAkt.slice(0, 5).forEach(a => {
+        const p = document.createElement('div');
+        p.className = 'prikk';
+        p.style.background = TYPER[a.type]?.farge || '#999';
+        rad.appendChild(p);
+      });
+      if (dagOpp.length > 0) {
+        const p = document.createElement('div');
+        p.className = 'prikk';
+        p.style.background = '#d48826';
+        p.title = dagOpp.length + ' oppgave(r) med frist';
+        rad.appendChild(p);
+      }
+      celle.appendChild(rad);
+    }
+    return celle;
+  }
+
+  function velgDag(ds, el) {
+    valgtDato = ds;
+    document.querySelectorAll('.dag-celle.valgt').forEach(c => c.classList.remove('valgt'));
+    if (el) el.classList.add('valgt');
+    renderValgtDag(ds);
+  }
+
+  function synkDatoTil(nyDato) {
+    const til = document.getElementById('feltDatoTil');
+    if (!til.value || til.value < nyDato) til.value = nyDato;
+  }
+
+  function renderValgtDag(ds) {
+    const panel    = document.getElementById('valgtDagPanel');
+    const tittelEl = document.getElementById('valgtDagTittel');
+    const listEl   = document.getElementById('valgtDagListe');
+
+    const d = new Date(ds + 'T00:00:00');
+    const navn = UKEDAGER[d.getDay()];
+    tittelEl.textContent =
+      navn.charAt(0).toUpperCase() + navn.slice(1) +
+      ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()];
+
+    const dagAkt = aktiviteter
+      .filter(a => a.dato === ds)
+      .sort((a, b) => (a.tid || '').localeCompare(b.tid || ''));
+
+    // Oppgaver med frist denne dagen, ELLER koblet til en aktivitet denne dagen
+    const aktIdsIDag = new Set(dagAkt.map(a => a.id));
+    const dagOpp = oppgaver
+      .filter(o => !o.fullfort && (
+        o.frist === ds ||
+        (o.aktivitetId && aktIdsIDag.has(o.aktivitetId))
+      ))
+      .sort((a, b) => (a.beskrivelse || '').localeCompare(b.beskrivelse || ''));
+
+    listEl.innerHTML = '';
+
+    // Alltid vis begge seksjoner med sine + Legg til-knapper
+    listEl.appendChild(lagDagSeksjon('Aktiviteter', () => åpneAktivitetModal(null, ds)));
+    if (dagAkt.length === 0) {
+      const tom = document.createElement('div');
+      tom.className = 'tom-melding';
+      tom.style.cssText = 'padding:14px 20px;font-size:13px;';
+      tom.textContent = 'Ingen aktiviteter.';
+      listEl.appendChild(tom);
+    } else {
+      dagAkt.forEach(a => listEl.appendChild(lagAktivitetKort(a, true)));
+    }
+
+    listEl.appendChild(lagDagSeksjon('Oppgaver', () => åpneOppgaveModal()));
+    if (dagOpp.length === 0) {
+      const tom = document.createElement('div');
+      tom.className = 'tom-melding';
+      tom.style.cssText = 'padding:14px 20px;font-size:13px;';
+      tom.textContent = 'Ingen oppgaver.';
+      listEl.appendChild(tom);
+    } else {
+      dagOpp.forEach(o => {
+          const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+          let stripeKlasse = 'stripe-fri';
+          if (akt) stripeKlasse = 'stripe-' + akt.type;
+
+          const kort = document.createElement('div');
+          kort.className = 'oppgave-kort ' + stripeKlasse;
+          kort.style.cursor = 'pointer';
+          kort.onclick = () => åpneOppgaveModal(o.id);
+
+          const info = document.createElement('div');
+          info.className = 'oppgave-info';
+
+          let metaHtml = '';
+          if (o.frist) {
+            const fristD  = new Date(o.frist + 'T00:00:00');
+            const iDag    = new Date(); iDag.setHours(0,0,0,0);
+            const forfalt = fristD < iDag;
+            const fristStr = fristD.getDate() + '. ' + MAANEDER[fristD.getMonth()];
+            metaHtml += `<span class="frist-tekst ${forfalt ? 'forfalt' : ''}">
+              ${forfalt ? '⚠ Forfalt: ' : '📅 '}${fristStr}</span>`;
+          }
+          if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">⚽ ${akt.tittel}</span>`;
+
+          info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
+            ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
+
+          const redigKnapp = document.createElement('button');
+          redigKnapp.className = 'ikon-knapp';
+          redigKnapp.innerHTML = redigIkon();
+          redigKnapp.onclick = () => åpneOppgaveModal(o.id);
+
+          kort.appendChild(info);
+          kort.appendChild(redigKnapp);
+          listEl.appendChild(kort);
+        });
+      }
+    panel.classList.add('vis');
+  }
+
+  function lagDagSeksjon(label, onLeggTil) {
+    const div = document.createElement('div');
+    div.className = 'dag-seksjon-header';
+    const lbl = document.createElement('span');
+    lbl.className = 'dag-seksjon-label';
+    lbl.textContent = label;
+    const knapp = document.createElement('button');
+    knapp.className = 'dag-seksjon-legg-til';
+    knapp.textContent = '+ Legg til';
+    knapp.onclick = e => { e.stopPropagation(); onLeggTil(); };
+    div.appendChild(lbl);
+    div.appendChild(knapp);
+    return div;
+  }
+
+  function forrigeManad() {
+    if (visMaaned === 0) { visMaaned = 11; visAar--; }
+    else visMaaned--;
+    nullstillValgtDag();
+    renderKalender();
+  }
+
+  function nesteManad() {
+    if (visMaaned === 11) { visMaaned = 0; visAar++; }
+    else visMaaned++;
+    nullstillValgtDag();
+    renderKalender();
+  }
+
+  function nullstillValgtDag() {
+    valgtDato = null;
+    document.getElementById('valgtDagPanel').classList.remove('vis');
+  }
+
+  /* ──────────────────────────────
+     LISTE
+  ────────────────────────────── */
+  function renderListe() {
+    const container = document.getElementById('aktivitetListe');
+    const filterRad = document.getElementById('aktivitetFilterRad');
+
+    // Bygg filterknapper
+    filterRad.innerHTML = '';
+    const filtre = [
+      { id: 'kamp',   label: 'Kamp',   farge: 'kamp' },
+      { id: 'cup',    label: 'Cup',    farge: 'cup' },
+      { id: 'dugnad', label: 'Dugnad', farge: 'dugnad' }
+    ];
+    filtre.forEach(f => {
+      const pill = document.createElement('button');
+      const erAktiv = aktivitetFilter === f.id;
+      pill.className = 'filter-pill ' + (erAktiv ? 'aktiv-' + f.farge : 'farge-' + f.farge);
+      pill.textContent = f.label;
+      pill.onclick = () => {
+        aktivitetFilter = aktivitetFilter === f.id ? null : f.id;
+        renderListe();
+      };
+      filterRad.appendChild(pill);
+    });
+
+    let filtrert = [...aktiviteter];
+    if (aktivitetFilter) filtrert = filtrert.filter(a => a.type === aktivitetFilter);
+
+    if (filtrert.length === 0) {
+      container.innerHTML =
+        '<div class="tom-melding">Ingen aktiviteter ennå.<br>Trykk «+ Legg til aktivitet» for å starte.</div>';
+      return;
+    }
+
+    const sortert = filtrert.sort((a, b) =>
+      (a.dato + (a.tid || '')).localeCompare(b.dato + (b.tid || ''))
+    );
+    const grupper = {};
+    sortert.forEach(a => {
+      const d   = new Date(a.dato + 'T00:00:00');
+      const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
+      if (!grupper[key]) {
+        grupper[key] = {
+          label: MAANEDER[d.getMonth()] + ' ' + d.getFullYear(),
+          items: []
+        };
+      }
+      grupper[key].items.push(a);
+    });
+    container.innerHTML = '';
+    Object.values(grupper).forEach(g => {
+      const ml = document.createElement('div');
+      ml.className = 'maaned-label';
+      ml.textContent = g.label;
+      container.appendChild(ml);
+      g.items.forEach(a => container.appendChild(lagAktivitetKort(a)));
+    });
+  }
+
+  /* ──────────────────────────────
+     UTILS
+  ────────────────────────────── */
+  function redigIkon() {
+    return '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 1.5L11.5 3.5L4.5 10.5H2.5V8.5L9.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 3L10 5" stroke="currentColor" stroke-width="1.3"/></svg>';
+  }
+
+  function lagAktivitetKort(a, fraKalender = false) {
+    const wrapper = document.createElement('div');
+
+    const kort = document.createElement('div');
+    kort.className = 'aktivitet-kort hover-' + a.type;
+    kort.style.cursor = 'pointer';
+    kort.onclick = () => åpneAktivitetModal(a.id);
+
+    const badge = document.createElement('span');
+    badge.className = `type-badge ${a.type}`;
+    badge.textContent = TYPER[a.type]?.tekst || a.type;
+
+    const d = new Date(a.dato + 'T00:00:00');
+    let datoStr = UKEDAGER_K[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()];
+    if (a.datoTil && a.datoTil !== a.dato) {
+      const dTil = new Date(a.datoTil + 'T00:00:00');
+      datoStr += '\u2013' + dTil.getDate() + '. ' + MAANEDER[dTil.getMonth()];
+    }
+    const tidStr = a.tid ? ('kl.\u00a0' + a.tid + (a.tidTil ? '\u2013' + a.tidTil : '')) : '';
+
+    const info = document.createElement('div');
+    info.className = 'aktivitet-info';
+    info.innerHTML = `
+      <div class="aktivitet-tittel">${a.tittel}</div>
+      <div class="aktivitet-meta">${datoStr}${tidStr ? '&nbsp;' + tidStr : ''}</div>`;
+
+    kort.appendChild(badge);
+    kort.appendChild(info);
+
+    const tilknyttedeOppgaver = oppgaver.filter(o => o.aktivitetId === a.id);
+    if (tilknyttedeOppgaver.length > 0) {
+      const antallUferdige = tilknyttedeOppgaver.filter(o => !o.fullfort).length;
+      if (antallUferdige > 0) {
+        const ob = document.createElement('span');
+        ob.className = 'oppgave-badge badge-' + a.type;
+        ob.textContent = '📋 ' + antallUferdige;
+        ob.title = 'Vis oppgaver for denne aktiviteten';
+        ob.onclick = e => {
+          e.stopPropagation();
+          aktivFilter = 'aktivitet:' + a.id;
+          byttFane('oppgaver', document.querySelectorAll('.fane')[2]);
+        };
+        kort.appendChild(ob);
+      }
+    }
+
+    // Info-knapp for beskrivelse
+    if (a.beskrivelse) {
+      const beskPanel = document.createElement('div');
+      beskPanel.className = 'besk-panel';
+      beskPanel.textContent = a.beskrivelse;
+
+      const infoKnapp = document.createElement('button');
+      infoKnapp.className = 'ikon-knapp info-knapp knapp-' + a.type;
+      infoKnapp.textContent = 'i';
+      infoKnapp.title = 'Vis beskrivelse';
+      infoKnapp.onclick = e => {
+        e.stopPropagation();
+        const vis = beskPanel.classList.toggle('vis');
+        infoKnapp.classList.toggle('aktiv', vis);
+      };
+      kort.appendChild(infoKnapp);
+      wrapper.appendChild(kort);
+      wrapper.appendChild(beskPanel);
+    } else {
+      wrapper.appendChild(kort);
+    }
+
+    return wrapper;
+  }
+
+  /* ──────────────────────────────
+     OPPGAVER
+  ────────────────────────────── */
+  function renderOppgaver() {
+    const container = document.getElementById('oppgaveListe');
+    const filterRad = document.getElementById('filterRad');
+
+    filterRad.innerHTML = '';
+
+    // Hvis vi viser en spesifikk aktivitet, vis eget header og tilbake-knapp
+    if (aktivFilter && aktivFilter.startsWith('aktivitet:')) {
+      const aktId = aktivFilter.slice(10);
+      const akt   = aktiviteter.find(a => a.id === aktId);
+      const pill  = document.createElement('button');
+      pill.className = 'filter-pill aktiv';
+      pill.textContent = '← ' + (akt ? akt.tittel : 'Aktivitet');
+      pill.onclick = () => { aktivFilter = null; renderOppgaver(); };
+      filterRad.appendChild(pill);
+    } else {
+      const filtre = [
+        { id: 'kamp',      label: 'Kamp',      farge: 'kamp' },
+        { id: 'cup',       label: 'Cup',        farge: 'cup' },
+        { id: 'dugnad',    label: 'Dugnad',     farge: 'dugnad' },
+        { id: 'generelt',  label: 'Generelt',   farge: 'generelt' },
+        { id: 'fullførte', label: 'Fullførte',  farge: null }
+      ];
+      filtre.forEach(f => {
+        const pill = document.createElement('button');
+        const erAktiv = aktivFilter === f.id;
+        const fargeKlasse = f.id === 'fullførte'
+          ? (erAktiv ? 'fullforte aktiv' : 'fullforte')
+          : f.farge
+            ? (erAktiv ? 'aktiv-' + f.farge : 'farge-' + f.farge)
+            : (erAktiv ? 'aktiv' : '');
+        pill.className = ('filter-pill ' + fargeKlasse).trim();
+        pill.textContent = f.label;
+        pill.onclick = () => {
+          aktivFilter = aktivFilter === f.id ? null : f.id;
+          renderOppgaver();
+        };
+        filterRad.appendChild(pill);
+      });
+    }
+
+    let filtrert = [...oppgaver];
+
+    if (aktivFilter && aktivFilter.startsWith('aktivitet:')) {
+      const aktId = aktivFilter.slice(10);
+      filtrert = filtrert.filter(o => o.aktivitetId === aktId && !o.fullfort);
+    } else if (aktivFilter === 'fullførte') {
+      filtrert = filtrert.filter(o => o.fullfort);
+    } else {
+      filtrert = filtrert.filter(o => !o.fullfort);
+      if (aktivFilter === 'generelt') {
+        filtrert = filtrert.filter(o => !o.aktivitetId);
+      } else if (['kamp','cup','dugnad'].includes(aktivFilter)) {
+        filtrert = filtrert.filter(o => {
+          const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+          return akt && akt.type === aktivFilter;
+        });
+      }
+    }
+
+    filtrert.sort((a, b) =>
+      (a.frist || '9999').localeCompare(b.frist || '9999')
+    );
+
+    if (filtrert.length === 0) {
+      container.innerHTML =
+        '<div class="tom-melding">Ingen oppgaver her ennå.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    filtrert.forEach(o => {
+      let stripeKlasse = 'stripe-fri';
+      if (o.aktivitetId) {
+        const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+        if (akt) stripeKlasse = 'stripe-' + akt.type;
+      }
+
+      const wrapper = document.createElement('div');
+
+      const kort = document.createElement('div');
+      kort.className = 'oppgave-kort ' + stripeKlasse + (o.fullfort ? ' fullfort' : '');
+
+      const cb = document.createElement('div');
+      cb.className = 'checkbox' + (o.fullfort ? ' sjekket' : '');
+      cb.textContent = o.fullfort ? '✓' : '';
+      cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); };
+
+      const info = document.createElement('div');
+      info.className = 'oppgave-info';
+
+      let metaHtml = '';
+      if (o.frist) {
+        const iDag   = new Date(); iDag.setHours(0, 0, 0, 0);
+        const fristD = new Date(o.frist + 'T00:00:00');
+        const forfalt = !o.fullfort && fristD < iDag;
+        const fristStr = fristD.getDate() + '. ' + MAANEDER[fristD.getMonth()];
+        metaHtml += `<span class="frist-tekst ${forfalt ? 'forfalt' : ''}">
+          ${forfalt ? '⚠ Forfalt: ' : '📅 '}${fristStr}</span>`;
+      }
+      if (o.aktivitetId) {
+        const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">⚽ ${akt.tittel}</span>`;
+      }
+
+      info.innerHTML = `
+        <div class="oppgave-besk">${o.beskrivelse}</div>
+        ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
+
+      kort.style.cursor = 'pointer';
+      kort.onclick = () => åpneOppgaveModal(o.id);
+
+      kort.appendChild(cb);
+      kort.appendChild(info);
+
+      if (o.notat) {
+        const beskPanel = document.createElement('div');
+        beskPanel.className = 'besk-panel';
+        beskPanel.textContent = o.notat;
+
+        const typeKlasse = o.aktivitetId
+          ? 'knapp-' + (aktiviteter.find(a => a.id === o.aktivitetId)?.type || 'fri')
+          : 'knapp-fri';
+        const infoKnapp = document.createElement('button');
+        infoKnapp.className = 'ikon-knapp info-knapp ' + typeKlasse;
+        infoKnapp.textContent = 'i';
+        infoKnapp.title = 'Vis notater';
+        infoKnapp.onclick = e => {
+          e.stopPropagation();
+          const vis = beskPanel.classList.toggle('vis');
+          infoKnapp.classList.toggle('aktiv', vis);
+        };
+        kort.appendChild(infoKnapp);
+        wrapper.appendChild(kort);
+        wrapper.appendChild(beskPanel);
+      } else {
+        wrapper.appendChild(kort);
+      }
+
+      container.appendChild(wrapper);
+    });
+  }
+
+  function toggleOppgave(id) {
+    const o = oppgaver.find(o => o.id === id);
+    if (o) { o.fullfort = !o.fullfort; lagre(); renderOppgaver(); }
+  }
+
+  /* ──────────────────────────────
+     AKTIVITET MODAL
+  ────────────────────────────── */
+  function åpneAktivitetModal(id = null, dato = null) {
+    redigAktivitetId = id;
+    const slettKnapp = document.getElementById('slettAktivitetKnapp');
+
+    if (id) {
+      const a = aktiviteter.find(a => a.id === id);
+      document.getElementById('aktivitetModalTittel').textContent = 'Rediger aktivitet';
+      document.getElementById('feltTittel').value  = a.tittel;
+      document.getElementById('feltType').value    = a.type;
+      document.getElementById('feltDato').value    = a.dato;
+      document.getElementById('feltDatoTil').value = a.datoTil || a.dato;
+      document.getElementById('feltTid').value     = a.tid    || '';
+      document.getElementById('feltTidTil').value  = a.tidTil || '';
+      document.getElementById('feltBesk').value   = a.beskrivelse || '';
+      slettKnapp.style.display = 'block';
+    } else {
+      document.getElementById('aktivitetModalTittel').textContent = 'Ny aktivitet';
+      document.getElementById('feltTittel').value  = '';
+      document.getElementById('feltType').value    = 'kamp';
+      const defaultDato = dato || new Date().toISOString().slice(0, 10);
+      document.getElementById('feltDato').value    = defaultDato;
+      document.getElementById('feltDatoTil').value = defaultDato;
+      document.getElementById('feltTid').value     = '';
+      document.getElementById('feltTidTil').value  = '';
+      document.getElementById('feltBesk').value   = '';
+      slettKnapp.style.display = 'none';
+    }
+    document.getElementById('aktivitetModal').classList.add('vis');
+    setTimeout(() => document.getElementById('feltTittel').focus(), 100);
+  }
+
+  function lagreAktivitet() {
+    const tittel  = document.getElementById('feltTittel').value.trim();
+    const type    = document.getElementById('feltType').value;
+    const dato    = document.getElementById('feltDato').value;
+    const datoTil = document.getElementById('feltDatoTil').value || dato;
+    const tid     = document.getElementById('feltTid').value;
+    const tidTil  = document.getElementById('feltTidTil').value;
+    const besk    = document.getElementById('feltBesk').value.trim();
+
+    if (!tittel) { alert('Tittel er påkrevd.'); return; }
+    if (!dato)   { alert('Dato er påkrevd.'); return; }
+
+    if (redigAktivitetId) {
+      const a = aktiviteter.find(a => a.id === redigAktivitetId);
+      Object.assign(a, { tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk });
+    } else {
+      aktiviteter.push({ id: uid(), tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk });
+    }
+
+    lagre();
+    lukkModal('aktivitetModal');
+    oppdaterAktivPanel();
+  }
+
+  function slettAktivitet() {
+    if (!confirm('Slett denne aktiviteten?')) return;
+    aktiviteter = aktiviteter.filter(a => a.id !== redigAktivitetId);
+    oppgaver.forEach(o => { if (o.aktivitetId === redigAktivitetId) o.aktivitetId = null; });
+    lagre();
+    lukkModal('aktivitetModal');
+    oppdaterAktivPanel();
+  }
+
+  /* ──────────────────────────────
+     OPPGAVE MODAL
+  ────────────────────────────── */
+  let valgtFristValg = 'ingen';
+
+  function velgFrist(el) {
+    document.querySelectorAll('.frist-rad').forEach(r => r.classList.remove('aktiv'));
+    el.classList.add('aktiv');
+    valgtFristValg = el.dataset.valg;
+    const egFelt   = document.getElementById('fristEgFelt');
+    const infoEl   = document.getElementById('fristRelativInfo');
+    egFelt.classList.toggle('vis', valgtFristValg === 'egendefinert');
+
+    // Vis beregnet dato for relative valg
+    if (valgtFristValg !== 'ingen' && valgtFristValg !== 'egendefinert') {
+      const aktId = document.getElementById('oppFeltAktivitet').value;
+      const akt   = aktiviteter.find(a => a.id === aktId);
+      const base  = akt ? new Date(akt.dato + 'T00:00:00') : new Date();
+      const dato  = regnUtFristDato(valgtFristValg, base);
+      if (dato) {
+        infoEl.textContent = '→ ' + dato.getDate() + '. ' + MAANEDER[dato.getMonth()] + ' ' + dato.getFullYear();
+        infoEl.style.display = 'block';
+      }
+    } else {
+      infoEl.style.display = 'none';
+    }
+  }
+
+  function regnUtFristDato(valg, base) {
+    const d = new Date(base);
+    if (valg === '1dag') d.setDate(d.getDate() - 1);
+    else if (valg === '3dag') d.setDate(d.getDate() - 3);
+    else if (valg === '1uke') d.setDate(d.getDate() - 7);
+    else return null;
+    return d;
+  }
+
+  function oppdaterFristInfo() {
+    if (valgtFristValg !== 'ingen' && valgtFristValg !== 'egendefinert') {
+      velgFrist(document.querySelector(`.frist-rad[data-valg="${valgtFristValg}"]`));
+    }
+  }
+
+  function åpneOppgaveModal(id = null) {
+    redigOppgaveId = id;
+    const slettKnapp = document.getElementById('slettOppgaveKnapp');
+    const select     = document.getElementById('oppFeltAktivitet');
+
+    // Fyll aktivitetsliste
+    select.innerHTML = '<option value="">— Frittstående —</option>';
+    [...aktiviteter]
+      .sort((a, b) => a.dato.localeCompare(b.dato))
+      .forEach(a => {
+        const d   = new Date(a.dato + 'T00:00:00');
+        const opt = document.createElement('option');
+        opt.value       = a.id;
+        opt.textContent = `${a.tittel}  (${d.getDate()}. ${MAANEDER[d.getMonth()]})`;
+        select.appendChild(opt);
+      });
+
+    // Reset frist picker
+    valgtFristValg = 'ingen';
+    document.querySelectorAll('.frist-rad').forEach(r => r.classList.remove('aktiv'));
+    document.querySelector('.frist-rad[data-valg="ingen"]').classList.add('aktiv');
+    document.getElementById('fristEgFelt').classList.remove('vis');
+    document.getElementById('oppFeltFrist').value = '';
+    document.getElementById('fristRelativInfo').style.display = 'none';
+
+    if (id) {
+      const o = oppgaver.find(o => o.id === id);
+      document.getElementById('oppgaveModalTittel').textContent = 'Rediger oppgave';
+      document.getElementById('oppFeltBesk').value  = o.beskrivelse;
+      document.getElementById('oppFeltNotat').value = o.notat || '';
+      select.value = o.aktivitetId || '';
+
+      // Gjenopprett fristvalg
+      if (o.frist) {
+        document.getElementById('oppFeltFrist').value = o.frist;
+        document.querySelectorAll('.frist-rad').forEach(r => r.classList.remove('aktiv'));
+        document.querySelector('.frist-rad[data-valg="egendefinert"]').classList.add('aktiv');
+        document.getElementById('fristEgFelt').classList.add('vis');
+        valgtFristValg = 'egendefinert';
+      }
+      slettKnapp.style.display = 'block';
+    } else {
+      document.getElementById('oppgaveModalTittel').textContent = 'Ny oppgave';
+      document.getElementById('oppFeltBesk').value  = '';
+      document.getElementById('oppFeltNotat').value = '';
+      select.value = '';
+      slettKnapp.style.display = 'none';
+    }
+    document.getElementById('oppgaveModal').classList.add('vis');
+    setTimeout(() => document.getElementById('oppFeltBesk').focus(), 100);
+  }
+
+  function lagreOppgave() {
+    const besk        = document.getElementById('oppFeltBesk').value.trim();
+    const notat       = document.getElementById('oppFeltNotat').value.trim();
+    const aktivitetId = document.getElementById('oppFeltAktivitet').value || null;
+
+    if (!besk) { alert('Tittel er påkrevd.'); return; }
+
+    let frist = '';
+    if (valgtFristValg === 'egendefinert') {
+      frist = document.getElementById('oppFeltFrist').value;
+      if (!frist) { alert('Velg en dato for fristen.'); return; }
+    } else if (valgtFristValg !== 'ingen') {
+      const akt  = aktiviteter.find(a => a.id === aktivitetId);
+      const base = akt ? new Date(akt.dato + 'T00:00:00') : new Date();
+      const dato = regnUtFristDato(valgtFristValg, base);
+      if (dato) frist = dato.toISOString().slice(0, 10);
+    }
+
+    if (redigOppgaveId) {
+      const o = oppgaver.find(o => o.id === redigOppgaveId);
+      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId });
+    } else {
+      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, fullfort: false };
+      oppgaver.push(nyOppgave);
+      // Auto-eksporter til kalender når ny oppgave har en frist
+      if (frist) {
+        lastNedICS(genererICSFraOppgave(nyOppgave), besk.replace(/\s+/g, '_').slice(0, 40) + '.ics');
+      }
+    }
+
+    lagre();
+    lukkModal('oppgaveModal');
+    renderOppgaver();
+  }
+
+  function slettOppgave() {
+    if (!confirm('Slett denne oppgaven?')) return;
+    oppgaver = oppgaver.filter(o => o.id !== redigOppgaveId);
+    lagre();
+    lukkModal('oppgaveModal');
+    renderOppgaver();
+  }
+
+  /* ──────────────────────────────
+     MODAL UTILS
+  ────────────────────────────── */
+  function lukkModal(id) {
+    document.getElementById(id).classList.remove('vis');
+  }
+
+  function oppdaterAktivPanel() {
+    const aktiv = document.querySelector('.panel.aktiv')?.id;
+    if (aktiv === 'panel-kalender') renderKalender();
+    if (aktiv === 'panel-liste')    renderListe();
+    if (aktiv === 'panel-oppgaver') renderOppgaver();
+  }
+
+  // Klikk utenfor modal lukker den
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('vis');
+    });
+  });
+
+  // ESC lukker modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape')
+      document.querySelectorAll('.modal-overlay.vis')
+        .forEach(m => m.classList.remove('vis'));
+  });
+
+  // Enter i tekstfelt lagrer
+  document.getElementById('feltTittel').addEventListener('keydown', e => {
+    if (e.key === 'Enter') lagreAktivitet();
+  });
+  document.getElementById('oppFeltBesk').addEventListener('keydown', e => {
+    if (e.key === 'Enter') lagreOppgave();
+  });
+
+  // Oppdater fristinfo når aktivitet endres
+  document.getElementById('oppFeltAktivitet').addEventListener('change', oppdaterFristInfo);
+
+  /* ──────────────────────────────
+     EKSPORT TIL KALENDER (.ics)
+  ────────────────────────────── */
+  // Generer ICS for en oppgave med fast 1-dag-før-påminnelse (brukes ved auto-eksport)
+  function genererICSFraOppgave(o) {
+    // Sett hendelsen til kl. 07:00 på fristen – TRIGGER:-P1D gir påminnelse kl. 07:00 dagen før
+    const dtstart = `DTSTART;TZID=Europe/Oslo:${o.frist.replace(/-/g, '')}T070000`;
+    const dtend   = `DTEND;TZID=Europe/Oslo:${o.frist.replace(/-/g, '')}T070100`;
+    const now     = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+    let besk = '';
+    if (o.aktivitetId) {
+      const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+      if (akt) besk = `DESCRIPTION:Tilknyttet: ${akt.tittel}`;
+    } else if (o.notat) {
+      besk = `DESCRIPTION:${o.notat.replace(/[\r\n]+/g, '\\n')}`;
+    }
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Laglederen//NO',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      `UID:${o.id}@lagplan`,
+      `DTSTAMP:${now}`,
+      dtstart,
+      dtend,
+      `SUMMARY:${o.beskrivelse}`,
+      besk,
+      'BEGIN:VALARM',
+      'TRIGGER:-P1D',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Påminnelse fra Laglederen',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean).join('\r\n');
+  }
+  let eksportOppgaveId = null;
+  let valgtPaaminnelse = '1dag';
+
+  function åpneEksportModal(id) {
+    eksportOppgaveId = id;
+    const o = oppgaver.find(o => o.id === id);
+    if (!o || !o.frist) return;
+
+    const d = new Date(o.frist + 'T00:00:00');
+    document.getElementById('eksportTittel').textContent = o.beskrivelse;
+    document.getElementById('eksportDato').textContent =
+      'Frist: ' + d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
+
+    valgtPaaminnelse = '1dag';
+    document.querySelectorAll('.paaminnelse-rad').forEach(r => r.classList.remove('aktiv'));
+    document.querySelector('[data-valg="1dag"]').classList.add('aktiv');
+    document.getElementById('egendefinertFelt').classList.remove('vis');
+    document.getElementById('eksportEgDato').value = '';
+
+    document.getElementById('eksportModal').classList.add('vis');
+  }
+
+  function velgPaaminnelse(el) {
+    document.querySelectorAll('.paaminnelse-rad').forEach(r => r.classList.remove('aktiv'));
+    el.classList.add('aktiv');
+    valgtPaaminnelse = el.dataset.valg;
+    const egFelt = document.getElementById('egendefinertFelt');
+    valgtPaaminnelse === 'egendefinert'
+      ? egFelt.classList.add('vis')
+      : egFelt.classList.remove('vis');
+  }
+
+  function eksporterICS() {
+    const o = oppgaver.find(o => o.id === eksportOppgaveId);
+    if (!o) return;
+
+    if (valgtPaaminnelse === 'egendefinert') {
+      const egDato = document.getElementById('eksportEgDato').value;
+      if (!egDato)          { alert('Velg en påminnelsesdato.'); return; }
+      if (egDato >= o.frist){ alert('Påminnelsesdatoen må være før fristen.'); return; }
+    }
+
+    const icsInnhold = genererICS(o);
+    lastNedICS(icsInnhold, o.beskrivelse.replace(/\s+/g, '_').slice(0, 40) + '.ics');
+    lukkModal('eksportModal');
+  }
+
+  function genererICS(o) {
+    const egDato = document.getElementById('eksportEgDato').value;
+
+    let triggerLinje = 'TRIGGER:-P1D';
+    if      (valgtPaaminnelse === '1dag')  triggerLinje = 'TRIGGER:-P1D';
+    else if (valgtPaaminnelse === '3dag')  triggerLinje = 'TRIGGER:-P3D';
+    else if (valgtPaaminnelse === '1uke')  triggerLinje = 'TRIGGER:-P1W';
+    else if (valgtPaaminnelse === '1mnd')  triggerLinje = 'TRIGGER:-P1M';
+    else if (valgtPaaminnelse === 'egendefinert' && egDato) {
+      const fristDato = new Date(o.frist + 'T00:00:00');
+      const pamDato   = new Date(egDato   + 'T00:00:00');
+      const diffDager = Math.round((fristDato - pamDato) / 86400000);
+      triggerLinje = diffDager > 0 ? `TRIGGER:-P${diffDager}D` : 'TRIGGER:-P0D';
+    }
+
+    const dtstart = `DTSTART;VALUE=DATE:${o.frist.replace(/-/g, '')}`;
+    const now     = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+
+    // Finn tilknyttet aktivitet for beskrivelse
+    let besk = '';
+    if (o.aktivitetId) {
+      const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+      if (akt) besk = `DESCRIPTION:Tilknyttet: ${akt.tittel}`;
+    }
+
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Laglederen//NO',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      `UID:${o.id}@lagplan`,
+      `DTSTAMP:${now}`,
+      dtstart,
+      `SUMMARY:${o.beskrivelse}`,
+      besk,
+      'BEGIN:VALARM',
+      triggerLinje,
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Påminnelse fra Laglederen',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean).join('\r\n');
+  }
+
+  function lastNedICS(innhold, filnavn) {
+    const blob = new Blob([innhold], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const el   = document.createElement('a');
+    el.href     = url;
+    el.download = filnavn;
+    document.body.appendChild(el);
+    el.click();
+    document.body.removeChild(el);
+    URL.revokeObjectURL(url);
+  }
+  /* ──────────────────────────────
+     IMPORT / EKSPORT
+  ────────────────────────────── */
+  function eksporterData() {
+    const payload = {
+      versjon: '1.02',
+      eksportert: new Date().toISOString(),
+      aktiviteter,
+      oppgaver
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const el   = document.createElement('a');
+    el.href     = url;
+    el.download = 'laglederen-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(el);
+    el.click();
+    document.body.removeChild(el);
+    URL.revokeObjectURL(url);
+  }
+
+  function importerData(input) {
+    const fil = input.files[0];
+    if (!fil) return;
+    const leser = new FileReader();
+    leser.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!Array.isArray(data.aktiviteter) || !Array.isArray(data.oppgaver)) {
+          alert('Filen ser ikke ut til å være en gyldig Laglederen-eksport.'); return;
+        }
+        const bekreft = confirm(
+          'Dette vil erstatte alle eksisterende aktiviteter og oppgaver med dataene fra filen.\n\nFortsette?'
+        );
+        if (!bekreft) return;
+        aktiviteter = data.aktiviteter;
+        oppgaver    = data.oppgaver;
+        lagre();
+        oppdaterAktivPanel();
+        alert('✓ Data importert.');
+      } catch {
+        alert('Kunne ikke lese filen. Sjekk at det er en gyldig .json-fil.');
+      }
+    };
+    leser.readAsText(fil);
+    input.value = ''; // reset så samme fil kan importeres igjen
+  }
+
+  /* ──────────────────────────────
+     INIT
+  ────────────────────────────── */
+  function init() {
+    hent();
+    renderKalender();
+  }
+
+  init();
+</script>
+</body>
+</html>
