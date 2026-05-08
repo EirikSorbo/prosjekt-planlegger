@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MishMash WP4</title>
   <meta name="theme-color" content="#2e2b45">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -729,12 +729,13 @@
       border-radius: var(--rs);
       padding: 9px 11px;
       font-family: 'Nunito', sans-serif;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
       color: var(--tekst);
       background: var(--bg);
       outline: none;
       transition: border-color .15s, background .15s;
+      -webkit-text-size-adjust: 100%;
     }
     .felt input:focus,
     .felt select:focus,
@@ -2280,6 +2281,11 @@
     hent();
     renderKalender();
     oppdaterForfaltBadge();
+
+    // iOS krever notification-tillatelse for at setAppBadge() skal vise tall på hjemskjerm-ikonet
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   }
 
   init();
