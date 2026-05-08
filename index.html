@@ -529,7 +529,37 @@
     .filter-pill.fullforte      { background: #f0f0f0; color: #888; border-color: #ccc; }
     .filter-pill.fullforte.aktiv{ background: #999;    color: white; border-color: #999; }
 
-    /* ── Beskrivelse-knapp og panel ── */
+    /* ── Sveip for å slette ── */
+    .sveip-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--r);
+    }
+    .sveip-container + .besk-panel { border-radius: 0 0 var(--r) var(--r); }
+    .sveip-bakgrunn {
+      position: absolute;
+      inset: 0;
+      background: #c0392b;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 22px;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      letter-spacing: 0.3px;
+      pointer-events: none;
+      border-radius: var(--r);
+    }
+    .sveip-innhold {
+      position: relative;
+      background: var(--hvit);
+      transition: transform 0.2s ease;
+      will-change: transform;
+      border-radius: var(--r);
+    }
+    .sveip-innhold.ingen-trans { transition: none; }
     .info-knapp {
       width: 28px;
       height: 28px;
@@ -903,83 +933,6 @@
     }
     .frist-eg-felt.vis { display: flex; }
 
-    /* ── Eksport modal ── */
-    .eksport-aktivitet-info {
-      background: var(--grønn-lys);
-      border: 1px solid var(--grønn-mid);
-      border-radius: var(--rs);
-      padding: 10px 14px;
-      color: var(--grønn-mørk);
-    }
-    .eksport-aktivitet-info strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-    }
-    .eksport-aktivitet-info span {
-      font-size: 12px;
-      font-weight: 500;
-      opacity: 0.8;
-    }
-
-    .paaminnelse-valg {
-      border: 1px solid var(--kant);
-      border-radius: var(--rs);
-      overflow: hidden;
-      background: var(--bg);
-    }
-
-    .paaminnelse-rad {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 14px;
-      cursor: pointer;
-      border-bottom: 1px solid var(--kant);
-      transition: background .1s;
-    }
-    .paaminnelse-rad:last-child { border-bottom: none; }
-    .paaminnelse-rad:hover { background: var(--grønn-lys); }
-
-    .paaminnelse-sirkel {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid var(--kant);
-      flex-shrink: 0;
-      transition: all .15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .paaminnelse-rad.aktiv .paaminnelse-sirkel {
-      border-color: var(--grønn);
-      background: var(--grønn);
-    }
-    .paaminnelse-rad.aktiv .paaminnelse-sirkel::after {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: white;
-    }
-
-    .paaminnelse-tekst {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--tekst);
-    }
-    .paaminnelse-rad.aktiv .paaminnelse-tekst {
-      color: var(--grønn-mørk);
-      font-weight: 700;
-    }
-
-    .egendefinert-felt {
-      margin-top: 10px;
-      display: none;
-    }
-    .egendefinert-felt.vis { display: flex; flex-direction: column; gap: 5px; }
-
     /* ── Versjon ── */
     .versjon {
       text-align: center;
@@ -1200,57 +1153,6 @@
   </div>
 </div>
 
-<!-- Modal: Eksporter til kalender -->
-<div class="modal-overlay" id="eksportModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-tittel">Legg til i kalender</div>
-      <button class="lukk-knapp" onclick="lukkModal('eksportModal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="eksport-aktivitet-info" id="eksportAktivitetInfo">
-        <strong id="eksportTittel"></strong>
-        <span id="eksportDato"></span>
-      </div>
-      <div class="felt">
-        <label>Påminnelse</label>
-        <div class="paaminnelse-valg">
-          <div class="paaminnelse-rad aktiv" data-valg="1dag" onclick="velgPaaminnelse(this)">
-            <div class="paaminnelse-sirkel"></div>
-            <div class="paaminnelse-tekst">1 dag før</div>
-          </div>
-          <div class="paaminnelse-rad" data-valg="3dag" onclick="velgPaaminnelse(this)">
-            <div class="paaminnelse-sirkel"></div>
-            <div class="paaminnelse-tekst">3 dager før</div>
-          </div>
-          <div class="paaminnelse-rad" data-valg="1uke" onclick="velgPaaminnelse(this)">
-            <div class="paaminnelse-sirkel"></div>
-            <div class="paaminnelse-tekst">1 uke før</div>
-          </div>
-          <div class="paaminnelse-rad" data-valg="1mnd" onclick="velgPaaminnelse(this)">
-            <div class="paaminnelse-sirkel"></div>
-            <div class="paaminnelse-tekst">1 måned før</div>
-          </div>
-          <div class="paaminnelse-rad" data-valg="egendefinert" onclick="velgPaaminnelse(this)">
-            <div class="paaminnelse-sirkel"></div>
-            <div class="paaminnelse-tekst">Egendefinert dato</div>
-          </div>
-        </div>
-        <div class="egendefinert-felt" id="egendefinertFelt">
-          <label>Påminnelsesdato</label>
-          <input type="date" id="eksportEgDato" />
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div></div>
-      <div class="knapp-gruppe">
-        <button class="knapp-sek" onclick="lukkModal('eksportModal')">Avbryt</button>
-        <button class="knapp-primær" onclick="eksporterICS()">Eksporter &#8594;</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
   /* ──────────────────────────────
@@ -1502,13 +1404,7 @@
           info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
             ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
 
-          const redigKnapp = document.createElement('button');
-          redigKnapp.className = 'ikon-knapp';
-          redigKnapp.innerHTML = redigIkon();
-          redigKnapp.onclick = () => åpneOppgaveModal(o.id);
-
           kort.appendChild(info);
-          kort.appendChild(redigKnapp);
           listEl.appendChild(kort);
         });
       }
@@ -1613,12 +1509,68 @@
   /* ──────────────────────────────
      UTILS
   ────────────────────────────── */
-  function redigIkon() {
-    return '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 1.5L11.5 3.5L4.5 10.5H2.5V8.5L9.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 3L10 5" stroke="currentColor" stroke-width="1.3"/></svg>';
+  /* ──────────────────────────────
+     SVEIP FOR Å SLETTE
+  ────────────────────────────── */
+  function leggTilSveipSlett(container, innhold, onSlett) {
+    const TERSKEL = 110; // px for å trigge sletting
+    let startX = 0, startY = 0, dx = 0, sveiper = false, retningBestemt = false;
+
+    innhold.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dx = 0; sveiper = false; retningBestemt = false;
+      innhold.classList.add('ingen-trans');
+    }, { passive: true });
+
+    innhold.addEventListener('touchmove', e => {
+      const curX = e.touches[0].clientX;
+      const curY = e.touches[0].clientY;
+      const diffX = curX - startX;
+      const diffY = curY - startY;
+
+      if (!retningBestemt) {
+        if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) return;
+        retningBestemt = true;
+        sveiper = Math.abs(diffX) > Math.abs(diffY) && diffX < 0;
+      }
+      if (!sveiper) return;
+      e.preventDefault();
+      dx = Math.min(0, diffX);
+      innhold.style.transform = `translateX(${dx}px)`;
+    }, { passive: false });
+
+    innhold.addEventListener('touchend', () => {
+      innhold.classList.remove('ingen-trans');
+      if (dx < -TERSKEL) {
+        // Animér ut og slett
+        innhold.style.transform = `translateX(-100%)`;
+        innhold.style.opacity = '0';
+        container.style.maxHeight = container.offsetHeight + 'px';
+        container.style.transition = 'max-height 0.25s ease, opacity 0.25s';
+        setTimeout(() => {
+          container.style.maxHeight = '0';
+          container.style.overflow = 'hidden';
+          container.style.opacity = '0';
+        }, 150);
+        setTimeout(onSlett, 380);
+      } else {
+        innhold.style.transform = 'translateX(0)';
+        dx = 0;
+      }
+    });
   }
 
   function lagAktivitetKort(a, fraKalender = false) {
+    const ytre = document.createElement('div');
+    ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
+
+    const slettBg = document.createElement('div');
+    slettBg.className = 'sveip-bakgrunn';
+    slettBg.textContent = 'Slett';
+
     const wrapper = document.createElement('div');
+    wrapper.className = 'sveip-innhold';
 
     const kort = document.createElement('div');
     kort.className = 'aktivitet-kort hover-' + a.type;
@@ -1685,7 +1637,15 @@
       wrapper.appendChild(kort);
     }
 
-    return wrapper;
+    ytre.appendChild(slettBg);
+    ytre.appendChild(wrapper);
+    leggTilSveipSlett(ytre, wrapper, () => {
+      aktiviteter = aktiviteter.filter(x => x.id !== a.id);
+      oppgaver.forEach(o => { if (o.aktivitetId === a.id) o.aktivitetId = null; });
+      lagre();
+      oppdaterAktivPanel();
+    });
+    return ytre;
   }
 
   /* ──────────────────────────────
@@ -1770,7 +1730,15 @@
         if (akt) stripeKlasse = 'stripe-' + akt.type;
       }
 
+      const ytre = document.createElement('div');
+      ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
+
+      const slettBg = document.createElement('div');
+      slettBg.className = 'sveip-bakgrunn';
+      slettBg.textContent = 'Slett';
+
       const wrapper = document.createElement('div');
+      wrapper.className = 'sveip-innhold';
 
       const kort = document.createElement('div');
       kort.className = 'oppgave-kort ' + stripeKlasse + (o.fullfort ? ' fullfort' : '');
@@ -1831,7 +1799,14 @@
         wrapper.appendChild(kort);
       }
 
-      container.appendChild(wrapper);
+      ytre.appendChild(slettBg);
+      ytre.appendChild(wrapper);
+      leggTilSveipSlett(ytre, wrapper, () => {
+        oppgaver = oppgaver.filter(x => x.id !== o.id);
+        lagre();
+        renderOppgaver();
+      });
+      container.appendChild(ytre);
     });
   }
 
@@ -1849,6 +1824,7 @@
 
     if (id) {
       const a = aktiviteter.find(a => a.id === id);
+      if (!a) return;
       document.getElementById('aktivitetModalTittel').textContent = 'Rediger aktivitet';
       document.getElementById('feltTittel').value  = a.tittel;
       document.getElementById('feltType').value    = a.type;
@@ -2027,10 +2003,6 @@
     } else {
       const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, fullfort: false };
       oppgaver.push(nyOppgave);
-      // Auto-eksporter til kalender når ny oppgave har en frist
-      if (frist) {
-        lastNedICS(genererICSFraOppgave(nyOppgave), besk.replace(/\s+/g, '_').slice(0, 40) + '.ics');
-      }
     }
 
     lagre();
@@ -2085,147 +2057,6 @@
   // Oppdater fristinfo når aktivitet endres
   document.getElementById('oppFeltAktivitet').addEventListener('change', oppdaterFristInfo);
 
-  /* ──────────────────────────────
-     EKSPORT TIL KALENDER (.ics)
-  ────────────────────────────── */
-  // Generer ICS for en oppgave med fast 1-dag-før-påminnelse (brukes ved auto-eksport)
-  function genererICSFraOppgave(o) {
-    // Sett hendelsen til kl. 07:00 på fristen – TRIGGER:-P1D gir påminnelse kl. 07:00 dagen før
-    const dtstart = `DTSTART;TZID=Europe/Oslo:${o.frist.replace(/-/g, '')}T070000`;
-    const dtend   = `DTEND;TZID=Europe/Oslo:${o.frist.replace(/-/g, '')}T070100`;
-    const now     = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
-    let besk = '';
-    if (o.aktivitetId) {
-      const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-      if (akt) besk = `DESCRIPTION:Tilknyttet: ${akt.tittel}`;
-    } else if (o.notat) {
-      besk = `DESCRIPTION:${o.notat.replace(/[\r\n]+/g, '\\n')}`;
-    }
-    return [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//MishMash WP4//NO',
-      'CALSCALE:GREGORIAN',
-      'BEGIN:VEVENT',
-      `UID:${o.id}@lagplan`,
-      `DTSTAMP:${now}`,
-      dtstart,
-      dtend,
-      `SUMMARY:${o.beskrivelse}`,
-      besk,
-      'BEGIN:VALARM',
-      'TRIGGER:-P1D',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:Påminnelse fra MishMash WP4',
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].filter(Boolean).join('\r\n');
-  }
-  let eksportOppgaveId = null;
-  let valgtPaaminnelse = '1dag';
-
-  function åpneEksportModal(id) {
-    eksportOppgaveId = id;
-    const o = oppgaver.find(o => o.id === id);
-    if (!o || !o.frist) return;
-
-    const d = new Date(o.frist + 'T00:00:00');
-    document.getElementById('eksportTittel').textContent = o.beskrivelse;
-    document.getElementById('eksportDato').textContent =
-      'Frist: ' + d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
-
-    valgtPaaminnelse = '1dag';
-    document.querySelectorAll('.paaminnelse-rad').forEach(r => r.classList.remove('aktiv'));
-    document.querySelector('.paaminnelse-rad[data-valg="1dag"]').classList.add('aktiv');
-    document.getElementById('egendefinertFelt').classList.remove('vis');
-    document.getElementById('eksportEgDato').value = '';
-
-    document.getElementById('eksportModal').classList.add('vis');
-  }
-
-  function velgPaaminnelse(el) {
-    document.querySelectorAll('.paaminnelse-rad').forEach(r => r.classList.remove('aktiv'));
-    el.classList.add('aktiv');
-    valgtPaaminnelse = el.dataset.valg;
-    const egFelt = document.getElementById('egendefinertFelt');
-    valgtPaaminnelse === 'egendefinert'
-      ? egFelt.classList.add('vis')
-      : egFelt.classList.remove('vis');
-  }
-
-  function eksporterICS() {
-    const o = oppgaver.find(o => o.id === eksportOppgaveId);
-    if (!o) return;
-
-    if (valgtPaaminnelse === 'egendefinert') {
-      const egDato = document.getElementById('eksportEgDato').value;
-      if (!egDato)          { alert('Velg en påminnelsesdato.'); return; }
-      if (egDato >= o.frist){ alert('Påminnelsesdatoen må være før fristen.'); return; }
-    }
-
-    const icsInnhold = genererICS(o);
-    lastNedICS(icsInnhold, o.beskrivelse.replace(/\s+/g, '_').slice(0, 40) + '.ics');
-    lukkModal('eksportModal');
-  }
-
-  function genererICS(o) {
-    const egDato = document.getElementById('eksportEgDato').value;
-
-    let triggerLinje = 'TRIGGER:-P1D';
-    if      (valgtPaaminnelse === '1dag')  triggerLinje = 'TRIGGER:-P1D';
-    else if (valgtPaaminnelse === '3dag')  triggerLinje = 'TRIGGER:-P3D';
-    else if (valgtPaaminnelse === '1uke')  triggerLinje = 'TRIGGER:-P1W';
-    else if (valgtPaaminnelse === '1mnd')  triggerLinje = 'TRIGGER:-P1M';
-    else if (valgtPaaminnelse === 'egendefinert' && egDato) {
-      const fristDato = new Date(o.frist + 'T00:00:00');
-      const pamDato   = new Date(egDato   + 'T00:00:00');
-      const diffDager = Math.round((fristDato - pamDato) / 86400000);
-      triggerLinje = diffDager > 0 ? `TRIGGER:-P${diffDager}D` : 'TRIGGER:-P0D';
-    }
-
-    const dtstart = `DTSTART;VALUE=DATE:${o.frist.replace(/-/g, '')}`;
-    const now     = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
-
-    // Finn tilknyttet aktivitet for beskrivelse
-    let besk = '';
-    if (o.aktivitetId) {
-      const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-      if (akt) besk = `DESCRIPTION:Tilknyttet: ${akt.tittel}`;
-    }
-
-    return [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//MishMash WP4//NO',
-      'CALSCALE:GREGORIAN',
-      'BEGIN:VEVENT',
-      `UID:${o.id}@lagplan`,
-      `DTSTAMP:${now}`,
-      dtstart,
-      `SUMMARY:${o.beskrivelse}`,
-      besk,
-      'BEGIN:VALARM',
-      triggerLinje,
-      'ACTION:DISPLAY',
-      'DESCRIPTION:Påminnelse fra MishMash WP4',
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].filter(Boolean).join('\r\n');
-  }
-
-  function lastNedICS(innhold, filnavn) {
-    const blob = new Blob([innhold], { type: 'text/calendar;charset=utf-8' });
-    const url  = URL.createObjectURL(blob);
-    const el   = document.createElement('a');
-    el.href     = url;
-    el.download = filnavn;
-    document.body.appendChild(el);
-    el.click();
-    document.body.removeChild(el);
-    URL.revokeObjectURL(url);
-  }
   /* ──────────────────────────────
      IMPORT / EKSPORT
   ────────────────────────────── */
