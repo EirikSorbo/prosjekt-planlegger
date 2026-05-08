@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MishMash WP4</title>
-  <meta name="theme-color" content="#4a2875">
+  <meta name="theme-color" content="#2e2b45">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MishMash WP4">
@@ -68,18 +68,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --grønn:       #6b3fa0;
-      --grønn-lys:   #f0ebf8;
-      --grønn-mørk:  #4a2875;
-      --grønn-mid:   #c4aee8;
-      --tekst:       #1a1525;
-      --tekst-sek:   #7560a0;
-      --kant:        #ddd0f0;
-      --bg:          #f5f2fa;
+      --grønn:       #9490d4;
+      --grønn-lys:   #eeedfb;
+      --grønn-mørk:  #2e2b45;
+      --grønn-mid:   #c8c6ec;
+      --tekst:       #2e2b45;
+      --tekst-sek:   #7b78b0;
+      --kant:        #d4d2ee;
+      --bg:          #f3f2fb;
       --hvit:        #ffffff;
-      --kamp:        #d94f4f;
-      --cup:         #7f5cc0;
-      --dugnad:      #d48826;
       --r:           12px;
       --rs:          8px;
     }
@@ -274,10 +271,10 @@
       transition: background .1s;
     }
     .aktivitet-kort:last-child { border-bottom: none; }
-    .aktivitet-kort.hover-ai:hover    { background: #e8f0fa; }
-    .aktivitet-kort.hover-seed:hover  { background: #e8f8ee; }
-    .aktivitet-kort.hover-admin:hover { background: #fdf3e3; }
-    .aktivitet-kort.hover-annet:hover { background: #f0ebf8; }
+    .aktivitet-kort.hover-ai:hover    { background: #eeedfb; }
+    .aktivitet-kort.hover-seed:hover  { background: #ebf8ef; }
+    .aktivitet-kort.hover-admin:hover { background: #eae9f8; }
+    .aktivitet-kort.hover-annet:hover { background: #e8e7f0; }
 
     .type-badge {
       padding: 3px 10px;
@@ -291,10 +288,10 @@
       color: white;
       flex-shrink: 0;
     }
-    .type-badge.ai     { background: #3a7abf; }
-    .type-badge.seed   { background: #2da85d; }
-    .type-badge.admin  { background: #d48826; }
-    .type-badge.annet  { background: #8e6bbf; }
+    .type-badge.ai     { background: #9490d4; }
+    .type-badge.seed   { background: #72c088; }
+    .type-badge.admin  { background: #5e5a9c; }
+    .type-badge.annet  { background: #2e2b45; }
 
     .aktivitet-info { flex: 1; min-width: 0; }
     .aktivitet-tittel {
@@ -519,16 +516,16 @@
     .filter-pill.aktiv { background: var(--grønn); color: white; border-color: var(--grønn); }
 
     /* Kategori-farger – alltid synlig (border + tekst), fylt når aktiv */
-    .filter-pill.farge-ai     { border-color: #3a7abf;  color: #3a7abf; }
-    .filter-pill.farge-seed   { border-color: #2da85d;  color: #2da85d; }
-    .filter-pill.farge-admin  { border-color: #d48826;  color: #d48826; }
-    .filter-pill.farge-annet  { border-color: #8e6bbf;  color: #8e6bbf; }
-    .filter-pill.farge-generelt{ border-color: #64b5a0; color: #3d8c78; }
-    .filter-pill.aktiv-ai     { background: #3a7abf;    color: white; border-color: #3a7abf; }
-    .filter-pill.aktiv-seed   { background: #2da85d;    color: white; border-color: #2da85d; }
-    .filter-pill.aktiv-admin  { background: #d48826;    color: white; border-color: #d48826; }
-    .filter-pill.aktiv-annet  { background: #8e6bbf;    color: white; border-color: #8e6bbf; }
-    .filter-pill.aktiv-generelt{ background: #64b5a0;   color: white; border-color: #64b5a0; }
+    .filter-pill.farge-ai     { border-color: #9490d4;  color: #9490d4; }
+    .filter-pill.farge-seed   { border-color: #72c088;  color: #72c088; }
+    .filter-pill.farge-admin  { border-color: #5e5a9c;  color: #5e5a9c; }
+    .filter-pill.farge-annet  { border-color: #2e2b45;  color: #2e2b45; }
+    .filter-pill.farge-generelt{ border-color: #7b78b0; color: #7b78b0; }
+    .filter-pill.aktiv-ai     { background: #9490d4;    color: white; border-color: #9490d4; }
+    .filter-pill.aktiv-seed   { background: #72c088;    color: white; border-color: #72c088; }
+    .filter-pill.aktiv-admin  { background: #5e5a9c;    color: white; border-color: #5e5a9c; }
+    .filter-pill.aktiv-annet  { background: #2e2b45;    color: white; border-color: #2e2b45; }
+    .filter-pill.aktiv-generelt{ background: #7b78b0;   color: white; border-color: #7b78b0; }
     .filter-pill.fullforte      { background: #f0f0f0; color: #888; border-color: #ccc; }
     .filter-pill.fullforte.aktiv{ background: #999;    color: white; border-color: #999; }
 
@@ -552,17 +549,17 @@
       flex-shrink: 0;
       line-height: 1;
     }
-    .info-knapp.knapp-ai    { border-color: #3a7abf; color: #3a7abf; }
-    .info-knapp.knapp-seed  { border-color: #2da85d; color: #2da85d; }
-    .info-knapp.knapp-admin { border-color: #d48826; color: #d48826; }
-    .info-knapp.knapp-annet { border-color: #8e6bbf; color: #8e6bbf; }
-    .info-knapp.knapp-fri   { border-color: #64b5a0; color: #3d8c78; }
+    .info-knapp.knapp-ai    { border-color: #9490d4; color: #9490d4; }
+    .info-knapp.knapp-seed  { border-color: #72c088; color: #72c088; }
+    .info-knapp.knapp-admin { border-color: #5e5a9c; color: #5e5a9c; }
+    .info-knapp.knapp-annet { border-color: #2e2b45; color: #2e2b45; }
+    .info-knapp.knapp-fri   { border-color: #7b78b0; color: #7b78b0; }
     .info-knapp:hover { opacity: 0.75; }
-    .info-knapp.aktiv.knapp-ai    { background: #3a7abf; color: white; }
-    .info-knapp.aktiv.knapp-seed  { background: #2da85d; color: white; }
-    .info-knapp.aktiv.knapp-admin { background: #d48826; color: white; }
-    .info-knapp.aktiv.knapp-annet { background: #8e6bbf; color: white; }
-    .info-knapp.aktiv.knapp-fri   { background: #64b5a0; color: white; }
+    .info-knapp.aktiv.knapp-ai    { background: #9490d4; color: white; }
+    .info-knapp.aktiv.knapp-seed  { background: #72c088; color: white; }
+    .info-knapp.aktiv.knapp-admin { background: #5e5a9c; color: white; }
+    .info-knapp.aktiv.knapp-annet { background: #2e2b45; color: white; }
+    .info-knapp.aktiv.knapp-fri   { background: #7b78b0; color: white; }
 
     .besk-panel {
       display: none;
@@ -585,17 +582,17 @@
       transition: background .1s;
       border-left: 4px solid transparent;
     }
-    .oppgave-kort.stripe-ai     { border-left-color: #3a7abf; }
-    .oppgave-kort.stripe-seed   { border-left-color: #2da85d; }
-    .oppgave-kort.stripe-admin  { border-left-color: #d48826; }
-    .oppgave-kort.stripe-annet  { border-left-color: #8e6bbf; }
-    .oppgave-kort.stripe-fri    { border-left-color: #64b5a0; }
+    .oppgave-kort.stripe-ai     { border-left-color: #9490d4; }
+    .oppgave-kort.stripe-seed   { border-left-color: #72c088; }
+    .oppgave-kort.stripe-admin  { border-left-color: #5e5a9c; }
+    .oppgave-kort.stripe-annet  { border-left-color: #2e2b45; }
+    .oppgave-kort.stripe-fri    { border-left-color: #7b78b0; }
     .oppgave-kort:last-child { border-bottom: none; }
-    .oppgave-kort.stripe-ai:hover     { background: #e8f0fa; }
-    .oppgave-kort.stripe-seed:hover   { background: #e8f8ee; }
-    .oppgave-kort.stripe-admin:hover  { background: #fdf3e3; }
-    .oppgave-kort.stripe-annet:hover  { background: #f0ebf8; }
-    .oppgave-kort.stripe-fri:hover    { background: #e8f6f2; }
+    .oppgave-kort.stripe-ai:hover     { background: #eeedfb; }
+    .oppgave-kort.stripe-seed:hover   { background: #ebf8ef; }
+    .oppgave-kort.stripe-admin:hover  { background: #eae9f8; }
+    .oppgave-kort.stripe-annet:hover  { background: #e8e7f0; }
+    .oppgave-kort.stripe-fri:hover    { background: #eeedfb; }
     .oppgave-kort.fullfort { opacity: 0.55; }
 
     .checkbox {
@@ -821,10 +818,10 @@
       flex-shrink: 0;
     }
     .oppgave-badge:hover { opacity: 0.7; }
-    .oppgave-badge.badge-ai    { border-color: #3a7abf; color: #3a7abf; }
-    .oppgave-badge.badge-seed  { border-color: #2da85d; color: #2da85d; }
-    .oppgave-badge.badge-admin { border-color: #d48826; color: #d48826; }
-    .oppgave-badge.badge-annet { border-color: #8e6bbf; color: #8e6bbf; }
+    .oppgave-badge.badge-ai    { border-color: #9490d4; color: #9490d4; }
+    .oppgave-badge.badge-seed  { border-color: #72c088; color: #72c088; }
+    .oppgave-badge.badge-admin { border-color: #5e5a9c; color: #5e5a9c; }
+    .oppgave-badge.badge-annet { border-color: #2e2b45; color: #2e2b45; }
 
     /* ── Tilknyttet-chip: følger aktivitetstype ── */
     .tilknyttet-chip {
@@ -838,11 +835,11 @@
       border: 1px solid transparent;
       color: white;
     }
-    .tilknyttet-chip.chip-ai    { background: #3a7abf; border-color: #3a7abf; }
-    .tilknyttet-chip.chip-seed  { background: #2da85d; border-color: #2da85d; }
-    .tilknyttet-chip.chip-admin { background: #d48826; border-color: #d48826; }
-    .tilknyttet-chip.chip-annet { background: #8e6bbf; border-color: #8e6bbf; }
-    .tilknyttet-chip.chip-fri   { background: #64b5a0; border-color: #64b5a0; }
+    .tilknyttet-chip.chip-ai    { background: #9490d4; border-color: #9490d4; }
+    .tilknyttet-chip.chip-seed  { background: #72c088; border-color: #72c088; }
+    .tilknyttet-chip.chip-admin { background: #5e5a9c; border-color: #5e5a9c; }
+    .tilknyttet-chip.chip-annet { background: #2e2b45; border-color: #2e2b45; }
+    .tilknyttet-chip.chip-fri   { background: #7b78b0; border-color: #7b78b0; }
 
     /* ── Frist-velger i oppgavemodal ── */
     .frist-valg {
@@ -1270,10 +1267,10 @@
   let visMaaned        = new Date().getMonth();
 
   const TYPER = {
-    ai:    { farge: '#3a7abf', tekst: 'AI Literacy' },
-    seed:  { farge: '#2da85d', tekst: 'Seed funding' },
-    admin: { farge: '#d48826', tekst: 'Administrasjon' },
-    annet: { farge: '#8e6bbf', tekst: 'Annet' }
+    ai:    { farge: '#9490d4', tekst: 'AI Literacy' },
+    seed:  { farge: '#72c088', tekst: 'Seed funding' },
+    admin: { farge: '#5e5a9c', tekst: 'Administrasjon' },
+    annet: { farge: '#2e2b45', tekst: 'Annet' }
   };
 
   const MAANEDER = [
@@ -1410,7 +1407,7 @@
       if (dagOpp.length > 0) {
         const p = document.createElement('div');
         p.className = 'prikk';
-        p.style.background = '#d48826';
+        p.style.background = '#7b78b0';
         p.title = dagOpp.length + ' oppgave(r) med frist';
         rad.appendChild(p);
       }
