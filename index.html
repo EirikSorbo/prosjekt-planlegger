@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MishMash WP4">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234a2875'/%3E%3Ctext x='50' y='44' font-size='26' text-anchor='middle' dominant-baseline='middle' font-family='Arial,sans-serif' font-weight='bold' fill='white'%3EWP%3C/text%3E%3Ctext x='50' y='74' font-size='26' text-anchor='middle' dominant-baseline='middle' font-family='Arial,sans-serif' font-weight='bold' fill='white'%3E4%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='white'/%3E%3Ccircle cx='38' cy='50' r='27' fill='%239490d4'/%3E%3Ccircle cx='62' cy='50' r='27' fill='%23b4e8a8'/%3E%3CclipPath id='cp'%3E%3Ccircle cx='62' cy='50' r='27'/%3E%3C/clipPath%3E%3Ccircle cx='38' cy='50' r='27' fill='%232e2b45' clip-path='url(%23cp)'/%3E%3Ccircle cx='38' cy='50' r='27' fill='none' stroke='%236860b0' stroke-width='1'/%3E%3Ccircle cx='62' cy='50' r='27' fill='none' stroke='%236ca060' stroke-width='1'/%3E%3C/svg%3E" type="image/svg+xml">
   <link rel="apple-touch-icon" href="">
   <script>
     window.addEventListener('load', function() {
@@ -16,6 +16,8 @@
       const c = document.createElement('canvas');
       c.width = c.height = s;
       const ctx = c.getContext('2d');
+
+      // Rounded white background
       const r = 115;
       ctx.beginPath();
       ctx.moveTo(r, 0); ctx.lineTo(s-r, 0);
@@ -27,15 +29,36 @@
       ctx.lineTo(0, r);
       ctx.quadraticCurveTo(0, 0, r, 0);
       ctx.closePath();
-      ctx.fillStyle = '#4a2875';
-      ctx.fill();
       ctx.fillStyle = 'white';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = 'bold 170px sans-serif';
-      ctx.fillText('WP', s/2, s/2 - 95);
-      ctx.font = 'bold 180px sans-serif';
-      ctx.fillText('4', s/2, s/2 + 100);
+      ctx.fill();
+
+      // Circle centers: pair centered at s/2=256, separation = radius * 1.15
+      const cr = 138; // circle radius
+      const sep = Math.round(cr * 1.15); // ~159
+      const lx = s/2 - sep/2, rx = s/2 + sep/2, cy = s/2;
+
+      // Purple circle
+      ctx.beginPath(); ctx.arc(lx, cy, cr, 0, Math.PI*2);
+      ctx.fillStyle = '#9490d4'; ctx.fill();
+
+      // Green circle
+      ctx.beginPath(); ctx.arc(rx, cy, cr, 0, Math.PI*2);
+      ctx.fillStyle = '#b4e8a8'; ctx.fill();
+
+      // Dark intersection (clip to right circle, draw left)
+      ctx.save();
+      ctx.beginPath(); ctx.arc(rx, cy, cr, 0, Math.PI*2); ctx.clip();
+      ctx.beginPath(); ctx.arc(lx, cy, cr, 0, Math.PI*2);
+      ctx.fillStyle = '#2e2b45'; ctx.fill();
+      ctx.restore();
+
+      // Circle borders
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(lx, cy, cr, 0, Math.PI*2);
+      ctx.strokeStyle = '#6860b0'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(rx, cy, cr, 0, Math.PI*2);
+      ctx.strokeStyle = '#6ca060'; ctx.stroke();
+
       const link = document.querySelector('link[rel="apple-touch-icon"]');
       if (link) link.href = c.toDataURL('image/png');
     });
@@ -114,6 +137,9 @@
       color: var(--grønn);
       letter-spacing: -0.3px;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 7px;
       font-variant-numeric: lining-nums;
       font-feature-settings: "lnum" 1;
     }
@@ -972,6 +998,20 @@
 
 <header>
   <div class="logo">
+    <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+      <defs>
+        <clipPath id="hdrInt"><circle cx="18" cy="15" r="9"/></clipPath>
+        <clipPath id="hdrBox"><rect width="30" height="30" rx="6"/></clipPath>
+      </defs>
+      <g clip-path="url(#hdrBox)">
+        <rect width="30" height="30" fill="white"/>
+        <circle cx="12" cy="15" r="9" fill="#9490d4"/>
+        <circle cx="18" cy="15" r="9" fill="#b4e8a8"/>
+        <circle cx="12" cy="15" r="9" fill="#2e2b45" clip-path="url(#hdrInt)"/>
+        <circle cx="12" cy="15" r="9" fill="none" stroke="#6860b0" stroke-width="0.8"/>
+        <circle cx="18" cy="15" r="9" fill="none" stroke="#6ca060" stroke-width="0.8"/>
+      </g>
+    </svg>
     MishMash WP4
   </div>
   <div class="header-handlinger">
@@ -1459,7 +1499,7 @@
             metaHtml += `<span class="frist-tekst ${forfalt ? 'forfalt' : ''}">
               ${forfalt ? '⚠ Forfalt: ' : '📅 '}${fristStr}</span>`;
           }
-          if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">⚽ ${akt.tittel}</span>`;
+          if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">↗ ${akt.tittel}</span>`;
 
           info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
             ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
@@ -1756,7 +1796,7 @@
       }
       if (o.aktivitetId) {
         const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">⚽ ${akt.tittel}</span>`;
+        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">↗ ${akt.tittel}</span>`;
       }
 
       info.innerHTML = `
@@ -1799,7 +1839,7 @@
 
   function toggleOppgave(id) {
     const o = oppgaver.find(o => o.id === id);
-    if (o) { o.fullfort = !o.fullfort; lagre(); renderOppgaver(); oppdaterForfaltBadge(); }
+    if (o) { o.fullfort = !o.fullfort; lagre(); renderOppgaver(); }
   }
 
   /* ──────────────────────────────
@@ -2099,7 +2139,7 @@
 
     valgtPaaminnelse = '1dag';
     document.querySelectorAll('.paaminnelse-rad').forEach(r => r.classList.remove('aktiv'));
-    document.querySelector('[data-valg="1dag"]').classList.add('aktiv');
+    document.querySelector('.paaminnelse-rad[data-valg="1dag"]').classList.add('aktiv');
     document.getElementById('egendefinertFelt').classList.remove('vis');
     document.getElementById('eksportEgDato').value = '';
 
