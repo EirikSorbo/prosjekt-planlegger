@@ -110,12 +110,12 @@
     .logo {
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: 19px;
+      font-size: 13px;
       color: var(--grønn);
       letter-spacing: -0.3px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      white-space: nowrap;
+      font-variant-numeric: lining-nums;
+      font-feature-settings: "lnum" 1;
     }
 
     .logo-ikon {
@@ -399,6 +399,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 3px;
+      justify-content: center;
     }
 
     .prikk {
@@ -510,16 +511,17 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      border: 2px solid var(--kant);
+      border: 1px solid var(--kant);
       background: var(--hvit);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--tekst-sek);
-      font-size: 12px;
-      font-weight: 800;
-      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      font-style: italic;
+      font-family: Georgia, serif;
       transition: all .15s;
       flex-shrink: 0;
       line-height: 1;
@@ -777,26 +779,26 @@
 
     /* ── Oppgave-indikator på aktivitetskort ── */
     .oppgave-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid;
+      background: var(--hvit);
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 11px;
+      justify-content: center;
+      font-size: 14px;
       font-weight: 700;
-      font-family: 'Syne', sans-serif;
-      border: 1px solid transparent;
+      font-family: Georgia, serif;
       cursor: pointer;
       transition: opacity .15s;
       flex-shrink: 0;
-      white-space: nowrap;
-      color: white;
     }
-    .oppgave-badge:hover { opacity: 0.8; }
-    .oppgave-badge.badge-ai    { background: #3a7abf; border-color: #3a7abf; }
-    .oppgave-badge.badge-seed  { background: #2da85d; border-color: #2da85d; }
-    .oppgave-badge.badge-admin { background: #d48826; border-color: #d48826; }
-    .oppgave-badge.badge-annet { background: #8e6bbf; border-color: #8e6bbf; }
+    .oppgave-badge:hover { opacity: 0.7; }
+    .oppgave-badge.badge-ai    { border-color: #3a7abf; color: #3a7abf; }
+    .oppgave-badge.badge-seed  { border-color: #2da85d; color: #2da85d; }
+    .oppgave-badge.badge-admin { border-color: #d48826; color: #d48826; }
+    .oppgave-badge.badge-annet { border-color: #8e6bbf; color: #8e6bbf; }
 
     /* ── Tilknyttet-chip: følger aktivitetstype ── */
     .tilknyttet-chip {
@@ -969,7 +971,6 @@
 <body>
 
 <header>
-  <div style="width:76px"></div>
   <div class="logo">
     MishMash WP4
   </div>
@@ -1065,7 +1066,7 @@
           <input type="date" id="feltDato" oninput="synkDatoTil(this.value)" />
         </div>
         <div class="felt">
-          <label>Til dato (valgfritt)</label>
+          <label>Til dato</label>
           <input type="date" id="feltDatoTil" />
         </div>
       </div>
@@ -1075,12 +1076,12 @@
           <input type="time" id="feltTid" />
         </div>
         <div class="felt">
-          <label>Til kl. (valgfritt)</label>
+          <label>Til kl.</label>
           <input type="time" id="feltTidTil" />
         </div>
       </div>
       <div class="felt">
-        <label>Beskrivelse (valgfritt)</label>
+        <label>Beskrivelse</label>
         <textarea id="feltBesk"></textarea>
       </div>
     </div>
@@ -1107,7 +1108,7 @@
         <input type="text" id="oppFeltBesk" />
       </div>
       <div class="felt">
-        <label>Koble til aktivitet (valgfritt)</label>
+        <label>Koble til aktivitet</label>
         <select id="oppFeltAktivitet">
           <option value="">— Frittstående —</option>
         </select>
@@ -1147,7 +1148,7 @@
         <div id="fristRelativInfo" style="font-size:12px;color:var(--tekst-sek);margin-top:6px;display:none;"></div>
       </div>
       <div class="felt">
-        <label>Notater (valgfritt)</label>
+        <label>Notater</label>
         <textarea id="oppFeltNotat" style="min-height:64px;"></textarea>
       </div>
     </div>
@@ -1613,8 +1614,8 @@
       if (antallUferdige > 0) {
         const ob = document.createElement('span');
         ob.className = 'oppgave-badge badge-' + a.type;
-        ob.textContent = '📋 ' + antallUferdige;
-        ob.title = 'Vis oppgaver for denne aktiviteten';
+        ob.textContent = '!';
+        ob.title = antallUferdige + ' oppgave(r) knyttet til denne aktiviteten';
         ob.onclick = e => {
           e.stopPropagation();
           aktivFilter = 'aktivitet:' + a.id;
