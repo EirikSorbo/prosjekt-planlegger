@@ -978,6 +978,14 @@
   <button class="fane" onclick="byttFane('oppgaver', this)">Oppgaver</button>
 </nav>
 
+<div id="varselBanner" style="display:none;background:var(--grønn-lys);border-bottom:1px solid var(--grønn-mid);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;">
+  <span style="font-size:12px;color:var(--tekst);font-family:'Nunito',sans-serif;">🔔 Tillat varsler for å se forfalte oppgaver på ikonet</span>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="avvisVarsel()" style="background:none;border:1px solid var(--grønn-mid);border-radius:6px;padding:5px 10px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:var(--tekst-sek);cursor:pointer;">Ikke nå</button>
+    <button onclick="be0mVarsel()" style="background:var(--grønn);border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:white;cursor:pointer;">Tillat</button>
+  </div>
+</div>
+
 <main>
 
   <!-- Kalender -->
@@ -1027,7 +1035,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.12</div>
+  <div class="versjon">v.1.26</div>
 </main>
 
 <!-- Modal: Aktivitet -->
@@ -2062,7 +2070,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.02',
+      versjon: '1.26',
       eksportert: new Date().toISOString(),
       aktiviteter,
       oppgaver
@@ -2113,10 +2121,27 @@
     renderKalender();
     oppdaterForfaltBadge();
 
-    // iOS krever notification-tillatelse for at setAppBadge() skal vise tall på hjemskjerm-ikonet
+    // Vis banner hvis tillatelse ikke er avgjort ennå
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+      const avvist = localStorage.getItem('varsel_avvist');
+      if (!avvist) {
+        document.getElementById('varselBanner').style.display = 'flex';
+      }
     }
+  }
+
+  function be0mVarsel() {
+    document.getElementById('varselBanner').style.display = 'none';
+    Notification.requestPermission().then(result => {
+      if (result === 'granted') {
+        oppdaterForfaltBadge();
+      }
+    });
+  }
+
+  function avvisVarsel() {
+    document.getElementById('varselBanner').style.display = 'none';
+    localStorage.setItem('varsel_avvist', '1');
   }
 
   init();
