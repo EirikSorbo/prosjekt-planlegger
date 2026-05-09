@@ -285,13 +285,14 @@
       text-transform: uppercase;
       letter-spacing: 0.3px;
       white-space: nowrap;
-      color: white;
       flex-shrink: 0;
+      background: transparent;
+      border: 1.5px solid;
     }
-    .type-badge.ai     { background: #9490d4; }
-    .type-badge.seed   { background: #72c088; }
-    .type-badge.admin  { background: #5e5a9c; }
-    .type-badge.annet  { background: #2e2b45; }
+    .type-badge.ai     { border-color: #9490d4; color: #9490d4; }
+    .type-badge.seed   { border-color: #72c088; color: #72c088; }
+    .type-badge.admin  { border-color: #5e5a9c; color: #5e5a9c; }
+    .type-badge.annet  { border-color: #2e2b45; color: #2e2b45; }
 
     .aktivitet-info { flex: 1; min-width: 0; }
     .aktivitet-tittel {
@@ -862,7 +863,6 @@
     .oppgave-badge.badge-admin { border-color: #5e5a9c; color: #5e5a9c; }
     .oppgave-badge.badge-annet { border-color: #2e2b45; color: #2e2b45; }
 
-    /* ── Tilknyttet-chip: følger aktivitetstype ── */
     .tilknyttet-chip {
       display: inline-flex;
       align-items: center;
@@ -871,13 +871,13 @@
       border-radius: 12px;
       font-size: 11px;
       font-weight: 700;
-      border: 1px solid transparent;
-      color: white;
+      border: 1.5px solid;
+      background: transparent;
     }
-    .tilknyttet-chip.chip-ai    { background: #9490d4; border-color: #9490d4; }
-    .tilknyttet-chip.chip-seed  { background: #72c088; border-color: #72c088; }
-    .tilknyttet-chip.chip-admin { background: #5e5a9c; border-color: #5e5a9c; }
-    .tilknyttet-chip.chip-annet { background: #2e2b45; border-color: #2e2b45; }
+    .tilknyttet-chip.chip-ai    { border-color: #9490d4; color: #9490d4; }
+    .tilknyttet-chip.chip-seed  { border-color: #72c088; color: #72c088; }
+    .tilknyttet-chip.chip-admin { border-color: #5e5a9c; color: #5e5a9c; }
+    .tilknyttet-chip.chip-annet { border-color: #2e2b45; color: #2e2b45; }
 
     /* ── Frist-velger i oppgavemodal ── */
     .frist-valg {
