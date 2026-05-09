@@ -595,10 +595,10 @@
     .oppgave-kort.stripe-fri:hover    { background: #eeedfb; }
     .oppgave-kort.fullfort { opacity: 0.55; }
 
-    .checkbox {
+    .checkbox { display: none; }
+    .checkbox.sjekket {
       width: 20px;
       height: 20px;
-      border: 2px solid var(--kant);
       border-radius: 6px;
       cursor: pointer;
       display: flex;
@@ -606,14 +606,12 @@
       justify-content: center;
       flex-shrink: 0;
       margin-top: 1px;
-      transition: all .15s;
-      background: var(--hvit);
       font-size: 11px;
       font-weight: 700;
       color: white;
+      background: var(--grønn);
+      border: 2px solid var(--grønn);
     }
-    .checkbox:hover { border-color: var(--grønn); }
-    .checkbox.sjekket { background: var(--grønn); border-color: var(--grønn); }
 
     .oppgave-info { flex: 1; min-width: 0; }
 
@@ -1453,7 +1451,7 @@
 
         let metaHtml = '';
         if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
-        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">↗ ${akt.tittel}</span>`;
+        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">${akt.tittel}</span>`;
 
         info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
           ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
@@ -1802,7 +1800,30 @@
     }
 
     container.innerHTML = '';
+
+    // Group by month (frist-based; no-frist goes last under "Ingen frist")
+    const grupper = {};
     filtrert.forEach(o => {
+      let key, label;
+      if (o.frist) {
+        const d = new Date(o.frist + 'T00:00:00');
+        key   = `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
+        label = MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
+      } else {
+        key   = '9999-99';
+        label = 'Ingen frist';
+      }
+      if (!grupper[key]) grupper[key] = { label, items: [] };
+      grupper[key].items.push(o);
+    });
+
+    Object.values(grupper).forEach(g => {
+      const ml = document.createElement('div');
+      ml.className = 'maaned-label';
+      ml.textContent = g.label;
+      container.appendChild(ml);
+
+      g.items.forEach(o => {
       let stripeKlasse = 'stripe-fri';
       if (o.aktivitetId) {
         const akt = aktiviteter.find(a => a.id === o.aktivitetId);
@@ -1834,7 +1855,7 @@
       if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
       if (o.aktivitetId) {
         const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">↗ ${akt.tittel}</span>`;
+        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">${akt.tittel}</span>`;
       }
 
       info.innerHTML = `
@@ -1856,7 +1877,8 @@
         renderOppgaver();
       });
       container.appendChild(ytre);
-    });
+      }); // end g.items.forEach
+    }); // end Object.values(grupper).forEach
   }
 
   function åpneOppgaveInfo(id) {
@@ -1872,13 +1894,15 @@
 
     let html = '';
 
-    // Status
-    html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-      <div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--grønn-mid);flex-shrink:0;background:${o.fullfort ? 'var(--grønn)' : 'transparent'};display:flex;align-items:center;justify-content:center;">
-        ${o.fullfort ? '<svg width="12" height="12" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
-      </div>
-      <span style="font-size:13px;color:var(--tekst-sek);">${o.fullfort ? 'Fullført' : 'Ikke fullført'}</span>
-    </div>`;
+    // Status — kun vis hvis fullført
+    if (o.fullfort) {
+      html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--grønn);flex-shrink:0;background:var(--grønn);display:flex;align-items:center;justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="font-size:13px;color:var(--tekst-sek);">Fullført</span>
+      </div>`;
+    }
 
     // Frist
     if (fd) {
