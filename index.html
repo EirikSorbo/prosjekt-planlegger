@@ -520,12 +520,10 @@
     .filter-pill.farge-seed   { border-color: #72c088;  color: #72c088; }
     .filter-pill.farge-admin  { border-color: #5e5a9c;  color: #5e5a9c; }
     .filter-pill.farge-annet  { border-color: #2e2b45;  color: #2e2b45; }
-    .filter-pill.farge-generelt{ border-color: #7b78b0; color: #7b78b0; }
     .filter-pill.aktiv-ai     { background: #9490d4;    color: white; border-color: #9490d4; }
     .filter-pill.aktiv-seed   { background: #72c088;    color: white; border-color: #72c088; }
     .filter-pill.aktiv-admin  { background: #5e5a9c;    color: white; border-color: #5e5a9c; }
     .filter-pill.aktiv-annet  { background: #2e2b45;    color: white; border-color: #2e2b45; }
-    .filter-pill.aktiv-generelt{ background: #7b78b0;   color: white; border-color: #7b78b0; }
     .filter-pill.fullforte      { background: #f0f0f0; color: #888; border-color: #ccc; }
     .filter-pill.fullforte.aktiv{ background: #999;    color: white; border-color: #999; }
 
@@ -539,18 +537,30 @@
     .sveip-bakgrunn {
       position: absolute;
       inset: 0;
-      background: #c0392b;
+      background: transparent;
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      padding-right: 22px;
-      color: white;
-      font-size: 13px;
-      font-weight: 700;
-      font-family: 'Syne', sans-serif;
-      letter-spacing: 0.3px;
+      padding-right: 16px;
       pointer-events: none;
       border-radius: var(--r);
+    }
+    .sveip-bakgrunn .slett-sirkel {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #c0392b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.15s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .sveip-bakgrunn.vis .slett-sirkel {
+      opacity: 1;
+      transform: scale(1);
     }
     .sveip-innhold {
       position: relative;
@@ -583,13 +593,11 @@
     .info-knapp.knapp-seed  { border-color: #72c088; color: #72c088; }
     .info-knapp.knapp-admin { border-color: #5e5a9c; color: #5e5a9c; }
     .info-knapp.knapp-annet { border-color: #2e2b45; color: #2e2b45; }
-    .info-knapp.knapp-fri   { border-color: #7b78b0; color: #7b78b0; }
     .info-knapp:hover { opacity: 0.75; }
     .info-knapp.aktiv.knapp-ai    { background: #9490d4; color: white; }
     .info-knapp.aktiv.knapp-seed  { background: #72c088; color: white; }
     .info-knapp.aktiv.knapp-admin { background: #5e5a9c; color: white; }
     .info-knapp.aktiv.knapp-annet { background: #2e2b45; color: white; }
-    .info-knapp.aktiv.knapp-fri   { background: #7b78b0; color: white; }
 
     .besk-panel {
       display: none;
@@ -870,7 +878,6 @@
     .tilknyttet-chip.chip-seed  { background: #72c088; border-color: #72c088; }
     .tilknyttet-chip.chip-admin { background: #5e5a9c; border-color: #5e5a9c; }
     .tilknyttet-chip.chip-annet { background: #2e2b45; border-color: #2e2b45; }
-    .tilknyttet-chip.chip-fri   { background: #7b78b0; border-color: #7b78b0; }
 
     /* ── Frist-velger i oppgavemodal ── */
     .frist-valg {
@@ -1055,7 +1062,7 @@
         <select id="feltType">
           <option value="ai">AI Literacy</option>
           <option value="seed">Seed funding</option>
-          <option value="admin">Administrasjon</option>
+          <option value="admin">Admin</option>
           <option value="annet">Annet</option>
         </select>
       </div>
@@ -1180,7 +1187,7 @@
   const TYPER = {
     ai:    { farge: '#9490d4', tekst: 'AI Literacy' },
     seed:  { farge: '#72c088', tekst: 'Seed funding' },
-    admin: { farge: '#5e5a9c', tekst: 'Administrasjon' },
+    admin: { farge: '#5e5a9c', tekst: 'Admin' },
     annet: { farge: '#2e2b45', tekst: 'Annet' }
   };
 
@@ -1465,7 +1472,7 @@
     const filtre = [
       { id: 'ai',    label: 'AI Literacy',    farge: 'ai' },
       { id: 'seed',  label: 'Seed funding',   farge: 'seed' },
-      { id: 'admin', label: 'Administrasjon', farge: 'admin' },
+      { id: 'admin', label: 'Admin', farge: 'admin' },
       { id: 'annet', label: 'Annet',          farge: 'annet' }
     ];
     filtre.forEach(f => {
@@ -1520,8 +1527,8 @@
   /* ──────────────────────────────
      SVEIP FOR Å SLETTE
   ────────────────────────────── */
-  function leggTilSveipSlett(container, innhold, onSlett) {
-    const TERSKEL = 110; // px for å trigge sletting
+  function leggTilSveipSlett(container, innhold, bakgrunn, onSlett) {
+    const TERSKEL = 90;
     let startX = 0, startY = 0, dx = 0, sveiper = false, retningBestemt = false;
 
     innhold.addEventListener('touchstart', e => {
@@ -1546,16 +1553,19 @@
       e.preventDefault();
       dx = Math.min(0, diffX);
       innhold.style.transform = `translateX(${dx}px)`;
+      // Vis sirkelen når vi har dratt nok
+      if (dx < -30) bakgrunn.classList.add('vis');
+      else bakgrunn.classList.remove('vis');
     }, { passive: false });
 
     innhold.addEventListener('touchend', () => {
       innhold.classList.remove('ingen-trans');
       if (dx < -TERSKEL) {
-        // Animér ut og slett
         innhold.style.transform = `translateX(-100%)`;
         innhold.style.opacity = '0';
+        innhold.style.transition = 'transform 0.2s ease, opacity 0.2s';
+        container.style.transition = 'max-height 0.25s ease, opacity 0.25s, padding 0.25s';
         container.style.maxHeight = container.offsetHeight + 'px';
-        container.style.transition = 'max-height 0.25s ease, opacity 0.25s';
         setTimeout(() => {
           container.style.maxHeight = '0';
           container.style.overflow = 'hidden';
@@ -1564,6 +1574,7 @@
         setTimeout(onSlett, 380);
       } else {
         innhold.style.transform = 'translateX(0)';
+        bakgrunn.classList.remove('vis');
         dx = 0;
       }
     });
@@ -1575,7 +1586,7 @@
 
     const slettBg = document.createElement('div');
     slettBg.className = 'sveip-bakgrunn';
-    slettBg.textContent = 'Slett';
+    slettBg.innerHTML = `<div class="slett-sirkel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>`;
 
     const wrapper = document.createElement('div');
     wrapper.className = 'sveip-innhold';
@@ -1647,7 +1658,7 @@
 
     ytre.appendChild(slettBg);
     ytre.appendChild(wrapper);
-    leggTilSveipSlett(ytre, wrapper, () => {
+    leggTilSveipSlett(ytre, wrapper, slettBg, () => {
       aktiviteter = aktiviteter.filter(x => x.id !== a.id);
       oppgaver.forEach(o => { if (o.aktivitetId === a.id) o.aktivitetId = null; });
       lagre();
@@ -1678,9 +1689,8 @@
       const filtre = [
         { id: 'ai',        label: 'AI Literacy',    farge: 'ai' },
         { id: 'seed',      label: 'Seed funding',   farge: 'seed' },
-        { id: 'admin',     label: 'Administrasjon', farge: 'admin' },
+        { id: 'admin',     label: 'Admin', farge: 'admin' },
         { id: 'annet',     label: 'Annet',          farge: 'annet' },
-        { id: 'generelt',  label: 'Generelt',       farge: 'generelt' },
         { id: 'fullførte', label: 'Fullførte',      farge: null }
       ];
       filtre.forEach(f => {
@@ -1710,7 +1720,7 @@
       filtrert = filtrert.filter(o => o.fullfort);
     } else {
       filtrert = filtrert.filter(o => !o.fullfort);
-      if (aktivFilter === 'generelt') {
+      if (false) {
         filtrert = filtrert.filter(o => !o.aktivitetId);
       } else if (['ai','seed','admin','annet'].includes(aktivFilter)) {
         filtrert = filtrert.filter(o => {
@@ -1743,7 +1753,7 @@
 
       const slettBg = document.createElement('div');
       slettBg.className = 'sveip-bakgrunn';
-      slettBg.textContent = 'Slett';
+      slettBg.innerHTML = `<div class="slett-sirkel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>`;
 
       const wrapper = document.createElement('div');
       wrapper.className = 'sveip-innhold';
@@ -1809,7 +1819,7 @@
 
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
-      leggTilSveipSlett(ytre, wrapper, () => {
+      leggTilSveipSlett(ytre, wrapper, slettBg, () => {
         oppgaver = oppgaver.filter(x => x.id !== o.id);
         lagre();
         renderOppgaver();
