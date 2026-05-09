@@ -996,10 +996,6 @@
     MishMash WP4
   </div>
   <div class="header-handlinger">
-    <div id="brukerInfo" style="display:none;align-items:center;gap:6px;">
-      <span id="brukerNavn" style="font-size:11px;font-family:'Nunito',sans-serif;color:var(--tekst-sek);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-      <button class="header-knapp" onclick="window._fbSignOut()" title="Logg ut" style="font-size:13px;">⏏</button>
-    </div>
     <button class="header-knapp" onclick="eksporterData()" title="Eksporter">↓</button>
     <button class="header-knapp" onclick="document.getElementById('importInput').click()" title="Importer">↑</button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importerData(this)"/>
@@ -1046,6 +1042,10 @@
         <div class="valgt-dag-tittel" id="valgtDagTittel"></div>
       </div>
       <div id="valgtDagListe"></div>
+    </div>
+    <div id="brukerInfo" style="display:none;justify-content:flex-end;align-items:center;gap:8px;padding:10px 4px 0;">
+      <span id="brukerNavn" style="font-size:11px;font-family:'Nunito',sans-serif;color:var(--tekst-sek);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button class="header-knapp" onclick="window._fbSignOut()" title="Logg ut" style="font-size:14px;">⏏</button>
     </div>
   </div>
 
@@ -2111,7 +2111,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.31',
+      versjon: '1.32',
       eksportert: new Date().toISOString(),
       aktiviteter,
       oppgaver
