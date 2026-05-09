@@ -960,6 +960,7 @@
     <button class="header-knapp" onclick="eksporterData()" title="Eksporter">↓</button>
     <button class="header-knapp" onclick="document.getElementById('importInput').click()" title="Importer (erstatt)">↑</button>
     <button class="header-knapp" onclick="document.getElementById('mergeInput').click()" title="Slå sammen">⇅</button>
+    <button class="header-knapp" id="angreImportKnapp" onclick="angreImport()" title="Angre siste import/merge" style="display:none;">↩</button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importerData(this)"/>
     <input type="file" id="mergeInput"  accept=".json" style="display:none" onchange="mergeData(this)"/>
   </div>
@@ -2297,6 +2298,30 @@
     URL.revokeObjectURL(url);
   }
 
+  // Snapshot for angre-funksjon
+  let importSnapshot = null;
+
+  function taSnapshot() {
+    importSnapshot = {
+      aktiviteter: JSON.parse(JSON.stringify(aktiviteter)),
+      oppgaver:    JSON.parse(JSON.stringify(oppgaver))
+    };
+    document.getElementById('angreImportKnapp').style.display = 'inline-flex';
+  }
+
+  function angreImport() {
+    if (!importSnapshot) return;
+    if (!confirm('Angre siste import/merge og gå tilbake til forrige tilstand?')) return;
+    aktiviteter = importSnapshot.aktiviteter;
+    oppgaver    = importSnapshot.oppgaver;
+    importSnapshot = null;
+    document.getElementById('angreImportKnapp').style.display = 'none';
+    lagre();
+    oppdaterAktivPanel();
+    if (valgtDato) renderValgtDag(valgtDato);
+    alert('✓ Import angret.');
+  }
+
   function importerData(input) {
     const fil = input.files[0];
     if (!fil) return;
@@ -2311,6 +2336,7 @@
           'Dette vil erstatte alle eksisterende aktiviteter og oppgaver med dataene fra filen.\n\nFortsette?'
         );
         if (!bekreft) return;
+        taSnapshot();
         aktiviteter = data.aktiviteter;
         oppgaver    = data.oppgaver;
         lagre();
@@ -2342,6 +2368,12 @@
         const nyeAkt = data.aktiviteter.filter(a => !eksisterendeAktId.has(a.id));
         const nyeOpp = data.oppgaver.filter(o => !eksisterendeOppId.has(o.id));
 
+        if (nyeAkt.length === 0 && nyeOpp.length === 0) {
+          alert('Ingen nye elementer å legge til — alt fantes fra før.');
+          return;
+        }
+
+        taSnapshot();
         aktiviteter = [...aktiviteter, ...nyeAkt];
         oppgaver    = [...oppgaver,    ...nyeOpp];
 
