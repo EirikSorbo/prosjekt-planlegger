@@ -1072,6 +1072,40 @@
   <div class="versjon">v.1.26</div>
 </main>
 
+<!-- Modal: Oppgave info -->
+<div class="modal-overlay" id="oppgaveInfoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="oppInfoModalTittel"></div>
+      <button class="lukk-knapp" onclick="lukkModal('oppgaveInfoModal')">×</button>
+    </div>
+    <div class="modal-body" id="oppInfoModalBody"></div>
+    <div class="modal-footer">
+      <button class="knapp-sek" onclick="lukkModal('oppgaveInfoModal')">Lukk</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-primær" id="oppInfoRedigKnapp">Rediger</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Aktivitet info -->
+<div class="modal-overlay" id="aktivitetInfoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="infoModalTittel"></div>
+      <button class="lukk-knapp" onclick="lukkModal('aktivitetInfoModal')">×</button>
+    </div>
+    <div class="modal-body" id="infoModalBody"></div>
+    <div class="modal-footer">
+      <button class="knapp-sek" onclick="lukkModal('aktivitetInfoModal')">Lukk</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-primær" id="infoModalRedigKnapp">Rediger</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Aktivitet -->
 <div class="modal-overlay" id="aktivitetModal">
   <div class="modal">
@@ -1431,7 +1465,7 @@
           const kort = document.createElement('div');
           kort.className = 'oppgave-kort ' + stripeKlasse;
           kort.style.cursor = 'pointer';
-          kort.onclick = () => åpneOppgaveModal(o.id);
+          kort.onclick = () => åpneOppgaveInfo(o.id);
 
           const info = document.createElement('div');
           info.className = 'oppgave-info';
@@ -1625,7 +1659,7 @@
     const kort = document.createElement('div');
     kort.className = 'aktivitet-kort hover-' + a.type;
     kort.style.cursor = 'pointer';
-    kort.onclick = () => åpneAktivitetModal(a.id);
+    kort.onclick = () => åpneAktivitetInfo(a.id);
 
     const badge = document.createElement('span');
     badge.className = `type-badge ${a.type}`;
@@ -1658,8 +1692,7 @@
         ob.title = antallUferdige + ' oppgave(r) knyttet til denne aktiviteten';
         ob.onclick = e => {
           e.stopPropagation();
-          aktivFilter = 'aktivitet:' + a.id;
-          byttFane('oppgaver', document.querySelectorAll('.fane')[2]);
+          åpneAktivitetInfo(a.id);
         };
         kort.appendChild(ob);
       }
@@ -1676,28 +1709,7 @@
       åpneOppgaveModal(null, a.id);
     };
     kort.appendChild(leggTilOppgaveKnapp);
-
-    // Info-knapp for beskrivelse
-    if (a.beskrivelse) {
-      const beskPanel = document.createElement('div');
-      beskPanel.className = 'besk-panel';
-      beskPanel.textContent = a.beskrivelse;
-
-      const infoKnapp = document.createElement('button');
-      infoKnapp.className = 'ikon-knapp info-knapp knapp-' + a.type;
-      infoKnapp.textContent = 'i';
-      infoKnapp.title = 'Vis beskrivelse';
-      infoKnapp.onclick = e => {
-        e.stopPropagation();
-        const vis = beskPanel.classList.toggle('vis');
-        infoKnapp.classList.toggle('aktiv', vis);
-      };
-      kort.appendChild(infoKnapp);
-      wrapper.appendChild(kort);
-      wrapper.appendChild(beskPanel);
-    } else {
-      wrapper.appendChild(kort);
-    }
+    wrapper.appendChild(kort);
 
     ytre.appendChild(slettBg);
     ytre.appendChild(wrapper);
@@ -1831,34 +1843,11 @@
         ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
 
       kort.style.cursor = 'pointer';
-      kort.onclick = () => åpneOppgaveModal(o.id);
+      kort.onclick = () => åpneOppgaveInfo(o.id);
 
       kort.appendChild(cb);
       kort.appendChild(info);
-
-      if (o.notat) {
-        const beskPanel = document.createElement('div');
-        beskPanel.className = 'besk-panel';
-        beskPanel.textContent = o.notat;
-
-        const typeKlasse = o.aktivitetId
-          ? 'knapp-' + (aktiviteter.find(a => a.id === o.aktivitetId)?.type || 'fri')
-          : 'knapp-fri';
-        const infoKnapp = document.createElement('button');
-        infoKnapp.className = 'ikon-knapp info-knapp ' + typeKlasse;
-        infoKnapp.textContent = 'i';
-        infoKnapp.title = 'Vis notater';
-        infoKnapp.onclick = e => {
-          e.stopPropagation();
-          const vis = beskPanel.classList.toggle('vis');
-          infoKnapp.classList.toggle('aktiv', vis);
-        };
-        kort.appendChild(infoKnapp);
-        wrapper.appendChild(kort);
-        wrapper.appendChild(beskPanel);
-      } else {
-        wrapper.appendChild(kort);
-      }
+      wrapper.appendChild(kort);
 
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
@@ -1871,6 +1860,64 @@
     });
   }
 
+  function åpneOppgaveInfo(id) {
+    const o = oppgaver.find(o => o.id === id);
+    if (!o) return;
+
+    document.getElementById('oppInfoModalTittel').textContent = o.beskrivelse;
+
+    const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+    const fd  = o.frist ? new Date(o.frist + 'T00:00:00') : null;
+    const iDag = new Date(); iDag.setHours(0,0,0,0);
+    const forfalt = fd && !o.fullfort && fd < iDag;
+
+    let html = '';
+
+    // Status
+    html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--grønn-mid);flex-shrink:0;background:${o.fullfort ? 'var(--grønn)' : 'transparent'};display:flex;align-items:center;justify-content:center;">
+        ${o.fullfort ? '<svg width="12" height="12" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+      </div>
+      <span style="font-size:13px;color:var(--tekst-sek);">${o.fullfort ? 'Fullført' : 'Ikke fullført'}</span>
+    </div>`;
+
+    // Frist
+    if (fd) {
+      const fristStr = fd.getDate() + '. ' + MAANEDER[fd.getMonth()] + ' ' + fd.getFullYear();
+      html += `<div style="padding:10px 12px;border-radius:var(--rs);background:${forfalt ? '#fdeaea' : 'var(--grønn-lys)'};font-size:13px;color:${forfalt ? '#c0392b' : 'var(--tekst)'};margin-bottom:14px;">
+        ${forfalt ? '⚠ Forfalt: ' : '📅 Frist: '}<strong>${fristStr}</strong>
+      </div>`;
+    }
+
+    // Tilknyttet aktivitet
+    if (akt) {
+      const ad = new Date(akt.dato + 'T00:00:00');
+      html += `<div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet aktivitet</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--grønn-lys);border-radius:var(--rs);cursor:pointer;" onclick="lukkModal('oppgaveInfoModal');åpneAktivitetInfo('${akt.id}')">
+          <span class="type-badge ${akt.type}" style="font-size:10px;">${TYPER[akt.type]?.tekst || akt.type}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--tekst);">${akt.tittel}</span>
+          <span style="font-size:12px;color:var(--tekst-sek);margin-left:auto;">${ad.getDate()}. ${MAANEDER[ad.getMonth()]}</span>
+        </div>
+      </div>`;
+    }
+
+    // Notater
+    if (o.notat) {
+      html += `<div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Notater</div>
+        <div style="padding:12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);line-height:1.5;">${o.notat}</div>
+      </div>`;
+    }
+
+    document.getElementById('oppInfoModalBody').innerHTML = html;
+    document.getElementById('oppInfoRedigKnapp').onclick = () => {
+      lukkModal('oppgaveInfoModal');
+      åpneOppgaveModal(id);
+    };
+    document.getElementById('oppgaveInfoModal').classList.add('vis');
+  }
+
   function toggleOppgave(id) {
     const o = oppgaver.find(o => o.id === id);
     if (o) { o.fullfort = !o.fullfort; lagre(); renderOppgaver(); }
@@ -1879,6 +1926,56 @@
   /* ──────────────────────────────
      AKTIVITET MODAL
   ────────────────────────────── */
+  function åpneAktivitetInfo(id) {
+    const a = aktiviteter.find(a => a.id === id);
+    if (!a) return;
+
+    const d = new Date(a.dato + 'T00:00:00');
+    let datoStr = UKEDAGER_K[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
+    if (a.datoTil && a.datoTil !== a.dato) {
+      const dTil = new Date(a.datoTil + 'T00:00:00');
+      datoStr += ' – ' + dTil.getDate() + '. ' + MAANEDER[dTil.getMonth()];
+    }
+    const tidStr = a.tid ? ('kl. ' + a.tid + (a.tidTil ? '–' + a.tidTil : '')) : '';
+
+    document.getElementById('infoModalTittel').textContent = a.tittel;
+
+    const tilknyttede = oppgaver.filter(o => o.aktivitetId === a.id);
+
+    let html = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <span class="type-badge ${a.type}">${TYPER[a.type]?.tekst || a.type}</span>
+      </div>
+      <div style="font-size:13px;color:var(--tekst-sek);margin-bottom:4px;">${datoStr}${tidStr ? ' · ' + tidStr : ''}</div>`;
+
+    if (a.beskrivelse) {
+      html += `<div style="margin-top:14px;padding:12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);line-height:1.5;">${a.beskrivelse}</div>`;
+    }
+
+    if (tilknyttede.length > 0) {
+      html += `<div style="margin-top:18px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Oppgaver (${tilknyttede.length})</div>`;
+      tilknyttede.forEach(o => {
+        const fd = o.frist ? new Date(o.frist + 'T00:00:00') : null;
+        const fristStr = fd ? (' · Frist ' + fd.getDate() + '. ' + MAANEDER[fd.getMonth()]) : '';
+        html += `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--kant);cursor:pointer;" onclick="lukkModal('aktivitetInfoModal');åpneOppgaveInfo('${o.id}')">
+          <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--grønn-mid);flex-shrink:0;background:${o.fullfort ? 'var(--grønn)' : 'transparent'};display:flex;align-items:center;justify-content:center;">
+            ${o.fullfort ? '<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+          </div>
+          <div style="flex:1;font-size:13px;color:var(--tekst);${o.fullfort ? 'opacity:0.45;text-decoration:line-through;' : ''}">${o.beskrivelse}${fristStr ? '<span style="color:var(--tekst-sek);font-size:11px;"> ' + fristStr + '</span>' : ''}</div>
+        </div>`;
+      });
+    } else {
+      html += `<div style="margin-top:18px;font-size:13px;color:var(--tekst-sek);">Ingen oppgaver knyttet til denne aktiviteten.</div>`;
+    }
+
+    document.getElementById('infoModalBody').innerHTML = html;
+    document.getElementById('infoModalRedigKnapp').onclick = () => {
+      lukkModal('aktivitetInfoModal');
+      åpneAktivitetModal(id);
+    };
+    document.getElementById('aktivitetInfoModal').classList.add('vis');
+  }
+
   function åpneAktivitetModal(id = null, dato = null) {
     redigAktivitetId = id;
     const slettKnapp = document.getElementById('slettAktivitetKnapp');
