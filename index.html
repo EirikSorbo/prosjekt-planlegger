@@ -954,6 +954,29 @@
 </head>
 <body>
 
+<!-- Login overlay -->
+<div id="loginOverlay" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
+  <svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="licp"><circle cx="52" cy="36" r="22"/></clipPath>
+    </defs>
+    <rect width="72" height="72" rx="18" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+    <circle cx="30" cy="36" r="22" fill="#9490d4"/>
+    <circle cx="52" cy="36" r="22" fill="#b4e8a8"/>
+    <circle cx="30" cy="36" r="22" fill="#2e2b45" clip-path="url(#licp)"/>
+    <circle cx="30" cy="36" r="22" fill="none" stroke="#6860b0" stroke-width="1"/>
+    <circle cx="52" cy="36" r="22" fill="none" stroke="#6ca060" stroke-width="1"/>
+  </svg>
+  <div style="text-align:center;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--tekst);font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;">MishMash WP4</div>
+    <div style="font-family:'Nunito',sans-serif;font-size:13px;color:var(--tekst-sek);margin-top:4px;">Logg inn for å fortsette</div>
+  </div>
+  <button onclick="window._fbSignIn()" style="background:var(--grønn);color:white;border:none;border-radius:10px;padding:13px 28px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+    Logg inn med Google
+  </button>
+</div>
+
 <header>
   <div class="logo">
     <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
@@ -973,6 +996,10 @@
     MishMash WP4
   </div>
   <div class="header-handlinger">
+    <div id="brukerInfo" style="display:none;align-items:center;gap:6px;">
+      <span id="brukerNavn" style="font-size:11px;font-family:'Nunito',sans-serif;color:var(--tekst-sek);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button class="header-knapp" onclick="window._fbSignOut()" title="Logg ut" style="font-size:13px;">⏏</button>
+    </div>
     <button class="header-knapp" onclick="eksporterData()" title="Eksporter">↓</button>
     <button class="header-knapp" onclick="document.getElementById('importInput').click()" title="Importer">↑</button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importerData(this)"/>
@@ -1206,6 +1233,10 @@
     localStorage.setItem('lp_a', JSON.stringify(aktiviteter));
     localStorage.setItem('lp_o', JSON.stringify(oppgaver));
     oppdaterForfaltBadge();
+    // Synkroniser til Firestore hvis innlogget
+    if (window._currentUid && window._lagreTilSky) {
+      window._lagreTilSky(window._currentUid);
+    }
   }
 
   function hent() {
@@ -2080,7 +2111,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.26',
+      versjon: '1.31',
       eksportert: new Date().toISOString(),
       aktiviteter,
       oppgaver
@@ -2130,14 +2161,6 @@
     hent();
     renderKalender();
     oppdaterForfaltBadge();
-
-    // Vis banner hvis tillatelse ikke er avgjort ennå
-    if ('Notification' in window && Notification.permission === 'default') {
-      const avvist = localStorage.getItem('varsel_avvist');
-      if (!avvist) {
-        document.getElementById('varselBanner').style.display = 'flex';
-      }
-    }
   }
 
   function be0mVarsel() {
@@ -2155,6 +2178,114 @@
   }
 
   init();
+</script>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC_6N483KSKRNQaQZ-Jsxh01fWR5cT5iLA",
+    authDomain: "mishmash-wp4.firebaseapp.com",
+    projectId: "mishmash-wp4",
+    storageBucket: "mishmash-wp4.firebasestorage.app",
+    messagingSenderId: "220759938476",
+    appId: "1:220759938476:web:da647c94b80553deea9609"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // ── Eksponér til resten av appen ──
+  window._fbSignIn = async () => {
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch(e) {
+      alert('Innlogging feilet: ' + e.message);
+    }
+  };
+
+  window._fbSignOut = async () => {
+    await signOut(auth);
+  };
+
+  // ── Synkroniser data med Firestore ──
+  async function lagreTilSky(uid) {
+    try {
+      await setDoc(doc(db, 'brukere', uid), {
+        aktiviteter: JSON.parse(localStorage.getItem('lp_a') || '[]'),
+        oppgaver:    JSON.parse(localStorage.getItem('lp_o') || '[]'),
+        oppdatert:   new Date().toISOString()
+      });
+    } catch(e) {
+      console.warn('Sky-lagring feilet:', e);
+    }
+  }
+
+  window._lagreTilSky = lagreTilSky;
+
+  // ── Auth-tilstand ──
+  onAuthStateChanged(auth, async bruker => {
+    const loginOverlay = document.getElementById('loginOverlay');
+    const brukerInfo   = document.getElementById('brukerInfo');
+    const brukerNavn   = document.getElementById('brukerNavn');
+
+    if (bruker) {
+      // Logget inn
+      loginOverlay.style.display = 'none';
+      brukerNavn.textContent = bruker.displayName || bruker.email;
+      brukerInfo.style.display = 'flex';
+      window._currentUid = bruker.uid;
+
+      // Hent data fra Firestore
+      const snap = await getDoc(doc(db, 'brukere', bruker.uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        localStorage.setItem('lp_a', JSON.stringify(data.aktiviteter || []));
+        localStorage.setItem('lp_o', JSON.stringify(data.oppgaver    || []));
+      }
+
+      // Last inn appen med sky-data
+      if (typeof hent === 'function') hent();
+      if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
+      if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
+
+      // Vis varsel-banner nå som bruker er logget inn
+      if ('Notification' in window && Notification.permission === 'default') {
+        const avvist = localStorage.getItem('varsel_avvist');
+        if (!avvist) document.getElementById('varselBanner').style.display = 'flex';
+      }
+
+      // Lytt på endringer fra andre enheter – hopp over første snapshot (allerede lastet via getDoc)
+      let firstSnapshot = true;
+      window._unsub = onSnapshot(doc(db, 'brukere', bruker.uid), snap => {
+        if (firstSnapshot) { firstSnapshot = false; return; }
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const nyA = JSON.stringify(data.aktiviteter || []);
+        const nyO = JSON.stringify(data.oppgaver    || []);
+        if (nyA !== localStorage.getItem('lp_a') || nyO !== localStorage.getItem('lp_o')) {
+          localStorage.setItem('lp_a', nyA);
+          localStorage.setItem('lp_o', nyO);
+          if (typeof hent === 'function') hent();
+          if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
+          if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
+        }
+      });
+
+    } else {
+      // Ikke logget inn
+      if (window._unsub) window._unsub();
+      loginOverlay.style.display = 'flex';
+      brukerInfo.style.display = 'none';
+      window._currentUid = null;
+    }
+  });
 </script>
 </body>
 </html>
