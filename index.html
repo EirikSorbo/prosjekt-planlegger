@@ -958,14 +958,14 @@
 <div id="loginOverlay" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
   <svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <clipPath id="licp"><circle cx="52" cy="36" r="22"/></clipPath>
+      <clipPath id="licp"><circle cx="46" cy="36" r="18"/></clipPath>
     </defs>
     <rect width="72" height="72" rx="18" fill="white" stroke="#e0e0e0" stroke-width="1"/>
-    <circle cx="30" cy="36" r="22" fill="#9490d4"/>
-    <circle cx="52" cy="36" r="22" fill="#b4e8a8"/>
-    <circle cx="30" cy="36" r="22" fill="#2e2b45" clip-path="url(#licp)"/>
-    <circle cx="30" cy="36" r="22" fill="none" stroke="#6860b0" stroke-width="1"/>
-    <circle cx="52" cy="36" r="22" fill="none" stroke="#6ca060" stroke-width="1"/>
+    <circle cx="26" cy="36" r="18" fill="#9490d4"/>
+    <circle cx="46" cy="36" r="18" fill="#b4e8a8"/>
+    <circle cx="26" cy="36" r="18" fill="#2e2b45" clip-path="url(#licp)"/>
+    <circle cx="26" cy="36" r="18" fill="none" stroke="#6860b0" stroke-width="1"/>
+    <circle cx="46" cy="36" r="18" fill="none" stroke="#6ca060" stroke-width="1"/>
   </svg>
   <div style="text-align:center;">
     <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--tekst);font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;">MishMash WP4</div>
@@ -1088,7 +1088,7 @@
         <label>Kategori</label>
         <select id="feltType">
           <option value="ai">AI Literacy</option>
-          <option value="seed">Seed funding</option>
+          <option value="seed">Seed</option>
           <option value="admin">Admin</option>
           <option value="annet">Annet</option>
         </select>
@@ -1213,7 +1213,7 @@
 
   const TYPER = {
     ai:    { farge: '#9490d4', tekst: 'AI Literacy' },
-    seed:  { farge: '#72c088', tekst: 'Seed funding' },
+    seed:  { farge: '#72c088', tekst: 'Seed' },
     admin: { farge: '#5e5a9c', tekst: 'Admin' },
     annet: { farge: '#2e2b45', tekst: 'Annet' }
   };
@@ -1502,7 +1502,7 @@
     filterRad.innerHTML = '';
     const filtre = [
       { id: 'ai',    label: 'AI Literacy',    farge: 'ai' },
-      { id: 'seed',  label: 'Seed funding',   farge: 'seed' },
+      { id: 'seed',  label: 'Seed',   farge: 'seed' },
       { id: 'admin', label: 'Admin', farge: 'admin' },
       { id: 'annet', label: 'Annet',          farge: 'annet' }
     ];
@@ -1665,6 +1665,18 @@
       }
     }
 
+    // + knapp for å legge til oppgave knyttet til aktiviteten
+    const leggTilOppgaveKnapp = document.createElement('button');
+    leggTilOppgaveKnapp.className = 'ikon-knapp';
+    leggTilOppgaveKnapp.textContent = '+';
+    leggTilOppgaveKnapp.title = 'Legg til oppgave';
+    leggTilOppgaveKnapp.style.cssText = 'font-size:18px;font-weight:400;color:var(--tekst-sek);line-height:1;';
+    leggTilOppgaveKnapp.onclick = e => {
+      e.stopPropagation();
+      åpneOppgaveModal(null, a.id);
+    };
+    kort.appendChild(leggTilOppgaveKnapp);
+
     // Info-knapp for beskrivelse
     if (a.beskrivelse) {
       const beskPanel = document.createElement('div');
@@ -1719,7 +1731,7 @@
     } else {
       const filtre = [
         { id: 'ai',        label: 'AI Literacy',    farge: 'ai' },
-        { id: 'seed',      label: 'Seed funding',   farge: 'seed' },
+        { id: 'seed',      label: 'Seed',   farge: 'seed' },
         { id: 'admin',     label: 'Admin', farge: 'admin' },
         { id: 'annet',     label: 'Annet',          farge: 'annet' },
         { id: 'fullførte', label: 'Fullførte',      farge: null }
@@ -1976,7 +1988,7 @@
     }
   }
 
-  function åpneOppgaveModal(id = null) {
+  function åpneOppgaveModal(id = null, preAktivitetId = null) {
     redigOppgaveId = id;
     const slettKnapp = document.getElementById('slettOppgaveKnapp');
     const select     = document.getElementById('oppFeltAktivitet');
@@ -2021,7 +2033,7 @@
       document.getElementById('oppgaveModalTittel').textContent = 'Ny oppgave';
       document.getElementById('oppFeltBesk').value  = '';
       document.getElementById('oppFeltNotat').value = '';
-      select.value = '';
+      select.value = preAktivitetId || '';
       slettKnapp.style.display = 'none';
     }
     document.getElementById('oppgaveModal').classList.add('vis');
@@ -2111,7 +2123,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.32',
+      versjon: '1.34',
       eksportert: new Date().toISOString(),
       aktiviteter,
       oppgaver
