@@ -958,8 +958,10 @@
   </div>
   <div class="header-handlinger">
     <button class="header-knapp" onclick="eksporterData()" title="Eksporter">↓</button>
-    <button class="header-knapp" onclick="document.getElementById('importInput').click()" title="Importer">↑</button>
+    <button class="header-knapp" onclick="document.getElementById('importInput').click()" title="Importer (erstatt)">↑</button>
+    <button class="header-knapp" onclick="document.getElementById('mergeInput').click()" title="Slå sammen">⇅</button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importerData(this)"/>
+    <input type="file" id="mergeInput"  accept=".json" style="display:none" onchange="mergeData(this)"/>
   </div>
 </header>
 
@@ -2082,6 +2084,7 @@
     lagre();
     lukkModal('aktivitetModal');
     oppdaterAktivPanel();
+    if (valgtDato) renderValgtDag(valgtDato);
   }
 
   function slettAktivitet() {
@@ -2091,6 +2094,7 @@
     lagre();
     lukkModal('aktivitetModal');
     oppdaterAktivPanel();
+    if (valgtDato) renderValgtDag(valgtDato);
   }
 
   /* ──────────────────────────────
@@ -2239,7 +2243,10 @@
 
   function oppdaterAktivPanel() {
     const aktiv = document.querySelector('.panel.aktiv')?.id;
-    if (aktiv === 'panel-kalender') renderKalender();
+    if (aktiv === 'panel-kalender') {
+      renderKalender();
+      if (valgtDato) renderValgtDag(valgtDato);
+    }
     if (aktiv === 'panel-liste')    renderListe();
     if (aktiv === 'panel-oppgaver') renderOppgaver();
   }
@@ -2317,9 +2324,37 @@
     input.value = ''; // reset så samme fil kan importeres igjen
   }
 
-  /* ──────────────────────────────
-     INIT
-  ────────────────────────────── */
+  function mergeData(input) {
+    const fil = input.files[0];
+    if (!fil) return;
+    const leser = new FileReader();
+    leser.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!Array.isArray(data.aktiviteter) || !Array.isArray(data.oppgaver)) {
+          alert('Filen ser ikke ut til å være en gyldig MishMash WP4-eksport.'); return;
+        }
+
+        // Merge: legg til kun elementer med nye IDer
+        const eksisterendeAktId = new Set(aktiviteter.map(a => a.id));
+        const eksisterendeOppId = new Set(oppgaver.map(o => o.id));
+
+        const nyeAkt = data.aktiviteter.filter(a => !eksisterendeAktId.has(a.id));
+        const nyeOpp = data.oppgaver.filter(o => !eksisterendeOppId.has(o.id));
+
+        aktiviteter = [...aktiviteter, ...nyeAkt];
+        oppgaver    = [...oppgaver,    ...nyeOpp];
+
+        lagre();
+        oppdaterAktivPanel();
+        alert(`✓ Slått sammen: ${nyeAkt.length} nye aktiviteter og ${nyeOpp.length} nye oppgaver lagt til.`);
+      } catch {
+        alert('Kunne ikke lese filen. Sjekk at det er en gyldig .json-fil.');
+      }
+    };
+    leser.readAsText(fil);
+    input.value = '';
+  }
   function init() {
     hent();
     renderKalender();
@@ -2378,9 +2413,9 @@
   };
 
   // ── Synkroniser data med Firestore ──
-  async function lagreTilSky(uid) {
+  async function lagreTilSky(userId) {
     try {
-      await setDoc(doc(db, 'brukere', uid), {
+      await setDoc(doc(db, 'brukere', userId), {
         aktiviteter: JSON.parse(localStorage.getItem('lp_a') || '[]'),
         oppgaver:    JSON.parse(localStorage.getItem('lp_o') || '[]'),
         oppdatert:   new Date().toISOString()
