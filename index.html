@@ -1960,7 +1960,7 @@
     body.innerHTML = html;
 
     // Render oppgaver as proper cards like calendar view
-    const tilknyttede = oppgaver.filter(o => o.aktivitetId === a.id);
+    const tilknyttede = oppgaver.filter(o => o.aktivitetId === a.id && !o.fullfort);
     if (tilknyttede.length > 0) {
       const header = document.createElement('div');
       header.style.cssText = 'margin-top:18px;font-size:11px;font-weight:700;font-family:"Syne",sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;';
@@ -2218,6 +2218,7 @@
     lagre();
     lukkModal('oppgaveModal');
     renderOppgaver();
+    if (valgtDato) renderValgtDag(valgtDato);
   }
 
   function slettOppgave() {
@@ -2226,6 +2227,7 @@
     lagre();
     lukkModal('oppgaveModal');
     renderOppgaver();
+    if (valgtDato) renderValgtDag(valgtDato);
   }
 
   /* ──────────────────────────────
