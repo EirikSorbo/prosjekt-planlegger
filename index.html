@@ -925,9 +925,9 @@
 
     .todo-kort {
       display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 13px 16px;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
       background: var(--hvit);
       border-bottom: 1px solid var(--kant);
       cursor: pointer;
@@ -939,12 +939,11 @@
     .todo-kort.fullfort .todo-tittel { text-decoration: line-through; opacity: 0.4; }
 
     .todo-cb {
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       border: 2px solid var(--grønn-mid);
       flex-shrink: 0;
-      margin-top: 1px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -956,8 +955,8 @@
     .todo-cb:hover:not(.sjekket) { border-color: var(--grønn); }
 
     .todo-info { flex: 1; min-width: 0; }
-    .todo-tittel { font-size: 14px; font-weight: 600; color: var(--tekst); }
-    .todo-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; align-items: center; }
+    .todo-tittel { font-size: 13px; font-weight: 600; color: var(--tekst); }
+    .todo-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; align-items: center; }
 
     /* ── Versjon ── */
     .versjon {
@@ -1709,16 +1708,29 @@
     if (!container) return;
     container.innerHTML = '';
 
-    const aktive   = todos.filter(t => !t.fullfort);
-    const fullforte = todos.filter(t => t.fullfort);
-    const alle = [...aktive.sort((a,b) => {
-      if (!a.frist && !b.frist) return 0;
-      if (!a.frist) return 1;
-      if (!b.frist) return -1;
-      return a.frist.localeCompare(b.frist);
-    }), ...fullforte];
+    const iDag  = new Date(); iDag.setHours(0,0,0,0);
+    const om30  = new Date(iDag); om30.setDate(om30.getDate() + 30);
 
-    if (alle.length === 0) {
+    // Todos uten frist (aktive)
+    const utenFrist = todos.filter(t => !t.fullfort && !t.frist);
+
+    // Todos med frist (aktive), sortert
+    const medFrist = todos.filter(t => !t.fullfort && t.frist)
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+
+    // Oppgaver med frist innen 30 dager (ikke fullført)
+    const oppgaverSnart = oppgaver.filter(o => {
+      if (o.fullfort || !o.frist) return false;
+      const d = new Date(o.frist + 'T00:00:00');
+      return d <= om30;
+    }).sort((a,b) => a.frist.localeCompare(b.frist));
+
+    // Fullførte todos
+    const fullforte = todos.filter(t => t.fullfort);
+
+    const tomListe = utenFrist.length === 0 && medFrist.length === 0 &&
+                     oppgaverSnart.length === 0 && fullforte.length === 0;
+    if (tomListe) {
       const tom = document.createElement('div');
       tom.style.cssText = 'padding:24px;text-align:center;font-size:13px;color:var(--tekst-sek);';
       tom.textContent = 'Ingen to do-elementer ennå.';
@@ -1726,21 +1738,8 @@
       return;
     }
 
-    let sistSeksjon = null;
-    alle.forEach(t => {
-      // Seksjonslabel
-      const seksjon = t.fullfort ? 'Fullført' : (t.frist ? (() => {
-        const d = new Date(t.frist + 'T00:00:00');
-        return MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
-      })() : 'Ingen frist');
-      if (seksjon !== sistSeksjon) {
-        const ml = document.createElement('div');
-        ml.className = 'maaned-label';
-        ml.textContent = seksjon;
-        container.appendChild(ml);
-        sistSeksjon = seksjon;
-      }
-
+    // Helper: render a todo item
+    const lagTodoKort = t => {
       const ytre = document.createElement('div');
       ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
 
@@ -1757,11 +1756,8 @@
 
       const cb = document.createElement('div');
       cb.className = 'todo-cb' + (t.fullfort ? ' sjekket' : '');
-      cb.innerHTML = t.fullfort ? '<svg width="11" height="11" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+      cb.innerHTML = t.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
       cb.onclick = e => { e.stopPropagation(); toggleTodo(t.id); };
-
-      const info = document.createElement('div');
-      info.className = 'todo-info';
 
       let metaHtml = '';
       if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort);
@@ -1770,6 +1766,8 @@
         if (opp) metaHtml += `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${opp.beskrivelse}</span>`;
       }
 
+      const info = document.createElement('div');
+      info.className = 'todo-info';
       info.innerHTML = `<div class="todo-tittel">${t.tittel}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
 
@@ -1782,8 +1780,85 @@
         todos = todos.filter(x => x.id !== t.id);
         lagre(); renderTodos();
       });
-      container.appendChild(ytre);
+      return ytre;
+    };
+
+    // Helper: render an oppgave as a compact row
+    const lagOppgaveKort = o => {
+      const ytre = document.createElement('div');
+      ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
+
+      const slettBg = document.createElement('div');
+      slettBg.className = 'sveip-bakgrunn';
+      slettBg.innerHTML = `<div class="slett-sirkel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>`;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'sveip-innhold';
+
+      const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+      const stripeKlasse = akt ? 'stripe-' + akt.type : 'stripe-fri';
+
+      const kort = document.createElement('div');
+      kort.className = 'oppgave-kort ' + stripeKlasse;
+      kort.style.cursor = 'pointer';
+      kort.onclick = () => åpneOppgaveInfo(o.id);
+
+      const cb = document.createElement('div');
+      cb.className = 'checkbox';
+      cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); renderTodos(); };
+
+      let metaHtml = fristSpan(o.frist, o.fullfort);
+      if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">${akt.tittel}</span>`;
+
+      const info = document.createElement('div');
+      info.className = 'oppgave-info';
+      info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
+        <div class="oppgave-meta">${metaHtml}</div>`;
+
+      kort.appendChild(cb);
+      kort.appendChild(info);
+      wrapper.appendChild(kort);
+      ytre.appendChild(slettBg);
+      ytre.appendChild(wrapper);
+      leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+        oppgaver = oppgaver.filter(x => x.id !== o.id);
+        lagre(); renderTodos();
+      });
+      return ytre;
+    };
+
+    const lagSeksjon = label => {
+      const ml = document.createElement('div');
+      ml.className = 'maaned-label';
+      ml.textContent = label;
+      container.appendChild(ml);
+    };
+
+    // 1. Uten frist
+    if (utenFrist.length > 0) {
+      lagSeksjon('Ingen frist');
+      utenFrist.forEach(t => container.appendChild(lagTodoKort(t)));
+    }
+
+    // 2. Med frist — todos og oppgaver interleaved by date, grouped by month
+    const allemedFrist = [
+      ...medFrist.map(t => ({ dato: t.frist, type: 'todo', item: t })),
+      ...oppgaverSnart.map(o => ({ dato: o.frist, type: 'opp', item: o }))
+    ].sort((a,b) => a.dato.localeCompare(b.dato));
+
+    let sistMnd = null;
+    allemedFrist.forEach(({ dato, type, item }) => {
+      const d = new Date(dato + 'T00:00:00');
+      const mnd = MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
+      if (mnd !== sistMnd) { lagSeksjon(mnd); sistMnd = mnd; }
+      container.appendChild(type === 'todo' ? lagTodoKort(item) : lagOppgaveKort(item));
     });
+
+    // 3. Fullførte
+    if (fullforte.length > 0) {
+      lagSeksjon('Fullført');
+      fullforte.forEach(t => container.appendChild(lagTodoKort(t)));
+    }
   }
 
   function toggleTodo(id) {
@@ -2267,7 +2342,7 @@
 
   function toggleOppgave(id) {
     const o = oppgaver.find(o => o.id === id);
-    if (o) { o.fullfort = !o.fullfort; lagre(); renderOppgaver(); }
+    if (o) { o.fullfort = !o.fullfort; lagre(); renderOppgaver(); renderTodos(); }
   }
 
   /* ──────────────────────────────
