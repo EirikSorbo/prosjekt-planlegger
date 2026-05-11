@@ -1064,7 +1064,6 @@
       flex-shrink: 0;
     }
     .uke-dag.valgt .uke-dag-header { background: var(--grønn-lys); }
-    .uke-dag.valgt .uke-dag-nr { outline: 2px solid var(--grønn); }
     .uke-hendelse {
       padding: 5px 12px 5px 52px;
       font-size: 12px;
@@ -1270,7 +1269,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.68</div>
+  <div class="versjon">v.1.69</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -1728,7 +1727,7 @@
       header.appendChild(prikker);
       dagEl.appendChild(header);
 
-      // Vis hendelser direkte under dag-headeren
+      // Vis aktiviteter
       dagAkt.forEach(a => {
         const el = document.createElement('div');
         el.className = 'uke-hendelse';
@@ -1737,6 +1736,18 @@
         const tid = a.tid ? ' · ' + a.tid : '';
         el.textContent = a.tittel + tid;
         el.onclick = e => { e.stopPropagation(); åpneAktivitetInfo(a.id); };
+        dagEl.appendChild(el);
+      });
+
+      // Vis oppgaver med frist på denne dagen
+      dagOpp.forEach(o => {
+        const el = document.createElement('div');
+        el.className = 'uke-hendelse';
+        el.style.borderLeftColor = 'var(--tekst-sek)';
+        el.style.background = 'var(--grønn-lys)';
+        el.style.color = 'var(--tekst-sek)';
+        el.textContent = '◻ ' + o.beskrivelse;
+        el.onclick = e => { e.stopPropagation(); åpneOppgaveInfo(o.id); };
         dagEl.appendChild(el);
       });
 
