@@ -1134,7 +1134,7 @@
       <div id="valgtDagListe"></div>
     </div>
     <div id="brukerInfo" style="display:none;justify-content:space-between;align-items:center;padding:10px 4px 0;">
-      <button onclick="åpneKategoriModal()" style="background:none;border:none;font-size:11px;font-family:'Nunito',sans-serif;color:var(--tekst-sek);cursor:pointer;padding:0;text-decoration:underline;">Rediger kategorier</button>
+      <button onclick="åpneKategoriModal()" class="knapp-sek" style="font-size:11px;padding:5px 10px;">Rediger kategorier</button>
       <div style="display:flex;align-items:center;gap:6px;">
         <span id="brukerNavn" style="font-size:11px;font-family:'Nunito',sans-serif;color:var(--tekst-sek);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;"></span>
         <button class="header-knapp" onclick="window._fbSignOut()" title="Logg ut" style="font-size:14px;">⏏</button>
@@ -1162,7 +1162,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.64</div>
+  <div class="versjon">v.1.65</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -1939,13 +1939,14 @@
       const stripeKlasse = akt ? 'stripe-' + akt.type : 'stripe-fri';
 
       const kort = document.createElement('div');
-      kort.className = 'todo-kort'; // compact mode — same height as todo items
+      kort.className = 'todo-kort' + (o.fullfort ? ' fullfort' : '');
       kort.style.borderLeft = `3px solid ${getKat(akt?.type)?.farge || 'var(--grønn-mid)'}`;
       kort.style.cursor = 'pointer';
       kort.onclick = () => åpneOppgaveInfo(o.id);
 
       const cb = document.createElement('div');
-      cb.className = 'todo-cb';
+      cb.className = 'todo-cb' + (o.fullfort ? ' sjekket' : '');
+      cb.innerHTML = o.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
       cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); renderTodos(); };
 
       let metaHtml = fristSpan(o.frist, o.fullfort);
@@ -3193,6 +3194,8 @@
         oppgaver:    JSON.parse(localStorage.getItem('lp_o') || '[]'),
         todos:       JSON.parse(localStorage.getItem('lp_t') || '[]'),
         kategorier:  JSON.parse(localStorage.getItem('lp_k') || 'null') || [],
+        filterAkt:   JSON.parse(localStorage.getItem('lp_fa') || '{}'),
+        filterOpp:   JSON.parse(localStorage.getItem('lp_fo') || '{}'),
         oppdatert:   new Date().toISOString()
       });
     } catch(e) {
@@ -3223,6 +3226,8 @@
         localStorage.setItem('lp_o', JSON.stringify(data.oppgaver    || []));
         localStorage.setItem('lp_t', JSON.stringify(data.todos       || []));
         if (data.kategorier?.length) localStorage.setItem('lp_k', JSON.stringify(data.kategorier));
+        if (data.filterAkt) localStorage.setItem('lp_fa', JSON.stringify(data.filterAkt));
+        if (data.filterOpp) localStorage.setItem('lp_fo', JSON.stringify(data.filterOpp));
       }
 
       // Last inn appen med sky-data
@@ -3246,12 +3251,17 @@
         const nyO = JSON.stringify(data.oppgaver    || []);
         const nyT = JSON.stringify(data.todos       || []);
         const nyK = JSON.stringify(data.kategorier  || []);
+        const nyFA = JSON.stringify(data.filterAkt  || {});
+        const nyFO = JSON.stringify(data.filterOpp  || {});
         if (nyA !== localStorage.getItem('lp_a') || nyO !== localStorage.getItem('lp_o') ||
-            nyT !== localStorage.getItem('lp_t') || nyK !== localStorage.getItem('lp_k')) {
+            nyT !== localStorage.getItem('lp_t') || nyK !== localStorage.getItem('lp_k') ||
+            nyFA !== localStorage.getItem('lp_fa') || nyFO !== localStorage.getItem('lp_fo')) {
           localStorage.setItem('lp_a', nyA);
           localStorage.setItem('lp_o', nyO);
           localStorage.setItem('lp_t', nyT);
           if (data.kategorier?.length) localStorage.setItem('lp_k', nyK);
+          if (data.filterAkt) localStorage.setItem('lp_fa', nyFA);
+          if (data.filterOpp) localStorage.setItem('lp_fo', nyFO);
           if (typeof hent === 'function') hent();
           if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
           if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
