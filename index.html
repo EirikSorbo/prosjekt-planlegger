@@ -899,6 +899,66 @@
     }
     .frist-eg-felt.vis { display: flex; }
 
+    /* ── To do ── */
+    .todo-hurtigknapper {
+      display: flex;
+      gap: 8px;
+      padding: 14px 0 10px;
+      flex-wrap: wrap;
+    }
+    .todo-hurtig-knapp {
+      flex: 1;
+      min-width: 90px;
+      background: var(--hvit);
+      border: 1.5px solid var(--kant);
+      border-radius: var(--rs);
+      padding: 9px 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--grønn);
+      cursor: pointer;
+      text-align: center;
+      transition: background .15s, border-color .15s;
+    }
+    .todo-hurtig-knapp:hover { background: var(--grønn-lys); border-color: var(--grønn-mid); }
+
+    .todo-kort {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 16px;
+      background: var(--hvit);
+      border-bottom: 1px solid var(--kant);
+      cursor: pointer;
+      transition: background .15s;
+      position: relative;
+    }
+    .todo-kort:hover { background: var(--grønn-lys); }
+    .todo-kort:last-child { border-bottom: none; }
+    .todo-kort.fullfort .todo-tittel { text-decoration: line-through; opacity: 0.4; }
+
+    .todo-cb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--grønn-mid);
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      background: var(--hvit);
+      cursor: pointer;
+    }
+    .todo-cb.sjekket { background: var(--grønn); border-color: var(--grønn); }
+    .todo-cb:hover:not(.sjekket) { border-color: var(--grønn); }
+
+    .todo-info { flex: 1; min-width: 0; }
+    .todo-tittel { font-size: 14px; font-weight: 600; color: var(--tekst); }
+    .todo-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; align-items: center; }
+
     /* ── Versjon ── */
     .versjon {
       text-align: center;
@@ -965,7 +1025,8 @@
 </header>
 
 <nav class="faner">
-  <button class="fane aktiv" onclick="byttFane('kalender', this)">Kalender</button>
+  <button class="fane aktiv" onclick="byttFane('todo', this)">To do</button>
+  <button class="fane" onclick="byttFane('kalender', this)">Kalender</button>
   <button class="fane" onclick="byttFane('liste', this)">Aktiviteter</button>
   <button class="fane" onclick="byttFane('oppgaver', this)">Oppgaver</button>
 </nav>
@@ -980,8 +1041,18 @@
 
 <main>
 
+  <!-- To do -->
+  <div id="panel-todo" class="panel aktiv">
+    <div class="todo-hurtigknapper">
+      <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
+      <button class="todo-hurtig-knapp" onclick="åpneAktivitetModal()">+ Aktivitet</button>
+      <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
+    </div>
+    <div class="kort-container" id="todoListe"></div>
+  </div>
+
   <!-- Kalender -->
-  <div id="panel-kalender" class="panel aktiv">
+  <div id="panel-kalender" class="panel">
     <div class="kalender-nav">
       <button class="nav-knapp" onclick="forrigeManad()">&#8249;</button>
       <div class="maaned-tittel" id="maanedTittel"></div>
@@ -1033,6 +1104,61 @@
 
   <div class="versjon">v.1.26</div>
 </main>
+
+<!-- Modal: To do info -->
+<div class="modal-overlay" id="todoInfoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="todoInfoModalTittel"></div>
+      <button class="lukk-knapp" onclick="lukkModal('todoInfoModal')">×</button>
+    </div>
+    <div class="modal-body" id="todoInfoModalBody"></div>
+    <div class="modal-footer">
+      <button class="knapp-sek" onclick="lukkModal('todoInfoModal')">Lukk</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" id="todoInfoFullfortKnapp" onclick="toggleTodoFraInfo()"></button>
+        <button class="knapp-primær" id="todoInfoRedigKnapp">Rediger</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: To do -->
+<div class="modal-overlay" id="todoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="todoModalTittel">Ny to do</div>
+      <button class="lukk-knapp" onclick="lukkModal('todoModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="felt">
+        <label>Tittel</label>
+        <input type="text" id="todoFeltTittel" />
+      </div>
+      <div class="felt">
+        <label>Beskrivelse</label>
+        <textarea id="todoFeltBesk" style="min-height:64px;"></textarea>
+      </div>
+      <div class="felt">
+        <label>Frist</label>
+        <input type="date" id="todoFeltFrist" />
+      </div>
+      <div class="felt">
+        <label>Koble til oppgave</label>
+        <select id="todoFeltOppgave">
+          <option value="">— Ingen —</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="knapp-fare" id="slettTodoKnapp" onclick="slettTodo()" style="display:none;">Slett</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('todoModal')">Avbryt</button>
+        <button class="knapp-primær" onclick="lagreTodo()">Lagre</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Modal: Oppgave info -->
 <div class="modal-overlay" id="oppgaveInfoModal">
@@ -1200,6 +1326,7 @@
   ────────────────────────────── */
   let aktiviteter = [];
   let oppgaver    = [];
+  let todos       = [];
 
   let redigAktivitetId = null;
   let redigOppgaveId   = null;
@@ -1230,8 +1357,8 @@
   function lagre() {
     localStorage.setItem('lp_a', JSON.stringify(aktiviteter));
     localStorage.setItem('lp_o', JSON.stringify(oppgaver));
+    localStorage.setItem('lp_t', JSON.stringify(todos));
     oppdaterForfaltBadge();
-    // Synkroniser til Firestore hvis innlogget
     if (window._currentUid && window._lagreTilSky) {
       window._lagreTilSky(window._currentUid);
     }
@@ -1240,8 +1367,10 @@
   function hent() {
     const a = localStorage.getItem('lp_a');
     const o = localStorage.getItem('lp_o');
+    const t = localStorage.getItem('lp_t');
     aktiviteter = a ? JSON.parse(a) : [];
     oppgaver    = o ? JSON.parse(o) : [];
+    todos       = t ? JSON.parse(t) : [];
   }
 
   function uid() {
@@ -1570,6 +1699,192 @@
   /* ──────────────────────────────
      UTILS
   ────────────────────────────── */
+  /* ──────────────────────────────
+     TO DO
+  ────────────────────────────── */
+  let redigTodoId = null;
+
+  function renderTodos() {
+    const container = document.getElementById('todoListe');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const aktive   = todos.filter(t => !t.fullfort);
+    const fullforte = todos.filter(t => t.fullfort);
+    const alle = [...aktive.sort((a,b) => {
+      if (!a.frist && !b.frist) return 0;
+      if (!a.frist) return 1;
+      if (!b.frist) return -1;
+      return a.frist.localeCompare(b.frist);
+    }), ...fullforte];
+
+    if (alle.length === 0) {
+      const tom = document.createElement('div');
+      tom.style.cssText = 'padding:24px;text-align:center;font-size:13px;color:var(--tekst-sek);';
+      tom.textContent = 'Ingen to do-elementer ennå.';
+      container.appendChild(tom);
+      return;
+    }
+
+    let sistSeksjon = null;
+    alle.forEach(t => {
+      // Seksjonslabel
+      const seksjon = t.fullfort ? 'Fullført' : (t.frist ? (() => {
+        const d = new Date(t.frist + 'T00:00:00');
+        return MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
+      })() : 'Ingen frist');
+      if (seksjon !== sistSeksjon) {
+        const ml = document.createElement('div');
+        ml.className = 'maaned-label';
+        ml.textContent = seksjon;
+        container.appendChild(ml);
+        sistSeksjon = seksjon;
+      }
+
+      const ytre = document.createElement('div');
+      ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
+
+      const slettBg = document.createElement('div');
+      slettBg.className = 'sveip-bakgrunn';
+      slettBg.innerHTML = `<div class="slett-sirkel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>`;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'sveip-innhold';
+
+      const kort = document.createElement('div');
+      kort.className = 'todo-kort' + (t.fullfort ? ' fullfort' : '');
+      kort.onclick = () => åpneTodoInfo(t.id);
+
+      const cb = document.createElement('div');
+      cb.className = 'todo-cb' + (t.fullfort ? ' sjekket' : '');
+      cb.innerHTML = t.fullfort ? '<svg width="11" height="11" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+      cb.onclick = e => { e.stopPropagation(); toggleTodo(t.id); };
+
+      const info = document.createElement('div');
+      info.className = 'todo-info';
+
+      let metaHtml = '';
+      if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort);
+      if (t.oppgaveId) {
+        const opp = oppgaver.find(o => o.id === t.oppgaveId);
+        if (opp) metaHtml += `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${opp.beskrivelse}</span>`;
+      }
+
+      info.innerHTML = `<div class="todo-tittel">${t.tittel}</div>
+        ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
+
+      kort.appendChild(cb);
+      kort.appendChild(info);
+      wrapper.appendChild(kort);
+      ytre.appendChild(slettBg);
+      ytre.appendChild(wrapper);
+      leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+        todos = todos.filter(x => x.id !== t.id);
+        lagre(); renderTodos();
+      });
+      container.appendChild(ytre);
+    });
+  }
+
+  function toggleTodo(id) {
+    const t = todos.find(t => t.id === id);
+    if (t) { t.fullfort = !t.fullfort; lagre(); renderTodos(); }
+  }
+
+  function åpneTodoModal(id = null) {
+    redigTodoId = id;
+    const slettKnapp = document.getElementById('slettTodoKnapp');
+
+    // Fyll oppgaveliste
+    const select = document.getElementById('todoFeltOppgave');
+    select.innerHTML = '<option value="">— Ingen —</option>';
+    oppgaver.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id;
+      opt.textContent = o.beskrivelse;
+      select.appendChild(opt);
+    });
+
+    if (id) {
+      const t = todos.find(t => t.id === id);
+      if (!t) return;
+      document.getElementById('todoModalTittel').textContent = 'Rediger to do';
+      document.getElementById('todoFeltTittel').value = t.tittel;
+      document.getElementById('todoFeltBesk').value   = t.beskrivelse || '';
+      document.getElementById('todoFeltFrist').value  = t.frist || '';
+      select.value = t.oppgaveId || '';
+      slettKnapp.style.display = 'inline-flex';
+    } else {
+      document.getElementById('todoModalTittel').textContent = 'Ny to do';
+      document.getElementById('todoFeltTittel').value = '';
+      document.getElementById('todoFeltBesk').value   = '';
+      document.getElementById('todoFeltFrist').value  = '';
+      select.value = '';
+      slettKnapp.style.display = 'none';
+    }
+    document.getElementById('todoModal').classList.add('vis');
+    setTimeout(() => document.getElementById('todoFeltTittel').focus(), 100);
+  }
+
+  function lagreTodo() {
+    const tittel = document.getElementById('todoFeltTittel').value.trim();
+    if (!tittel) { alert('Tittel er påkrevd.'); return; }
+    const besk      = document.getElementById('todoFeltBesk').value.trim();
+    const frist     = document.getElementById('todoFeltFrist').value || null;
+    const oppgaveId = document.getElementById('todoFeltOppgave').value || null;
+
+    if (redigTodoId) {
+      const t = todos.find(t => t.id === redigTodoId);
+      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.oppgaveId = oppgaveId; }
+    } else {
+      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, oppgaveId, fullfort: false });
+    }
+    lagre(); lukkModal('todoModal'); renderTodos();
+  }
+
+  function slettTodo() {
+    if (!confirm('Slett denne to do?')) return;
+    todos = todos.filter(t => t.id !== redigTodoId);
+    lagre(); lukkModal('todoModal'); renderTodos();
+  }
+
+  function åpneTodoInfo(id) {
+    const t = todos.find(t => t.id === id);
+    if (!t) return;
+    window._todoInfoId = id;
+
+    document.getElementById('todoInfoModalTittel').textContent = t.tittel;
+
+    let html = '';
+    if (t.frist) {
+      const lbl = fristLabel(t.frist, t.fullfort);
+      html += `<div style="padding:10px 12px;border-radius:var(--rs);background:${lbl.farge === '#c0392b' ? '#fdeaea' : 'var(--grønn-lys)'};font-size:13px;color:${lbl.farge};font-weight:${lbl.vekt};margin-bottom:14px;">${lbl.tekst}</div>`;
+    }
+    if (t.beskrivelse) {
+      html += `<div style="padding:12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);line-height:1.5;margin-bottom:14px;">${t.beskrivelse}</div>`;
+    }
+    if (t.oppgaveId) {
+      const opp = oppgaver.find(o => o.id === t.oppgaveId);
+      if (opp) html += `<div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet oppgave</div>
+        <div style="padding:10px 12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);cursor:pointer;" onclick="lukkModal('todoInfoModal');åpneOppgaveInfo('${opp.id}')">${opp.beskrivelse}</div>`;
+    }
+    if (!t.frist && !t.beskrivelse && !t.oppgaveId) {
+      html = `<div style="font-size:13px;color:var(--tekst-sek);">Ingen tilleggsinformasjon.</div>`;
+    }
+
+    document.getElementById('todoInfoModalBody').innerHTML = html;
+    document.getElementById('todoInfoFullfortKnapp').textContent = t.fullfort ? '↩ Angre fullført' : '✓ Merk fullført';
+    document.getElementById('todoInfoRedigKnapp').onclick = () => { lukkModal('todoInfoModal'); åpneTodoModal(id); };
+    document.getElementById('todoInfoModal').classList.add('vis');
+  }
+
+  function toggleTodoFraInfo() {
+    const id = window._todoInfoId;
+    if (!id) return;
+    toggleTodo(id);
+    åpneTodoInfo(id);
+  }
+
   /* ──────────────────────────────
      FRIST HELPER
   ────────────────────────────── */
@@ -2268,10 +2583,8 @@
 
   function oppdaterAktivPanel() {
     const aktiv = document.querySelector('.panel.aktiv')?.id;
-    if (aktiv === 'panel-kalender') {
-      renderKalender();
-      if (valgtDato) renderValgtDag(valgtDato);
-    }
+    if (aktiv === 'panel-todo')     renderTodos();
+    if (aktiv === 'panel-kalender') { renderKalender(); if (valgtDato) renderValgtDag(valgtDato); }
     if (aktiv === 'panel-liste')    renderListe();
     if (aktiv === 'panel-oppgaver') renderOppgaver();
   }
@@ -2306,10 +2619,11 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.34',
+      versjon: '1.56',
       eksportert: new Date().toISOString(),
       aktiviteter,
-      oppgaver
+      oppgaver,
+      todos
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
@@ -2328,7 +2642,8 @@
   function taSnapshot() {
     importSnapshot = {
       aktiviteter: JSON.parse(JSON.stringify(aktiviteter)),
-      oppgaver:    JSON.parse(JSON.stringify(oppgaver))
+      oppgaver:    JSON.parse(JSON.stringify(oppgaver)),
+      todos:       JSON.parse(JSON.stringify(todos))
     };
     document.getElementById('angreImportKnapp').style.display = 'inline-flex';
   }
@@ -2338,6 +2653,7 @@
     if (!confirm('Angre siste import/merge og gå tilbake til forrige tilstand?')) return;
     aktiviteter = importSnapshot.aktiviteter;
     oppgaver    = importSnapshot.oppgaver;
+    todos       = importSnapshot.todos;
     importSnapshot = null;
     document.getElementById('angreImportKnapp').style.display = 'none';
     lagre();
@@ -2388,11 +2704,13 @@
         // Merge: legg til kun elementer med nye IDer
         const eksisterendeAktId = new Set(aktiviteter.map(a => a.id));
         const eksisterendeOppId = new Set(oppgaver.map(o => o.id));
+        const eksisterendeTodId = new Set(todos.map(t => t.id));
 
         const nyeAkt = data.aktiviteter.filter(a => !eksisterendeAktId.has(a.id));
         const nyeOpp = data.oppgaver.filter(o => !eksisterendeOppId.has(o.id));
+        const nyeTod = (data.todos || []).filter(t => !eksisterendeTodId.has(t.id));
 
-        if (nyeAkt.length === 0 && nyeOpp.length === 0) {
+        if (nyeAkt.length === 0 && nyeOpp.length === 0 && nyeTod.length === 0) {
           alert('Ingen nye elementer å legge til — alt fantes fra før.');
           return;
         }
@@ -2400,6 +2718,7 @@
         taSnapshot();
         aktiviteter = [...aktiviteter, ...nyeAkt];
         oppgaver    = [...oppgaver,    ...nyeOpp];
+        todos       = [...todos,       ...nyeTod];
 
         lagre();
         oppdaterAktivPanel();
@@ -2413,6 +2732,7 @@
   }
   function init() {
     hent();
+    renderTodos();
     renderKalender();
     oppdaterForfaltBadge();
   }
@@ -2474,6 +2794,7 @@
       await setDoc(doc(db, 'brukere', userId), {
         aktiviteter: JSON.parse(localStorage.getItem('lp_a') || '[]'),
         oppgaver:    JSON.parse(localStorage.getItem('lp_o') || '[]'),
+        todos:       JSON.parse(localStorage.getItem('lp_t') || '[]'),
         oppdatert:   new Date().toISOString()
       });
     } catch(e) {
@@ -2502,6 +2823,7 @@
         const data = snap.data();
         localStorage.setItem('lp_a', JSON.stringify(data.aktiviteter || []));
         localStorage.setItem('lp_o', JSON.stringify(data.oppgaver    || []));
+        localStorage.setItem('lp_t', JSON.stringify(data.todos       || []));
       }
 
       // Last inn appen med sky-data
@@ -2523,9 +2845,11 @@
         const data = snap.data();
         const nyA = JSON.stringify(data.aktiviteter || []);
         const nyO = JSON.stringify(data.oppgaver    || []);
-        if (nyA !== localStorage.getItem('lp_a') || nyO !== localStorage.getItem('lp_o')) {
+        const nyT = JSON.stringify(data.todos       || []);
+        if (nyA !== localStorage.getItem('lp_a') || nyO !== localStorage.getItem('lp_o') || nyT !== localStorage.getItem('lp_t')) {
           localStorage.setItem('lp_a', nyA);
           localStorage.setItem('lp_o', nyO);
+          localStorage.setItem('lp_t', nyT);
           if (typeof hent === 'function') hent();
           if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
           if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
