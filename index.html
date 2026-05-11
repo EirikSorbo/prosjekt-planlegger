@@ -981,6 +981,105 @@
     .info-ikon-knapp:hover { background: var(--grønn-lys); border-color: var(--grønn-mid); color: var(--grønn); }
     .info-ikon-knapp.slett:hover { background: #fdeaea; border-color: #f5b8b8; color: #c0392b; }
 
+    /* ── Kalender visningsvalg ── */
+    .kal-visning-toggle {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      background: var(--grønn-lys);
+      border-radius: var(--rs);
+      padding: 3px;
+    }
+    .kal-toggle-knapp {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--tekst-sek);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .kal-toggle-knapp.aktiv {
+      background: var(--hvit);
+      color: var(--grønn);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* ── Uke-visning ── */
+    .uke-dag {
+      border-bottom: 1px solid var(--kant);
+      padding: 0;
+    }
+    .uke-dag:last-child { border-bottom: none; }
+    .uke-dag-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .uke-dag-header:hover { background: var(--grønn-lys); }
+    .uke-dag-header.i-dag { background: var(--grønn-lys); }
+    .uke-dag-nr {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--tekst);
+      flex-shrink: 0;
+    }
+    .uke-dag-nr.i-dag-nr {
+      background: var(--grønn);
+      color: white;
+    }
+    .uke-dag-navn {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      color: var(--tekst-sek);
+      text-transform: uppercase;
+      width: 28px;
+      flex-shrink: 0;
+    }
+    .uke-prikker {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .uke-prikk {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .uke-dag.valgt .uke-dag-header { background: var(--grønn-lys); }
+    .uke-dag.valgt .uke-dag-nr { outline: 2px solid var(--grønn); }
+    .uke-hendelse {
+      padding: 5px 12px 5px 52px;
+      font-size: 12px;
+      color: var(--tekst);
+      border-left: 3px solid transparent;
+      margin: 2px 0;
+      border-radius: 0 6px 6px 0;
+      cursor: pointer;
+      transition: background .1s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .uke-hendelse:hover { opacity: 0.75; }
+
     /* ── Kategori-modal ── */
     .kat-rad {
       display: flex;
@@ -1111,21 +1210,30 @@
   <!-- Kalender -->
   <div id="panel-kalender" class="panel">
     <div class="kalender-nav">
-      <button class="nav-knapp" onclick="forrigeManad()">&#8249;</button>
+      <button class="nav-knapp" id="forrigeKnapp" onclick="forrigeManad()">&#8249;</button>
       <div class="maaned-tittel" id="maanedTittel"></div>
-      <button class="nav-knapp" onclick="nesteManad()">&#8250;</button>
+      <button class="nav-knapp" id="nesteKnapp" onclick="nesteManad()">&#8250;</button>
     </div>
-    <div class="kalender-grid">
-      <div class="dag-navn-rad">
-        <div class="dag-navn">Man</div>
-        <div class="dag-navn">Tir</div>
-        <div class="dag-navn">Ons</div>
-        <div class="dag-navn">Tor</div>
-        <div class="dag-navn">Fre</div>
-        <div class="dag-navn">Lør</div>
-        <div class="dag-navn">Søn</div>
+    <div class="kal-visning-toggle">
+      <button id="toggleMaaned" class="kal-toggle-knapp aktiv" onclick="byttKalVisning('maaned')">Måned</button>
+      <button id="toggleUke"    class="kal-toggle-knapp"       onclick="byttKalVisning('uke')">Uke</button>
+    </div>
+    <div id="kalender-maaned-view">
+      <div class="kalender-grid">
+        <div class="dag-navn-rad">
+          <div class="dag-navn">Man</div>
+          <div class="dag-navn">Tir</div>
+          <div class="dag-navn">Ons</div>
+          <div class="dag-navn">Tor</div>
+          <div class="dag-navn">Fre</div>
+          <div class="dag-navn">Lør</div>
+          <div class="dag-navn">Søn</div>
+        </div>
+        <div class="dager-grid" id="dagerGrid"></div>
       </div>
-      <div class="dager-grid" id="dagerGrid"></div>
+    </div>
+    <div id="kalender-uke-view" style="display:none;">
+      <div id="ukeGrid"></div>
     </div>
     <div class="valgt-dag-panel" id="valgtDagPanel">
       <div class="valgt-dag-header">
@@ -1162,7 +1270,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.67</div>
+  <div class="versjon">v.1.68</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -1545,12 +1653,112 @@
     if (id === 'oppgaver') renderOppgaver();
   }
 
+  let kalVisning = 'maaned'; // 'maaned' | 'uke'
+  let ukeOffset  = 0; // uker relativt til i dag
+
+  function byttKalVisning(visning) {
+    kalVisning = visning;
+    document.getElementById('kalender-maaned-view').style.display = visning === 'maaned' ? '' : 'none';
+    document.getElementById('kalender-uke-view').style.display    = visning === 'uke'    ? '' : 'none';
+    document.getElementById('toggleMaaned').classList.toggle('aktiv', visning === 'maaned');
+    document.getElementById('toggleUke').classList.toggle('aktiv',    visning === 'uke');
+    if (visning === 'maaned') renderKalender();
+    else renderUke();
+  }
+
+  function renderUke() {
+    const grid = document.getElementById('ukeGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    // Finn mandagen i gjeldende uke
+    const iDag = new Date(); iDag.setHours(0,0,0,0);
+    const mandag = new Date(iDag);
+    const dagIUke = iDag.getDay() === 0 ? 6 : iDag.getDay() - 1;
+    mandag.setDate(mandag.getDate() - dagIUke + ukeOffset * 7);
+
+    const uke = new Date(mandag);
+    const ukeNr = getUkeNr(mandag);
+    document.getElementById('maanedTittel').textContent = 'Uke ' + ukeNr + ' · ' + mandag.getFullYear();
+    document.getElementById('forrigeKnapp').onclick = () => { ukeOffset--; renderUke(); };
+    document.getElementById('nesteKnapp').onclick   = () => { ukeOffset++; renderUke(); };
+
+    for (let i = 0; i < 7; i++) {
+      const d  = new Date(uke);
+      d.setDate(uke.getDate() + i);
+      const ds = d.toISOString().slice(0,10);
+      const erIDag = ds === iDag.toISOString().slice(0,10);
+      const erValgt = ds === valgtDato;
+
+      const dagAkt = aktiviteter.filter(a => a.dato <= ds && (a.datoTil >= ds || a.dato === ds));
+      const dagOpp = oppgaver.filter(o => o.frist === ds && !o.fullfort);
+
+      const dagEl = document.createElement('div');
+      dagEl.className = 'uke-dag' + (erValgt ? ' valgt' : '');
+
+      const header = document.createElement('div');
+      header.className = 'uke-dag-header' + (erIDag ? ' i-dag' : '');
+      header.onclick = () => velgDag(ds, dagEl);
+
+      const navnEl = document.createElement('div');
+      navnEl.className = 'uke-dag-navn';
+      navnEl.textContent = UKEDAGER_K[d.getDay()];
+
+      const nrEl = document.createElement('div');
+      nrEl.className = 'uke-dag-nr' + (erIDag ? ' i-dag-nr' : '');
+      nrEl.textContent = d.getDate();
+
+      const prikker = document.createElement('div');
+      prikker.className = 'uke-prikker';
+      dagAkt.forEach(a => {
+        const p = document.createElement('div');
+        p.className = 'uke-prikk';
+        p.style.background = getKat(a.type)?.farge || '#999';
+        prikker.appendChild(p);
+      });
+      dagOpp.forEach(() => {
+        const p = document.createElement('div');
+        p.className = 'uke-prikk';
+        p.style.background = 'var(--tekst-sek)';
+        prikker.appendChild(p);
+      });
+
+      header.appendChild(navnEl);
+      header.appendChild(nrEl);
+      header.appendChild(prikker);
+      dagEl.appendChild(header);
+
+      // Vis hendelser direkte under dag-headeren
+      dagAkt.forEach(a => {
+        const el = document.createElement('div');
+        el.className = 'uke-hendelse';
+        el.style.borderLeftColor = getKat(a.type)?.farge || '#ccc';
+        el.style.background = (getKat(a.type)?.farge || '#ccc') + '18';
+        const tid = a.tid ? ' · ' + a.tid : '';
+        el.textContent = a.tittel + tid;
+        el.onclick = e => { e.stopPropagation(); åpneAktivitetInfo(a.id); };
+        dagEl.appendChild(el);
+      });
+
+      grid.appendChild(dagEl);
+    }
+  }
+
+  function getUkeNr(dato) {
+    const d = new Date(Date.UTC(dato.getFullYear(), dato.getMonth(), dato.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const aarStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - aarStart) / 86400000) + 1) / 7);
+  }
+
   /* ──────────────────────────────
-     KALENDER
+     MÅNEDSKORT
   ────────────────────────────── */
   function renderKalender() {
     document.getElementById('maanedTittel').textContent =
       MAANEDER[visMaaned] + ' ' + visAar;
+    document.getElementById('forrigeKnapp').onclick = () => forrigeManad();
+    document.getElementById('nesteKnapp').onclick   = () => nesteManad();
 
     const grid = document.getElementById('dagerGrid');
     grid.innerHTML = '';
@@ -2982,7 +3190,10 @@
   function oppdaterAktivPanel() {
     const aktiv = document.querySelector('.panel.aktiv')?.id;
     if (aktiv === 'panel-todo')     renderTodos();
-    if (aktiv === 'panel-kalender') { renderKalender(); if (valgtDato) renderValgtDag(valgtDato); }
+    if (aktiv === 'panel-kalender') {
+      if (kalVisning === 'uke') renderUke();
+      else { renderKalender(); if (valgtDato) renderValgtDag(valgtDato); }
+    }
     if (aktiv === 'panel-liste')    renderListe();
     if (aktiv === 'panel-oppgaver') renderOppgaver();
   }
