@@ -1162,7 +1162,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.66</div>
+  <div class="versjon">v.1.67</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -1216,12 +1216,17 @@
         <input type="text" id="todoFeltTittel" />
       </div>
       <div class="felt">
-        <label>Beskrivelse</label>
-        <textarea id="todoFeltBesk" style="min-height:64px;"></textarea>
+        <label>Frist</label>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settTodoFrist(0)">I dag</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settTodoFrist(1)">I morgen</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settTodoFrist(3)">Om 3 dager</button>
+        </div>
+        <input type="date" id="todoFeltFrist" />
       </div>
       <div class="felt">
-        <label>Frist</label>
-        <input type="date" id="todoFeltFrist" />
+        <label>Beskrivelse</label>
+        <textarea id="todoFeltBesk" style="min-height:64px;"></textarea>
       </div>
       <div class="felt">
         <label>Koble til oppgave</label>
@@ -2012,6 +2017,12 @@
       t.fullfortDato = t.fullfort ? new Date().toISOString().slice(0,10) : null;
       lagre(); renderTodos();
     }
+  }
+
+  function settTodoFrist(dager) {
+    const d = new Date();
+    d.setDate(d.getDate() + dager);
+    document.getElementById('todoFeltFrist').value = d.toISOString().slice(0, 10);
   }
 
   function åpneTodoModal(id = null) {
