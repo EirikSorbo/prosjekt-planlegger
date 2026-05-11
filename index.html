@@ -164,18 +164,19 @@
       justify-content: center;
       background: var(--hvit);
       border-bottom: 1px solid var(--kant);
-      padding: 0 20px;
+      padding: 0;
       position: sticky;
       top: 58px;
       z-index: 99;
     }
 
     .fane {
-      padding: 14px 18px;
+      flex: 1;
+      padding: 13px 4px;
       font-family: 'Syne', sans-serif;
       font-weight: 700;
-      font-size: 12px;
-      letter-spacing: 0.6px;
+      font-size: 11px;
+      letter-spacing: 0.3px;
       color: var(--tekst-sek);
       cursor: pointer;
       border: none;
@@ -184,6 +185,8 @@
       margin-bottom: -1px;
       transition: color .15s, border-color .15s;
       text-transform: uppercase;
+      text-align: center;
+      white-space: nowrap;
     }
 
     .fane:hover { color: var(--grønn); }
@@ -1118,7 +1121,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.26</div>
+  <div class="versjon">v.1.60</div>
 </main>
 
 <!-- Modal: To do info -->
@@ -2749,7 +2752,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.56',
+      versjon: '1.60',
       eksportert: new Date().toISOString(),
       aktiviteter,
       oppgaver,
