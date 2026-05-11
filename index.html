@@ -1162,7 +1162,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.65</div>
+  <div class="versjon">v.1.66</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -1714,7 +1714,7 @@
 
         let metaHtml = '';
         if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
-        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">${akt.tittel}</span>`;
+        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
 
         info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
           ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
@@ -1950,7 +1950,7 @@
       cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); renderTodos(); };
 
       let metaHtml = fristSpan(o.frist, o.fullfort);
-      if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">${akt.tittel}</span>`;
+      if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
 
       const info = document.createElement('div');
       info.className = 'todo-info';
@@ -2337,13 +2337,15 @@
     wrapper.className = 'sveip-innhold';
 
     const kort = document.createElement('div');
-    kort.className = 'aktivitet-kort hover-' + a.type;
+    kort.className = 'aktivitet-kort' + (a.type ? ' hover-' + a.type : '');
     kort.style.cursor = 'pointer';
     kort.onclick = () => åpneAktivitetInfo(a.id);
 
     const badge = document.createElement('span');
-    badge.className = `type-badge ${a.type}`;
-    badge.textContent = getKat(a.type)?.label || a.type;
+    if (a.type) {
+      badge.className = `type-badge ${a.type}`;
+      badge.textContent = getKat(a.type)?.label || a.type;
+    }
 
     const d = new Date(a.dato + 'T00:00:00');
     let datoStr = UKEDAGER_K[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()];
@@ -2383,8 +2385,7 @@
     leggTilOppgaveKnapp.className = 'ikon-knapp';
     leggTilOppgaveKnapp.textContent = '+';
     leggTilOppgaveKnapp.title = 'Legg til oppgave';
-    leggTilOppgaveKnapp.style.cssText = `font-size:18px;font-weight:400;color:${getKat(a.type)?.farge || 'var(--tekst-sek)'};line-height:1;`;
-    leggTilOppgaveKnapp.onclick = e => {
+    leggTilOppgaveKnapp.style.cssText = `font-size:18px;font-weight:400;color:${getKat(a.type)?.farge || 'var(--tekst-sek)'};line-height:1;`;    leggTilOppgaveKnapp.onclick = e => {
       e.stopPropagation();
       åpneOppgaveModal(null, a.id);
     };
@@ -2528,7 +2529,7 @@
       if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
       if (o.aktivitetId) {
         const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type}">${akt.tittel}</span>`;
+        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
       }
 
       info.innerHTML = `
@@ -2593,7 +2594,7 @@
       html += `<div style="margin-bottom:14px;">
         <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet aktivitet</div>
         <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--grønn-lys);border-radius:var(--rs);cursor:pointer;" onclick="lukkModal('oppgaveInfoModal');åpneAktivitetInfo('${akt.id}')">
-          <span class="type-badge ${akt.type}" style="font-size:10px;">${getKat(akt.type)?.label || akt.type}</span>
+          <span class="type-badge ${akt.type || ''}" style="font-size:10px;">${getKat(akt.type)?.label || ''}</span>
           <span style="font-size:13px;font-weight:600;color:var(--tekst);">${akt.tittel}</span>
           <span style="font-size:12px;color:var(--tekst-sek);margin-left:auto;">${ad.getDate()}. ${MAANEDER[ad.getMonth()]}</span>
         </div>
@@ -2661,7 +2662,7 @@
 
     let html = `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-        <span class="type-badge ${a.type}">${getKat(a.type)?.label || a.type}</span>
+        ${a.type ? `<span class="type-badge ${a.type}">${getKat(a.type)?.label || a.type}</span>` : ''}
       </div>
       <div style="font-size:13px;color:var(--tekst-sek);margin-bottom:4px;">${datoStr}${tidStr ? ' · ' + tidStr : ''}</div>`;
 
@@ -3264,8 +3265,7 @@
           if (data.filterOpp) localStorage.setItem('lp_fo', nyFO);
           if (typeof hent === 'function') hent();
           if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
-          if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
-        }
+          if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();        }
       });
 
     } else {
