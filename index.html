@@ -958,6 +958,23 @@
     .todo-tittel { font-size: 13px; font-weight: 600; color: var(--tekst); }
     .todo-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; align-items: center; }
 
+    .info-ikon-knapp {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--kant);
+      background: var(--hvit);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--tekst-sek);
+      transition: background .15s, border-color .15s, color .15s;
+      flex-shrink: 0;
+    }
+    .info-ikon-knapp:hover { background: var(--grønn-lys); border-color: var(--grønn-mid); color: var(--grønn); }
+    .info-ikon-knapp.slett:hover { background: #fdeaea; border-color: #f5b8b8; color: #c0392b; }
+
     /* ── Versjon ── */
     .versjon {
       text-align: center;
@@ -1114,9 +1131,14 @@
     <div class="modal-body" id="todoInfoModalBody"></div>
     <div class="modal-footer">
       <button class="knapp-sek" onclick="lukkModal('todoInfoModal')">Lukk</button>
-      <div class="knapp-gruppe">
+      <div class="knapp-gruppe" style="align-items:center;">
         <button class="knapp-sek" id="todoInfoFullfortKnapp" onclick="toggleTodoFraInfo()"></button>
-        <button class="knapp-primær" id="todoInfoRedigKnapp">Rediger</button>
+        <button class="info-ikon-knapp" id="todoInfoRedigKnapp" title="Rediger">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="info-ikon-knapp slett" id="todoInfoSlettKnapp" title="Slett">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -1169,9 +1191,14 @@
     <div class="modal-body" id="oppInfoModalBody"></div>
     <div class="modal-footer">
       <button class="knapp-sek" onclick="lukkModal('oppgaveInfoModal')">Lukk</button>
-      <div class="knapp-gruppe">
+      <div class="knapp-gruppe" style="align-items:center;">
         <button class="knapp-sek" id="oppInfoFullfortKnapp" onclick="toggleOppgaveFraInfo()"></button>
-        <button class="knapp-primær" id="oppInfoRedigKnapp">Rediger</button>
+        <button class="info-ikon-knapp" id="oppInfoRedigKnapp" title="Rediger">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="info-ikon-knapp slett" id="oppInfoSlettKnapp" title="Slett">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -1187,9 +1214,14 @@
     <div class="modal-body" id="infoModalBody"></div>
     <div class="modal-footer">
       <button class="knapp-sek" onclick="lukkModal('aktivitetInfoModal')">Lukk</button>
-      <div class="knapp-gruppe">
+      <div class="knapp-gruppe" style="align-items:center;">
         <button class="knapp-sek" id="infoModalLeggTilOppgaveKnapp">+ Oppgave</button>
-        <button class="knapp-primær" id="infoModalRedigKnapp">Rediger</button>
+        <button class="info-ikon-knapp" id="infoModalRedigKnapp" title="Rediger">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="info-ikon-knapp slett" id="infoModalSlettKnapp" title="Slett">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -1950,6 +1982,12 @@
     document.getElementById('todoInfoModalBody').innerHTML = html;
     document.getElementById('todoInfoFullfortKnapp').textContent = t.fullfort ? '↩ Angre fullført' : '✓ Merk fullført';
     document.getElementById('todoInfoRedigKnapp').onclick = () => { lukkModal('todoInfoModal'); åpneTodoModal(id); };
+    document.getElementById('todoInfoSlettKnapp').onclick = () => {
+      if (!confirm('Slett denne to do?')) return;
+      todos = todos.filter(x => x.id !== id);
+      lagre(); lukkModal('todoInfoModal'); renderTodos();
+    };
+    window._todoInfoId = id;
     document.getElementById('todoInfoModal').classList.add('vis');
   }
 
@@ -2262,9 +2300,11 @@
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
       leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+        todos.forEach(t => { if (t.oppgaveId === o.id) t.oppgaveId = null; });
         oppgaver = oppgaver.filter(x => x.id !== o.id);
         lagre();
         renderOppgaver();
+        renderTodos();
       });
       container.appendChild(ytre);
       }); // end g.items.forEach
@@ -2327,6 +2367,12 @@
     document.getElementById('oppInfoRedigKnapp').onclick = () => {
       lukkModal('oppgaveInfoModal');
       åpneOppgaveModal(id);
+    };
+    document.getElementById('oppInfoSlettKnapp').onclick = () => {
+      if (!confirm('Slett denne oppgaven?')) return;
+      todos.forEach(t => { if (t.oppgaveId === id) t.oppgaveId = null; });
+      oppgaver = oppgaver.filter(x => x.id !== id);
+      lagre(); lukkModal('oppgaveInfoModal'); renderOppgaver(); renderTodos();
     };
     document.getElementById('oppInfoFullfortKnapp').textContent = o.fullfort ? '↩ Angre fullført' : '✓ Merk fullført';
     window._oppInfoId = id;
@@ -2437,6 +2483,13 @@
     document.getElementById('infoModalRedigKnapp').onclick = () => {
       lukkModal('aktivitetInfoModal');
       åpneAktivitetModal(id);
+    };
+    document.getElementById('infoModalSlettKnapp').onclick = () => {
+      if (!confirm('Slett denne aktiviteten?')) return;
+      aktiviteter = aktiviteter.filter(x => x.id !== id);
+      oppgaver.forEach(o => { if (o.aktivitetId === id) o.aktivitetId = null; });
+      lagre(); lukkModal('aktivitetInfoModal'); oppdaterAktivPanel();
+      if (valgtDato) renderValgtDag(valgtDato);
     };
     document.getElementById('infoModalLeggTilOppgaveKnapp').onclick = () => {
       lukkModal('aktivitetInfoModal');
@@ -2642,10 +2695,12 @@
 
   function slettOppgave() {
     if (!confirm('Slett denne oppgaven?')) return;
+    todos.forEach(t => { if (t.oppgaveId === redigOppgaveId) t.oppgaveId = null; });
     oppgaver = oppgaver.filter(o => o.id !== redigOppgaveId);
     lagre();
     lukkModal('oppgaveModal');
     renderOppgaver();
+    renderTodos();
     if (valgtDato) renderValgtDag(valgtDato);
   }
 
