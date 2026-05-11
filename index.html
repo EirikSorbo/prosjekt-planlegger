@@ -1162,7 +1162,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.63</div>
+  <div class="versjon">v.1.64</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -1995,16 +1995,22 @@
       container.appendChild(type === 'todo' ? lagTodoKort(item) : lagOppgaveKort(item));
     });
 
-    // 3. Fullførte
-    if (fullforte.length > 0) {
+    // 3. Fullførte (todos + oppgaver)
+    const fullforteOpp = oppgaver.filter(o => o.fullfort);
+    if (fullforte.length > 0 || fullforteOpp.length > 0) {
       lagSeksjon('Fullført');
       fullforte.forEach(t => container.appendChild(lagTodoKort(t)));
+      fullforteOpp.forEach(o => container.appendChild(lagOppgaveKort(o)));
     }
   }
 
   function toggleTodo(id) {
     const t = todos.find(t => t.id === id);
-    if (t) { t.fullfort = !t.fullfort; lagre(); renderTodos(); }
+    if (t) {
+      t.fullfort = !t.fullfort;
+      t.fullfortDato = t.fullfort ? new Date().toISOString().slice(0,10) : null;
+      lagre(); renderTodos();
+    }
   }
 
   function åpneTodoModal(id = null) {
@@ -2415,8 +2421,7 @@
       filterRad.appendChild(pill);
     } else {
       // Dynamiske kategori-filtere
-      kategorier.forEach(k => {
-        const pill = document.createElement('button');
+      kategorier.forEach(k => {        const pill = document.createElement('button');
         const state = oppgaveFilterState[k.id] || 1;
         let cls = 'filter-pill ';
         if (state === 2) cls += 'aktiv-' + k.id;
@@ -2432,13 +2437,6 @@
         };
         filterRad.appendChild(pill);
       });
-      // Fullførte-filter
-      const fullPill = document.createElement('button');
-      const erAktivFullf = aktivFilter === 'fullf';
-      fullPill.className = ('filter-pill ' + (erAktivFullf ? 'fullforte aktiv' : 'fullforte')).trim();
-      fullPill.textContent = 'Fullførte';
-      fullPill.onclick = () => { aktivFilter = erAktivFullf ? null : 'fullf'; renderOppgaver(); };
-      filterRad.appendChild(fullPill);
     }
 
     let filtrert = [...oppgaver];
@@ -2446,8 +2444,6 @@
     if (aktivFilter && aktivFilter.startsWith('aktivitet:')) {
       const aktId = aktivFilter.slice(10);
       filtrert = filtrert.filter(o => o.aktivitetId === aktId && !o.fullfort);
-    } else if (aktivFilter === 'fullf') {
-      filtrert = filtrert.filter(o => o.fullfort);
     } else {
       filtrert = filtrert.filter(o => !o.fullfort);
       const harKunOpp = katIds().some(k => oppgaveFilterState[k] === 2);
@@ -2636,7 +2632,11 @@
 
   function toggleOppgave(id) {
     const o = oppgaver.find(o => o.id === id);
-    if (o) { o.fullfort = !o.fullfort; lagre(); renderOppgaver(); renderTodos(); }
+    if (o) {
+      o.fullfort = !o.fullfort;
+      o.fullfortDato = o.fullfort ? new Date().toISOString().slice(0,10) : null;
+      lagre(); renderOppgaver(); renderTodos();
+    }
   }
 
   /* ──────────────────────────────
@@ -3115,8 +3115,20 @@
     leser.readAsText(fil);
     input.value = '';
   }
+  function ryddFullforte() {
+    const grense = new Date();
+    grense.setDate(grense.getDate() - 10);
+    const grenseDato = grense.toISOString().slice(0,10);
+    const forOpp = oppgaver.length;
+    const forTod = todos.length;
+    oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < grenseDato));
+    todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < grenseDato));
+    if (oppgaver.length !== forOpp || todos.length !== forTod) lagre();
+  }
+
   function init() {
     hent();
+    ryddFullforte();
     renderTodos();
     renderKalender();
     oppdaterForfaltBadge();
