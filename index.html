@@ -1269,7 +1269,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.69</div>
+  <div class="versjon">v.1.70</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -2761,6 +2761,11 @@
         const akt = aktiviteter.find(a => a.id === o.aktivitetId);
         if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
       }
+      const oppTodos = todos.filter(t => t.oppgaveId === o.id);
+      if (oppTodos.length > 0) {
+        const fullf = oppTodos.filter(t => t.fullfort).length;
+        metaHtml += `<span style="font-size:11px;color:var(--tekst-sek);white-space:nowrap;">${fullf}/${oppTodos.length} to-do</span>`;
+      }
 
       info.innerHTML = `
         <div class="oppgave-besk">${o.beskrivelse}</div>
@@ -2837,6 +2842,34 @@
         <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Notater</div>
         <div style="padding:12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);line-height:1.5;">${o.notat}</div>
       </div>`;
+    }
+
+    // Tilknyttede to-do elementer
+    const tilknyttedeTodos = todos.filter(t => t.oppgaveId === id);
+    if (tilknyttedeTodos.length > 0) {
+      const antallFullfort = tilknyttedeTodos.filter(t => t.fullfort).length;
+      const antallTotalt   = tilknyttedeTodos.length;
+      const prosent        = Math.round((antallFullfort / antallTotalt) * 100);
+
+      html += `<div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;">To-do (${antallFullfort} av ${antallTotalt})</div>
+          <div style="font-size:11px;font-weight:700;color:var(--grønn);">${prosent}%</div>
+        </div>
+        <div style="height:5px;background:var(--kant);border-radius:3px;margin-bottom:10px;overflow:hidden;">
+          <div style="height:100%;width:${prosent}%;background:var(--grønn);border-radius:3px;transition:width .3s;"></div>
+        </div>`;
+
+      tilknyttedeTodos.forEach(t => {
+        html += `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--kant);cursor:pointer;" onclick="lukkModal('oppgaveInfoModal');åpneTodoInfo('${t.id}')">
+          <div style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.fullfort ? 'var(--grønn)' : 'var(--grønn-mid)'};flex-shrink:0;background:${t.fullfort ? 'var(--grønn)' : 'transparent'};display:flex;align-items:center;justify-content:center;">
+            ${t.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+          </div>
+          <div style="flex:1;font-size:13px;color:var(--tekst);${t.fullfort ? 'opacity:0.4;text-decoration:line-through;' : ''}">${t.tittel}</div>
+          ${t.frist ? `<div style="font-size:11px;color:var(--tekst-sek);">${fristLabel(t.frist, t.fullfort).tekst}</div>` : ''}
+        </div>`;
+      });
+      html += `</div>`;
     }
 
     document.getElementById('oppInfoModalBody').innerHTML = html;
