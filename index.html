@@ -1269,7 +1269,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.70</div>
+  <div class="versjon">v.1.71</div>
 </main>
 
 <!-- Modal: Rediger kategorier -->
@@ -1364,6 +1364,7 @@
       <button class="knapp-sek" onclick="lukkModal('oppgaveInfoModal')">Lukk</button>
       <div class="knapp-gruppe" style="align-items:center;">
         <button class="knapp-sek" id="oppInfoFullfortKnapp" onclick="toggleOppgaveFraInfo()"></button>
+        <button class="knapp-sek" id="oppInfoLeggTilTodoKnapp">+ To do</button>
         <button class="info-ikon-knapp" id="oppInfoRedigKnapp" title="Rediger">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -2244,7 +2245,7 @@
     document.getElementById('todoFeltFrist').value = d.toISOString().slice(0, 10);
   }
 
-  function åpneTodoModal(id = null) {
+  function åpneTodoModal(id = null, preOppgaveId = null) {
     redigTodoId = id;
     const slettKnapp = document.getElementById('slettTodoKnapp');
 
@@ -2272,7 +2273,7 @@
       document.getElementById('todoFeltTittel').value = '';
       document.getElementById('todoFeltBesk').value   = '';
       document.getElementById('todoFeltFrist').value  = '';
-      select.value = '';
+      select.value = preOppgaveId || '';
       slettKnapp.style.display = 'none';
     }
     document.getElementById('todoModal').classList.add('vis');
@@ -2873,6 +2874,10 @@
     }
 
     document.getElementById('oppInfoModalBody').innerHTML = html;
+    document.getElementById('oppInfoLeggTilTodoKnapp').onclick = () => {
+      lukkModal('oppgaveInfoModal');
+      åpneTodoModal(null, id);
+    };
     document.getElementById('oppInfoRedigKnapp').onclick = () => {
       lukkModal('oppgaveInfoModal');
       åpneOppgaveModal(id);
