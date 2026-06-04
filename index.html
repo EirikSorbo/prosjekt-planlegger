@@ -964,6 +964,73 @@
     .todo-tittel { font-size: 13px; font-weight: 600; color: var(--tekst); }
     .todo-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; align-items: center; }
 
+    /* ── Kategorioversikt-knapper ── */
+    .kat-oversikt-rad {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 0 0 12px;
+    }
+    .kat-oversikt-knapp {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1.5px solid;
+      background: transparent;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .kat-oversikt-knapp:hover { opacity: 0.7; }
+
+    /* ── Kategorioversikt-modal ── */
+    .kat-oversikt-seksjon {
+      margin-bottom: 18px;
+    }
+    .kat-oversikt-seksjon-tittel {
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      color: var(--tekst-sek);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .kat-oversikt-akt {
+      padding: 10px 12px;
+      background: var(--hvit);
+      border-radius: var(--rs);
+      border: 1px solid var(--kant);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .kat-oversikt-akt:hover { background: var(--grønn-lys); }
+    .kat-oversikt-akt-tittel {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--tekst);
+    }
+    .kat-oversikt-akt-dato {
+      font-size: 11px;
+      color: var(--tekst-sek);
+      margin-top: 2px;
+    }
+    .kat-oversikt-oppgave {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 24px;
+      font-size: 12px;
+      color: var(--tekst);
+      cursor: pointer;
+      transition: background .1s;
+      border-radius: var(--rs);
+    }
+    .kat-oversikt-oppgave:hover { background: var(--grønn-lys); }
+    .kat-oversikt-oppgave.fullfort-opp { opacity: 0.4; text-decoration: line-through; }
+
     .info-ikon-knapp {
       width: 34px;
       height: 34px;
@@ -1203,6 +1270,7 @@
       <button class="todo-hurtig-knapp" onclick="åpneAktivitetModal()">+ Aktivitet</button>
       <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
     </div>
+    <div class="kat-oversikt-rad" id="katOversiktRad"></div>
     <div class="kort-container" id="todoListe"></div>
   </div>
 
@@ -1269,8 +1337,22 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.71</div>
+  <div class="versjon">v.1.73</div>
 </main>
+
+<!-- Modal: Kategorioversikt -->
+<div class="modal-overlay" id="katOversiktModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="katOversiktTittel"></div>
+      <button class="lukk-knapp" onclick="lukkModal('katOversiktModal')">×</button>
+    </div>
+    <div class="modal-body" id="katOversiktBody" style="max-height:70vh;overflow-y:auto;"></div>
+    <div class="modal-footer">
+      <button class="knapp-sek" onclick="lukkModal('katOversiktModal')">Lukk</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal: Rediger kategorier -->
 <div class="modal-overlay" id="kategoriModal">
@@ -2064,11 +2146,156 @@
      UTILS
   ────────────────────────────── */
   /* ──────────────────────────────
+     KATEGORIOVERSIKT
+  ────────────────────────────── */
+  function renderKatOversiktKnapper() {
+    const rad = document.getElementById('katOversiktRad');
+    if (!rad) return;
+    rad.innerHTML = '';
+    kategorier.forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'kat-oversikt-knapp';
+      btn.style.borderColor = k.farge;
+      btn.style.color = k.farge;
+      btn.textContent = k.label;
+      btn.onclick = () => åpneKatOversikt(k.id);
+      rad.appendChild(btn);
+    });
+  }
+
+  function åpneKatOversikt(katId) {
+    const kat = getKat(katId);
+    if (!kat) return;
+
+    document.getElementById('katOversiktTittel').textContent = kat.label;
+    document.getElementById('katOversiktTittel').style.color = kat.farge;
+
+    const body = document.getElementById('katOversiktBody');
+    body.innerHTML = '';
+
+    const iDag = new Date(); iDag.setHours(0,0,0,0);
+    const iDagStr = iDag.toISOString().slice(0,10);
+
+    const katAkt = aktiviteter.filter(a => a.type === katId)
+      .sort((a,b) => a.dato.localeCompare(b.dato));
+    const kommendeAkt = katAkt.filter(a => (a.datoTil || a.dato) >= iDagStr);
+    const tidligereAkt = katAkt.filter(a => (a.datoTil || a.dato) < iDagStr);
+    const katOpp = oppgaver.filter(o => {
+      const a = aktiviteter.find(a => a.id === o.aktivitetId);
+      return a?.type === katId;
+    });
+
+    // Helper: render en aktivitet med oppgaver og todos
+    function renderAktMedOppgaver(a, seksjon) {
+        const d = new Date(a.dato + 'T00:00:00');
+        let datoStr = d.getDate() + '. ' + MAANEDER[d.getMonth()];
+        if (a.datoTil && a.datoTil !== a.dato) {
+          const dTil = new Date(a.datoTil + 'T00:00:00');
+          datoStr += ' – ' + dTil.getDate() + '. ' + MAANEDER[dTil.getMonth()];
+        }
+        const tidStr = a.tid ? ' · ' + a.tid + (a.tidTil ? '–' + a.tidTil : '') : '';
+
+        const aktEl = document.createElement('div');
+        aktEl.className = 'kat-oversikt-akt';
+        aktEl.onclick = () => { lukkModal('katOversiktModal'); åpneAktivitetInfo(a.id); };
+        aktEl.innerHTML = `<div class="kat-oversikt-akt-tittel">${a.tittel}</div>
+          <div class="kat-oversikt-akt-dato">${datoStr}${tidStr}</div>`;
+        seksjon.appendChild(aktEl);
+
+        const aktOpp = oppgaver.filter(o => o.aktivitetId === a.id && !o.fullfort);
+        aktOpp.forEach(o => {
+          const oppEl = document.createElement('div');
+          oppEl.className = 'kat-oversikt-oppgave';
+          oppEl.onclick = () => { lukkModal('katOversiktModal'); åpneOppgaveInfo(o.id); };
+          const fristStr = o.frist ? fristLabel(o.frist, false).tekst : '';
+          oppEl.innerHTML = `<span style="color:var(--tekst-sek);">↳</span>
+            <span style="flex:1;">${o.beskrivelse}</span>
+            ${fristStr ? `<span style="font-size:11px;color:var(--tekst-sek);">${fristStr}</span>` : ''}`;
+          const oppTodos = todos.filter(t => t.oppgaveId === o.id);
+          if (oppTodos.length > 0) {
+            const fullf = oppTodos.filter(t => t.fullfort).length;
+            const badge = document.createElement('span');
+            badge.style.cssText = 'font-size:10px;color:var(--tekst-sek);white-space:nowrap;';
+            badge.textContent = `${fullf}/${oppTodos.length}`;
+            oppEl.appendChild(badge);
+          }
+          seksjon.appendChild(oppEl);
+
+          const oppTodoAktive = todos.filter(t => t.oppgaveId === o.id && !t.fullfort);
+          oppTodoAktive.forEach(t => {
+            const todoEl = document.createElement('div');
+            todoEl.className = 'kat-oversikt-oppgave';
+            todoEl.style.paddingLeft = '44px';
+            todoEl.style.fontSize = '11px';
+            todoEl.onclick = () => { lukkModal('katOversiktModal'); åpneTodoInfo(t.id); };
+            todoEl.innerHTML = `<span style="color:var(--grønn-mid);">◻</span> ${t.tittel}`;
+            seksjon.appendChild(todoEl);
+          });
+        });
+    }
+
+    // ── Kommende aktiviteter ──
+    if (kommendeAkt.length > 0) {
+      const seksjon = document.createElement('div');
+      seksjon.className = 'kat-oversikt-seksjon';
+      const tittel = document.createElement('div');
+      tittel.className = 'kat-oversikt-seksjon-tittel';
+      tittel.textContent = `Kommende aktiviteter (${kommendeAkt.length})`;
+      seksjon.appendChild(tittel);
+      kommendeAkt.forEach(a => renderAktMedOppgaver(a, seksjon));
+      body.appendChild(seksjon);
+    }
+
+    // ── Frittstående oppgaver ──
+    const frittstOpp = katOpp.filter(o => !o.fullfort && !katAkt.find(a => a.id === o.aktivitetId));
+    if (frittstOpp.length > 0) {
+      const seksjon = document.createElement('div');
+      seksjon.className = 'kat-oversikt-seksjon';
+      const tittel = document.createElement('div');
+      tittel.className = 'kat-oversikt-seksjon-tittel';
+      tittel.textContent = 'Øvrige oppgaver';
+      seksjon.appendChild(tittel);
+      frittstOpp.forEach(o => {
+        const oppEl = document.createElement('div');
+        oppEl.className = 'kat-oversikt-oppgave';
+        oppEl.style.paddingLeft = '12px';
+        oppEl.onclick = () => { lukkModal('katOversiktModal'); åpneOppgaveInfo(o.id); };
+        const fristStr = o.frist ? fristLabel(o.frist, false).tekst : '';
+        oppEl.innerHTML = `<span style="flex:1;">${o.beskrivelse}</span>
+          ${fristStr ? `<span style="font-size:11px;color:var(--tekst-sek);">${fristStr}</span>` : ''}`;
+        seksjon.appendChild(oppEl);
+      });
+      body.appendChild(seksjon);
+    }
+
+    // ── Tidligere aktiviteter ──
+    if (tidligereAkt.length > 0) {
+      const seksjon = document.createElement('div');
+      seksjon.className = 'kat-oversikt-seksjon';
+      seksjon.style.opacity = '0.6';
+      const tittel = document.createElement('div');
+      tittel.className = 'kat-oversikt-seksjon-tittel';
+      tittel.textContent = `Tidligere aktiviteter (${tidligereAkt.length})`;
+      seksjon.appendChild(tittel);
+      tidligereAkt.forEach(a => renderAktMedOppgaver(a, seksjon));
+      body.appendChild(seksjon);
+    }
+
+    // ── Tom kategori ──
+    if (katAkt.length === 0 && katOpp.length === 0) {
+      body.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--tekst-sek);">Ingen elementer i denne kategorien.</div>';
+    }
+
+    document.getElementById('katOversiktModal').classList.add('vis');
+  }
+
+  /* ──────────────────────────────
      TO DO
   ────────────────────────────── */
   let redigTodoId = null;
 
   function renderTodos() {
+    renderKatOversiktKnapper();
     const container = document.getElementById('todoListe');
     if (!container) return;
     container.innerHTML = '';
@@ -3277,7 +3504,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.63',
+      versjon: '1.73',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
@@ -3389,13 +3616,15 @@
     input.value = '';
   }
   function ryddFullforte() {
-    const grense = new Date();
-    grense.setDate(grense.getDate() - 10);
-    const grenseDato = grense.toISOString().slice(0,10);
+    const iDag = new Date();
+    const grense3  = new Date(iDag); grense3.setDate(iDag.getDate() - 3);
+    const grense10 = new Date(iDag); grense10.setDate(iDag.getDate() - 10);
+    const g3 = grense3.toISOString().slice(0,10);
+    const g10 = grense10.toISOString().slice(0,10);
     const forOpp = oppgaver.length;
     const forTod = todos.length;
-    oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < grenseDato));
-    todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < grenseDato));
+    oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < g3));
+    todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < g10));
     if (oppgaver.length !== forOpp || todos.length !== forTod) lagre();
   }
 
