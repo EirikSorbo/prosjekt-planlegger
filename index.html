@@ -3828,6 +3828,7 @@
 
       // Last inn appen med sky-data
       if (typeof hent === 'function') hent();
+      if (typeof ryddFullforte === 'function') ryddFullforte();
       if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
       if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
 
@@ -3859,6 +3860,7 @@
           if (data.filterAkt) localStorage.setItem('lp_fa', nyFA);
           if (data.filterOpp) localStorage.setItem('lp_fo', nyFO);
           if (typeof hent === 'function') hent();
+          if (typeof ryddFullforte === 'function') ryddFullforte();
           if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
           if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();        }
       });
