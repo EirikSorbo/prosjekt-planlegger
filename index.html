@@ -1423,6 +1423,12 @@
           <option value="">— Ingen —</option>
         </select>
       </div>
+      <div class="felt">
+        <label>Kategori</label>
+        <select id="todoFeltKategori">
+          <option value="">— Ingen —</option>
+        </select>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="knapp-fare" id="slettTodoKnapp" onclick="slettTodo()" style="display:none;">Slett</button>
@@ -1548,6 +1554,12 @@
         <label>Koble til aktivitet</label>
         <select id="oppFeltAktivitet">
           <option value="">— Frittstående —</option>
+        </select>
+      </div>
+      <div class="felt">
+        <label>Kategori</label>
+        <select id="oppFeltKategori">
+          <option value="">— Ingen —</option>
         </select>
       </div>
       <div class="felt">
@@ -1993,8 +2005,8 @@
     } else {
       dagOpp.forEach(o => {
         const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-        let stripeKlasse = 'stripe-fri';
-        if (akt) stripeKlasse = 'stripe-' + akt.type;
+        const vType = akt?.type || o.kategoriId;
+        const stripeKlasse = vType ? 'stripe-' + vType : 'stripe-fri';
 
         const ytre = document.createElement('div');
         ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
@@ -2021,7 +2033,12 @@
 
         let metaHtml = '';
         if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
-        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
+        if (akt) {
+          metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
+        } else if (o.kategoriId) {
+          const katV = getKat(o.kategoriId);
+          if (katV) metaHtml += `<span class="tilknyttet-chip chip-${katV.id}">${katV.label}</span>`;
+        }
 
         info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
           ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
@@ -2182,7 +2199,7 @@
     const tidligereAkt = katAkt.filter(a => (a.datoTil || a.dato) < iDagStr);
     const katOpp = oppgaver.filter(o => {
       const a = aktiviteter.find(a => a.id === o.aktivitetId);
-      return a?.type === katId;
+      return a?.type === katId || (!o.aktivitetId && o.kategoriId === katId);
     });
 
     // Helper: render en aktivitet med oppgaver og todos
@@ -2357,6 +2374,10 @@
         const opp = oppgaver.find(o => o.id === t.oppgaveId);
         if (opp) metaHtml += `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${opp.beskrivelse}</span>`;
       }
+      if (t.kategoriId) {
+        const katT = getKat(t.kategoriId);
+        if (katT) metaHtml += `<span class="tilknyttet-chip chip-${katT.id}">${katT.label}</span>`;
+      }
 
       const info = document.createElement('div');
       info.className = 'todo-info';
@@ -2388,11 +2409,12 @@
       wrapper.className = 'sveip-innhold';
 
       const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
-      const stripeKlasse = akt ? 'stripe-' + akt.type : 'stripe-fri';
+      const oType = akt?.type || o.kategoriId;
+      const stripeKlasse = oType ? 'stripe-' + oType : 'stripe-fri';
 
       const kort = document.createElement('div');
       kort.className = 'todo-kort' + (o.fullfort ? ' fullfort' : '');
-      kort.style.borderLeft = `3px solid ${getKat(akt?.type)?.farge || 'var(--grønn-mid)'}`;
+      kort.style.borderLeft = `3px solid ${getKat(oType)?.farge || 'var(--grønn-mid)'}`;
       kort.style.cursor = 'pointer';
       kort.onclick = () => åpneOppgaveInfo(o.id);
 
@@ -2402,7 +2424,12 @@
       cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); renderTodos(); };
 
       let metaHtml = fristSpan(o.frist, o.fullfort);
-      if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
+      if (akt) {
+        metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
+      } else if (o.kategoriId) {
+        const katO = getKat(o.kategoriId);
+        if (katO) metaHtml += `<span class="tilknyttet-chip chip-${katO.id}">${katO.label}</span>`;
+      }
 
       const info = document.createElement('div');
       info.className = 'todo-info';
@@ -2476,14 +2503,23 @@
     redigTodoId = id;
     const slettKnapp = document.getElementById('slettTodoKnapp');
 
-    // Fyll oppgaveliste
+    // Fyll oppgaveliste – kun ikke-fullførte
     const select = document.getElementById('todoFeltOppgave');
     select.innerHTML = '<option value="">— Ingen —</option>';
-    oppgaver.forEach(o => {
+    oppgaver.filter(o => !o.fullfort).forEach(o => {
       const opt = document.createElement('option');
       opt.value = o.id;
       opt.textContent = o.beskrivelse;
       select.appendChild(opt);
+    });
+
+    // Fyll kategori-select
+    const todoKatSelect = document.getElementById('todoFeltKategori');
+    todoKatSelect.innerHTML = '<option value="">— Ingen —</option>';
+    kategorier.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k.id; opt.textContent = k.label;
+      todoKatSelect.appendChild(opt);
     });
 
     if (id) {
@@ -2494,6 +2530,7 @@
       document.getElementById('todoFeltBesk').value   = t.beskrivelse || '';
       document.getElementById('todoFeltFrist').value  = t.frist || '';
       select.value = t.oppgaveId || '';
+      todoKatSelect.value = t.kategoriId || '';
       slettKnapp.style.display = 'inline-flex';
     } else {
       document.getElementById('todoModalTittel').textContent = 'Ny to do';
@@ -2501,6 +2538,7 @@
       document.getElementById('todoFeltBesk').value   = '';
       document.getElementById('todoFeltFrist').value  = '';
       select.value = preOppgaveId || '';
+      todoKatSelect.value = '';
       slettKnapp.style.display = 'none';
     }
     document.getElementById('todoModal').classList.add('vis');
@@ -2510,15 +2548,16 @@
   function lagreTodo() {
     const tittel = document.getElementById('todoFeltTittel').value.trim();
     if (!tittel) { alert('Tittel er påkrevd.'); return; }
-    const besk      = document.getElementById('todoFeltBesk').value.trim();
-    const frist     = document.getElementById('todoFeltFrist').value || null;
-    const oppgaveId = document.getElementById('todoFeltOppgave').value || null;
+    const besk       = document.getElementById('todoFeltBesk').value.trim();
+    const frist      = document.getElementById('todoFeltFrist').value || null;
+    const oppgaveId  = document.getElementById('todoFeltOppgave').value || null;
+    const kategoriId = document.getElementById('todoFeltKategori').value || null;
 
     if (redigTodoId) {
       const t = todos.find(t => t.id === redigTodoId);
-      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.oppgaveId = oppgaveId; }
+      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; }
     } else {
-      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, oppgaveId, fullfort: false });
+      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, oppgaveId, kategoriId, fullfort: false });
     }
     lagre(); lukkModal('todoModal'); renderTodos();
   }
@@ -2549,7 +2588,14 @@
       if (opp) html += `<div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet oppgave</div>
         <div style="padding:10px 12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);cursor:pointer;" onclick="lukkModal('todoInfoModal');åpneOppgaveInfo('${opp.id}')">${opp.beskrivelse}</div>`;
     }
-    if (!t.frist && !t.beskrivelse && !t.oppgaveId) {
+    if (t.kategoriId) {
+      const katTI = getKat(t.kategoriId);
+      if (katTI) html += `<div style="margin-top:12px;">
+        <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Kategori</div>
+        <span class="type-badge ${katTI.id}">${katTI.label}</span>
+      </div>`;
+    }
+    if (!t.frist && !t.beskrivelse && !t.oppgaveId && !t.kategoriId) {
       html = `<div style="font-size:13px;color:var(--tekst-sek);">Ingen tilleggsinformasjon.</div>`;
     }
 
@@ -2910,12 +2956,13 @@
       if (harKunOpp) {
         filtrert = filtrert.filter(o => {
           const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-          return akt && oppgaveFilterState[akt.type] === 2;
+          const type = akt?.type || o.kategoriId;
+          return type && oppgaveFilterState[type] === 2;
         });
       } else {
         filtrert = filtrert.filter(o => {
           const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-          const type = akt?.type;
+          const type = akt?.type || o.kategoriId;
           return !type || oppgaveFilterState[type] !== 3;
         });
       }
@@ -2956,11 +3003,9 @@
       container.appendChild(ml);
 
       g.items.forEach(o => {
-      let stripeKlasse = 'stripe-fri';
-      if (o.aktivitetId) {
-        const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-        if (akt) stripeKlasse = 'stripe-' + akt.type;
-      }
+      const aktR = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+      const typeR = aktR?.type || o.kategoriId;
+      const stripeKlasse = typeR ? 'stripe-' + typeR : 'stripe-fri';
 
       const ytre = document.createElement('div');
       ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
@@ -2986,8 +3031,11 @@
       let metaHtml = '';
       if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
       if (o.aktivitetId) {
-        const akt = aktiviteter.find(a => a.id === o.aktivitetId);
-        if (akt) metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
+        const aktM = aktiviteter.find(a => a.id === o.aktivitetId);
+        if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${aktM.type || "fri"}">${aktM.tittel}</span>`;
+      } else if (o.kategoriId) {
+        const katM = getKat(o.kategoriId);
+        if (katM) metaHtml += `<span class="tilknyttet-chip chip-${katM.id}">${katM.label}</span>`;
       }
       const oppTodos = todos.filter(t => t.oppgaveId === o.id);
       if (oppTodos.length > 0) {
@@ -3061,6 +3109,12 @@
           <span style="font-size:13px;font-weight:600;color:var(--tekst);">${akt.tittel}</span>
           <span style="font-size:12px;color:var(--tekst-sek);margin-left:auto;">${ad.getDate()}. ${MAANEDER[ad.getMonth()]}</span>
         </div>
+      </div>`;
+    } else if (o.kategoriId) {
+      const katI = getKat(o.kategoriId);
+      if (katI) html += `<div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Kategori</div>
+        <span class="type-badge ${katI.id}">${katI.label}</span>
       </div>`;
     }
 
@@ -3366,9 +3420,21 @@
     const slettKnapp = document.getElementById('slettOppgaveKnapp');
     const select     = document.getElementById('oppFeltAktivitet');
 
-    // Fyll aktivitetsliste
+    // Fyll kategori-select
+    const katSelect = document.getElementById('oppFeltKategori');
+    katSelect.innerHTML = '<option value="">— Ingen —</option>';
+    kategorier.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k.id; opt.textContent = k.label;
+      katSelect.appendChild(opt);
+    });
+
+    // Fyll aktivitetsliste – kun fremtidige/pågående (behold gjeldende valg om det finnes)
+    const iDagStr = new Date().toISOString().slice(0, 10);
+    const currentAktId = id ? (oppgaver.find(o => o.id === id)?.aktivitetId || null) : null;
     select.innerHTML = '<option value="">— Frittstående —</option>';
     [...aktiviteter]
+      .filter(a => (a.datoTil || a.dato) >= iDagStr || a.id === currentAktId)
       .sort((a, b) => a.dato.localeCompare(b.dato))
       .forEach(a => {
         const d   = new Date(a.dato + 'T00:00:00');
@@ -3392,6 +3458,11 @@
       document.getElementById('oppFeltBesk').value  = o.beskrivelse;
       document.getElementById('oppFeltNotat').value = o.notat || '';
       select.value = o.aktivitetId || '';
+      katSelect.value = o.kategoriId || '';
+      if (o.aktivitetId && !o.kategoriId) {
+        const aktKat = aktiviteter.find(a => a.id === o.aktivitetId);
+        if (aktKat) katSelect.value = aktKat.type;
+      }
 
       // Gjenopprett fristvalg
       if (o.frist) {
@@ -3407,6 +3478,11 @@
       document.getElementById('oppFeltBesk').value  = '';
       document.getElementById('oppFeltNotat').value = '';
       select.value = preAktivitetId || '';
+      katSelect.value = '';
+      if (preAktivitetId) {
+        const preAkt = aktiviteter.find(a => a.id === preAktivitetId);
+        if (preAkt) katSelect.value = preAkt.type;
+      }
       slettKnapp.style.display = 'none';
     }
     document.getElementById('oppgaveModal').classList.add('vis');
@@ -3417,6 +3493,7 @@
     const besk        = document.getElementById('oppFeltBesk').value.trim();
     const notat       = document.getElementById('oppFeltNotat').value.trim();
     const aktivitetId = document.getElementById('oppFeltAktivitet').value || null;
+    const kategoriId  = document.getElementById('oppFeltKategori').value || null;
 
     if (!besk) { alert('Tittel er påkrevd.'); return; }
 
@@ -3433,9 +3510,9 @@
 
     if (redigOppgaveId) {
       const o = oppgaver.find(o => o.id === redigOppgaveId);
-      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId });
+      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId });
     } else {
-      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, fullfort: false };
+      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, fullfort: false };
       oppgaver.push(nyOppgave);
     }
 
@@ -3496,8 +3573,15 @@
     if (e.key === 'Enter') lagreOppgave();
   });
 
-  // Oppdater fristinfo når aktivitet endres
-  document.getElementById('oppFeltAktivitet').addEventListener('change', oppdaterFristInfo);
+  // Oppdater fristinfo og kategori når aktivitet endres
+  document.getElementById('oppFeltAktivitet').addEventListener('change', function() {
+    oppdaterFristInfo();
+    const aktId = this.value;
+    if (aktId) {
+      const akt = aktiviteter.find(a => a.id === aktId);
+      if (akt) document.getElementById('oppFeltKategori').value = akt.type;
+    }
+  });
 
   /* ──────────────────────────────
      IMPORT / EKSPORT
