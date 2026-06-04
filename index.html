@@ -3714,14 +3714,12 @@
   }
   function ryddFullforte() {
     const iDag = new Date();
-    const grense3  = new Date(iDag); grense3.setDate(iDag.getDate() - 3);
-    const grense10 = new Date(iDag); grense10.setDate(iDag.getDate() - 10);
-    const g3 = grense3.toISOString().slice(0,10);
-    const g10 = grense10.toISOString().slice(0,10);
+    const grense = new Date(iDag); grense.setDate(iDag.getDate() - 3);
+    const g3 = grense.toISOString().slice(0,10);
     const forOpp = oppgaver.length;
     const forTod = todos.length;
     oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < g3));
-    todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < g10));
+    todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < g3));
     if (oppgaver.length !== forOpp || todos.length !== forTod) lagre();
   }
 
