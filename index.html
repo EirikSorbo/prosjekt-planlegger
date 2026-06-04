@@ -3718,8 +3718,8 @@
     const g3 = grense.toISOString().slice(0,10);
     const forOpp = oppgaver.length;
     const forTod = todos.length;
-    oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < g3));
-    todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < g3));
+    oppgaver = oppgaver.filter(o => !(o.fullfort && (!o.fullfortDato || o.fullfortDato < g3)));
+    todos    = todos.filter(t => !(t.fullfort && (!t.fullfortDato || t.fullfortDato < g3)));
     if (oppgaver.length !== forOpp || todos.length !== forTod) lagre();
   }
 
