@@ -1240,10 +1240,6 @@
     <button class="header-knapp" onclick="åpneKategoriModal()" title="Rediger kategorier">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
-    <button class="header-knapp" onclick="eksporterData()" title="Eksporter">↓</button>
-    <button class="header-knapp" onclick="document.getElementById('importInput').click()" title="Importer (erstatt)">↑</button>
-    <button class="header-knapp" onclick="document.getElementById('mergeInput').click()" title="Slå sammen">⇅</button>
-    <button class="header-knapp" id="angreImportKnapp" onclick="angreImport()" title="Angre siste import/merge" style="display:none;">↩</button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importerData(this)"/>
     <input type="file" id="mergeInput"  accept=".json" style="display:none" onchange="mergeData(this)"/>
   </div>
@@ -1357,17 +1353,31 @@
   </div>
 </div>
 
-<!-- Modal: Rediger kategorier -->
+<!-- Modal: Innstillinger -->
 <div class="modal-overlay" id="kategoriModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-tittel">Rediger kategorier</div>
+      <div class="modal-tittel">Innstillinger</div>
       <button class="lukk-knapp" onclick="lukkModal('kategoriModal')">×</button>
     </div>
-    <div class="modal-body" id="kategoriModalBody"></div>
-    <div class="modal-footer">
+    <div style="padding:12px 22px 4px;">
+      <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);">Kategorier</div>
+    </div>
+    <div class="modal-body" id="kategoriModalBody" style="padding-top:8px;"></div>
+    <div style="padding:10px 22px 16px;border-bottom:1px solid var(--kant);">
+      <button class="knapp-primær" onclick="leggTilKategori()" style="width:100%;">+ Legg til kategori</button>
+    </div>
+    <div style="padding:16px 22px 8px;">
+      <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Data</div>
+      <div style="display:flex;gap:8px;">
+        <button class="knapp-sek" onclick="eksporterData()" style="flex:1;font-size:12px;">↓ Eksporter</button>
+        <button class="knapp-sek" onclick="document.getElementById('importInput').click()" style="flex:1;font-size:12px;">↑ Importer</button>
+        <button class="knapp-sek" onclick="document.getElementById('mergeInput').click()" style="flex:1;font-size:12px;">⇅ Slå sammen</button>
+      </div>
+      <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end;">
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
-      <button class="knapp-primær" onclick="leggTilKategori()">+ Legg til</button>
     </div>
   </div>
 </div>
