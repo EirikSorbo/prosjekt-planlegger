@@ -1294,7 +1294,7 @@
       z-index: 3;
     }
 
-    /* ── Ukentlig oppsummering ── */
+    /* ── Rapport ── */
     .rapport-modal { max-width: 720px !important; }
     .rapport-body {
       padding: 24px 28px;
@@ -1487,6 +1487,10 @@
   <button class="fane" onclick="byttFane('liste', this)">Aktiviteter</button>
   <button class="fane" onclick="byttFane('kalender', this)">Oversikt</button>
 </nav>
+<div id="hovedFilterBar" style="display:none;background:var(--hvit);border-bottom:1px solid var(--kant);padding:6px 12px;display:none;align-items:center;gap:6px;overflow-x:auto;position:sticky;top:104px;z-index:98;">
+  <span style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.6px;color:var(--tekst-sek);white-space:nowrap;margin-right:4px;">Filter:</span>
+  <div id="hovedFilterKnapper" style="display:flex;gap:5px;flex-wrap:nowrap;"></div>
+</div>
 
 <div id="varselBanner" style="display:none;background:var(--grønn-lys);border-bottom:1px solid var(--grønn-mid);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;">
   <span style="font-size:12px;color:var(--tekst);font-family:'Nunito',sans-serif;">🔔 Tillat varsler for å se forfalte oppgaver på ikonet</span>
@@ -1622,10 +1626,10 @@
         <button class="knapp-sek" onclick="document.getElementById('mergeInput').click()" style="flex:1;font-size:12px;">⇅ Slå sammen</button>
       </div>
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
-      <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Ukentlig oppsummering</button>
+      <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.90</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.91</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1645,12 +1649,18 @@
   </div>
 </div>
 
-<!-- Modal: Ukentlig oppsummering -->
+<!-- Modal: Rapport -->
 <div class="modal-overlay" id="rapportModal">
   <div class="modal rapport-modal">
     <div class="modal-header">
-      <div class="modal-tittel">Ukentlig oppsummering</div>
+      <div class="modal-tittel">Rapport</div>
       <button class="lukk-knapp" onclick="lukkModal('rapportModal')">×</button>
+    </div>
+    <div style="padding:10px 28px 0;display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="filter-pill aktiv rapportPeriodeKnapp" data-periode="uke" onclick="byttRapportPeriode('uke', this)">Denne uken</button>
+      <button class="filter-pill rapportPeriodeKnapp" data-periode="2uker" onclick="byttRapportPeriode('2uker', this)">2 uker</button>
+      <button class="filter-pill rapportPeriodeKnapp" data-periode="maaned" onclick="byttRapportPeriode('maaned', this)">Denne måneden</button>
+      <button class="filter-pill rapportPeriodeKnapp" data-periode="kvartal" onclick="byttRapportPeriode('kvartal', this)">3 måneder</button>
     </div>
     <div class="rapport-body" id="rapportBody"></div>
     <div class="modal-footer">
@@ -1965,6 +1975,7 @@
   let aktivitetFilterState = {};
   let oppgaveFilterState   = {};
 
+  let globalKatFilter  = null; // Hovedfilter — null = vis alt
   let redigAktivitetId = null;
   let redigOppgaveId   = null;
   let valgtDato        = null;
@@ -2582,6 +2593,7 @@
     });
 
     let filtrert = [...aktiviteter];
+    if (globalKatFilter) filtrert = filtrert.filter(a => a.type === globalKatFilter);
     const harKun = katIds().some(k => aktivitetFilterState[k] === 2);
     if (harKun) {
       filtrert = filtrert.filter(a => aktivitetFilterState[a.type] === 2);
@@ -2781,22 +2793,28 @@
     const iDag  = new Date(); iDag.setHours(0,0,0,0);
     const om30  = new Date(iDag); om30.setDate(om30.getDate() + 30);
 
+    // Hovedfilter-hjelpefunksjon for todos
+    const todoPasserer = t => matcherGlobalFilter(null, t.kategoriId, null) ||
+      (t.oppgaveId && matcherGlobalFilter(null, oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId, oppgaver.find(o => o.id === t.oppgaveId)?.aktivitetId));
+    const oppPasserer = o => matcherGlobalFilter(null, o.kategoriId, o.aktivitetId);
+
     // Todos uten frist (aktive)
-    const utenFrist = todos.filter(t => !t.fullfort && !t.frist);
+    const utenFrist = todos.filter(t => !t.fullfort && !t.frist && (!globalKatFilter || todoPasserer(t)));
 
     // Todos med frist (aktive), sortert
-    const medFrist = todos.filter(t => !t.fullfort && t.frist)
+    const medFrist = todos.filter(t => !t.fullfort && t.frist && (!globalKatFilter || todoPasserer(t)))
       .sort((a,b) => a.frist.localeCompare(b.frist));
 
     // Oppgaver med frist innen 30 dager (ikke fullført)
     const oppgaverSnart = oppgaver.filter(o => {
       if (o.fullfort || !o.frist) return false;
+      if (globalKatFilter && !oppPasserer(o)) return false;
       const d = new Date(o.frist + 'T00:00:00');
       return d <= om30;
     }).sort((a,b) => a.frist.localeCompare(b.frist));
 
     // Fullførte todos
-    const fullforte = todos.filter(t => t.fullfort);
+    const fullforte = todos.filter(t => t.fullfort && (!globalKatFilter || todoPasserer(t)));
 
     const tomListe = utenFrist.length === 0 && medFrist.length === 0 &&
                      oppgaverSnart.length === 0 && fullforte.length === 0;
@@ -3409,6 +3427,7 @@
     }
 
     let filtrert = [...oppgaver];
+    if (globalKatFilter) filtrert = filtrert.filter(o => matcherGlobalFilter(null, o.kategoriId, o.aktivitetId));
 
     if (aktivFilter && aktivFilter.startsWith('aktivitet:')) {
       const aktId = aktivFilter.slice(10);
@@ -4004,6 +4023,7 @@
   }
 
   function oppdaterAktivPanel() {
+    renderHovedFilter();
     const aktiv = document.querySelector('.panel.aktiv')?.id;
     if (aktiv === 'panel-todo')     renderTodos();
     if (aktiv === 'panel-kalender') {
@@ -4052,7 +4072,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.90',
+      versjon: '1.91',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
@@ -4166,16 +4186,54 @@
   /* ──────────────────────────────
      UKENTLIG OPPSUMMERING
   ────────────────────────────── */
+  let rapportPeriode = 'uke'; // 'uke' | '2uker' | 'maaned' | 'kvartal'
+
+  function byttRapportPeriode(periode, btn) {
+    rapportPeriode = periode;
+    document.querySelectorAll('.rapportPeriodeKnapp').forEach(b => b.classList.remove('aktiv'));
+    btn.classList.add('aktiv');
+    åpneRapport(window._aktivRapportKatFilter || null, true);
+  }
+
   function beregnRapportData(katFilter = null) {
     const iDag = new Date(); iDag.setHours(0,0,0,0);
     const dagIUke = iDag.getDay() === 0 ? 6 : iDag.getDay() - 1;
 
-    const forrigeMandag = new Date(iDag); forrigeMandag.setDate(iDag.getDate() - dagIUke - 7);
-    const forrigeSondag = new Date(forrigeMandag); forrigeSondag.setDate(forrigeMandag.getDate() + 6);
-    const denneMandag = new Date(iDag); denneMandag.setDate(iDag.getDate() - dagIUke);
-    const denneSondag = new Date(denneMandag); denneSondag.setDate(denneMandag.getDate() + 6);
-    const nesteMandag = new Date(denneMandag); nesteMandag.setDate(denneMandag.getDate() + 7);
-    const nesteSluttSondag = new Date(nesteMandag); nesteSluttSondag.setDate(nesteMandag.getDate() + 13);
+    // Forrige periode
+    let forrigeStart, forrigeSlutt, denneStart, denneSlutt, nesteStart, nesteSlutt;
+    const setUke = () => {
+      denneStart = new Date(iDag); denneStart.setDate(iDag.getDate() - dagIUke);
+      denneSlutt = new Date(denneStart); denneSlutt.setDate(denneStart.getDate() + 6);
+      forrigeStart = new Date(denneStart); forrigeStart.setDate(denneStart.getDate() - 7);
+      forrigeSlutt = new Date(forrigeStart); forrigeSlutt.setDate(forrigeStart.getDate() + 6);
+      nesteStart = new Date(denneStart); nesteStart.setDate(denneStart.getDate() + 7);
+      nesteSlutt = new Date(nesteStart); nesteSlutt.setDate(nesteStart.getDate() + 13);
+    };
+
+    if (rapportPeriode === 'uke') {
+      setUke();
+    } else if (rapportPeriode === '2uker') {
+      denneStart = new Date(iDag); denneStart.setDate(iDag.getDate() - dagIUke);
+      denneSlutt = new Date(denneStart); denneSlutt.setDate(denneStart.getDate() + 13);
+      forrigeStart = new Date(denneStart); forrigeStart.setDate(denneStart.getDate() - 14);
+      forrigeSlutt = new Date(denneStart); forrigeSlutt.setDate(denneStart.getDate() - 1);
+      nesteStart = new Date(denneSlutt); nesteStart.setDate(denneSlutt.getDate() + 1);
+      nesteSlutt = new Date(nesteStart); nesteSlutt.setDate(nesteStart.getDate() + 13);
+    } else if (rapportPeriode === 'maaned') {
+      denneStart = new Date(iDag.getFullYear(), iDag.getMonth(), 1);
+      denneSlutt = new Date(iDag.getFullYear(), iDag.getMonth() + 1, 0);
+      forrigeStart = new Date(iDag.getFullYear(), iDag.getMonth() - 1, 1);
+      forrigeSlutt = new Date(iDag.getFullYear(), iDag.getMonth(), 0);
+      nesteStart = new Date(iDag.getFullYear(), iDag.getMonth() + 1, 1);
+      nesteSlutt = new Date(iDag.getFullYear(), iDag.getMonth() + 2, 0);
+    } else { // kvartal
+      denneStart = new Date(iDag.getFullYear(), iDag.getMonth(), 1);
+      denneSlutt = new Date(iDag.getFullYear(), iDag.getMonth() + 3, 0);
+      forrigeStart = new Date(iDag.getFullYear(), iDag.getMonth() - 3, 1);
+      forrigeSlutt = new Date(iDag.getFullYear(), iDag.getMonth(), 0);
+      nesteStart = new Date(iDag.getFullYear(), iDag.getMonth() + 3, 1);
+      nesteSlutt = new Date(iDag.getFullYear(), iDag.getMonth() + 6, 0);
+    }
 
     const fmt = d => d.toISOString().slice(0, 10);
     const iPeriode = (datoStr, start, slutt) => datoStr >= fmt(start) && datoStr <= fmt(slutt);
@@ -4201,35 +4259,40 @@
     };
 
     const fullfortForrige = [
-      ...oppgaver.filter(o => oppI(o) && o.fullfort && o.fullfortDato && iPeriode(o.fullfortDato, forrigeMandag, forrigeSondag))
+      ...oppgaver.filter(o => oppI(o) && o.fullfort && o.fullfortDato && iPeriode(o.fullfortDato, forrigeStart, forrigeSlutt))
         .map(o => ({ type: 'oppgave', tittel: o.beskrivelse, dato: o.fullfortDato, obj: o })),
-      ...todos.filter(t => todoI(t) && t.fullfort && t.fullfortDato && iPeriode(t.fullfortDato, forrigeMandag, forrigeSondag))
+      ...todos.filter(t => todoI(t) && t.fullfort && t.fullfortDato && iPeriode(t.fullfortDato, forrigeStart, forrigeSlutt))
         .map(t => ({ type: 'to do', tittel: t.tittel, dato: t.fullfortDato, obj: t }))
     ].sort((a,b) => a.dato.localeCompare(b.dato));
 
     const aktDenne = aktiviteter.filter(a => aktI(a) && (
-      iPeriode(a.dato, denneMandag, denneSondag) ||
-      (a.datoTil && a.datoTil >= fmt(denneMandag) && a.dato <= fmt(denneSondag))
+      iPeriode(a.dato, denneStart, denneSlutt) ||
+      (a.datoTil && a.datoTil >= fmt(denneStart) && a.dato <= fmt(denneSlutt))
     )).sort((a,b) => a.dato.localeCompare(b.dato));
 
-    const fristerDenne = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && iPeriode(o.frist, denneMandag, denneSondag))
+    const fristerDenne = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && iPeriode(o.frist, denneStart, denneSlutt))
       .sort((a,b) => a.frist.localeCompare(b.frist));
 
     const aktNeste = aktiviteter.filter(a => aktI(a) && (
-      iPeriode(a.dato, nesteMandag, nesteSluttSondag) ||
-      (a.datoTil && a.datoTil >= fmt(nesteMandag) && a.dato <= fmt(nesteSluttSondag))
+      iPeriode(a.dato, nesteStart, nesteSlutt) ||
+      (a.datoTil && a.datoTil >= fmt(nesteStart) && a.dato <= fmt(nesteSlutt))
     )).sort((a,b) => a.dato.localeCompare(b.dato));
 
-    const fristerNeste = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && iPeriode(o.frist, nesteMandag, nesteSluttSondag))
+    const fristerNeste = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && iPeriode(o.frist, nesteStart, nesteSlutt))
       .sort((a,b) => a.frist.localeCompare(b.frist));
 
     const forfalt = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && o.frist < fmt(iDag))
       .sort((a,b) => a.frist.localeCompare(b.frist));
 
+    const periodeNavn = { uke: 'Denne uken', '2uker': 'Disse 2 ukene', maaned: 'Denne måneden', kvartal: 'Dette kvartalet' }[rapportPeriode];
+    const forrigeNavn = { uke: 'Forrige uke', '2uker': 'Forrige 2 uker', maaned: 'Forrige måned', kvartal: 'Forrige kvartal' }[rapportPeriode];
+    const nesteNavn   = { uke: 'Neste 2 uker', '2uker': 'Neste 2 uker', maaned: 'Neste måned', kvartal: 'Neste kvartal' }[rapportPeriode];
+
     return {
-      iDag, forrigeMandag, forrigeSondag, denneMandag, denneSondag, nesteMandag, nesteSluttSondag,
+      iDag, forrigeStart, forrigeSlutt, denneStart, denneSlutt, nesteStart, nesteSlutt,
       fullfortForrige, aktDenne, fristerDenne, aktNeste, fristerNeste, forfalt,
-      katFilter, kat: katFilter ? getKat(katFilter) : null
+      katFilter, kat: katFilter ? getKat(katFilter) : null,
+      periodeNavn, forrigeNavn, nesteNavn
     };
   }
 
@@ -4241,7 +4304,7 @@
     return fmtDato(d);
   }
 
-  function åpneRapport(katFilter = null) {
+  function åpneRapport(katFilter = null, skipModal = false) {
     window._aktivRapportKatFilter = katFilter || null;
     const data = beregnRapportData(katFilter);
     const body = document.getElementById('rapportBody');
@@ -4252,14 +4315,14 @@
       : 'Statusrapport';
 
     document.querySelector('#rapportModal .modal-tittel').textContent =
-      data.kat ? `Rapport: ${data.kat.label}` : 'Ukentlig oppsummering';
+      data.kat ? `Rapport: ${data.kat.label}` : 'Rapport';
 
     let html = `<div class="rapport-tittel-stor">${tittel}</div>
-      <div class="rapport-undertittel">Denne uken: ${fmtPer(data.denneMandag, data.denneSondag)} · Generert ${fmtDato(data.iDag)} ${data.iDag.getFullYear()}</div>
+      <div class="rapport-undertittel">${data.periodeNavn}: ${fmtPer(data.denneStart, data.denneSlutt)} · Generert ${fmtDato(data.iDag)} ${data.iDag.getFullYear()}</div>
       <div class="rapport-stat-rad">
-        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fullfortForrige.length}</div><div class="rapport-stat-label">Fullført forrige uke</div></div>
-        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fristerDenne.length}</div><div class="rapport-stat-label">Frister denne uken</div></div>
-        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fristerNeste.length}</div><div class="rapport-stat-label">Frister neste 2 uker</div></div>
+        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fullfortForrige.length}</div><div class="rapport-stat-label">Fullført ${data.forrigeNavn.toLowerCase()}</div></div>
+        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fristerDenne.length}</div><div class="rapport-stat-label">Frister nå</div></div>
+        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fristerNeste.length}</div><div class="rapport-stat-label">Frister neste</div></div>
         <div class="rapport-stat" style="${data.forfalt.length > 0 ? 'background:#fdeaea;' : ''}"><div class="rapport-stat-tall" style="${data.forfalt.length > 0 ? 'color:#c0392b;' : ''}">${data.forfalt.length}</div><div class="rapport-stat-label">Forfalt</div></div>
       </div>`;
 
@@ -4279,9 +4342,9 @@
       html += `</div>`;
     }
 
-    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Denne uken (${fmtPer(data.denneMandag, data.denneSondag)})</div>`;
+    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})</div>`;
     if (data.aktDenne.length === 0 && data.fristerDenne.length === 0) {
-      html += `<div class="rapport-tom">Ingenting planlagt denne uken.</div>`;
+      html += `<div class="rapport-tom">Ingenting planlagt i denne perioden.</div>`;
     } else {
       data.aktDenne.forEach(a => {
         const kat = getKat(a.type);
@@ -4306,9 +4369,9 @@
     }
     html += `</div>`;
 
-    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Neste 2 uker (${fmtPer(data.nesteMandag, data.nesteSluttSondag)})</div>`;
+    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">${data.nesteNavn} (${fmtPer(data.nesteStart, data.nesteSlutt)})</div>`;
     if (data.aktNeste.length === 0 && data.fristerNeste.length === 0) {
-      html += `<div class="rapport-tom">Ingenting planlagt de neste to ukene.</div>`;
+      html += `<div class="rapport-tom">Ingenting planlagt i neste periode.</div>`;
     } else {
       data.aktNeste.forEach(a => {
         const kat = getKat(a.type);
@@ -4333,9 +4396,9 @@
     }
     html += `</div>`;
 
-    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Fullført forrige uke (${fmtPer(data.forrigeMandag, data.forrigeSondag)})</div>`;
+    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Fullført ${data.forrigeNavn.toLowerCase()} (${fmtPer(data.forrigeStart, data.forrigeSlutt)})</div>`;
     if (data.fullfortForrige.length === 0) {
-      html += `<div class="rapport-tom">Ingen registrerte fullføringer denne perioden.</div>`;
+      html += `<div class="rapport-tom">Ingen registrerte fullføringer i forrige periode.</div>`;
     } else {
       data.fullfortForrige.forEach(item => {
         const kat = item.obj.kategoriId ? getKat(item.obj.kategoriId) :
@@ -4353,7 +4416,7 @@
     html += `</div>`;
 
     body.innerHTML = html;
-    document.getElementById('rapportModal').classList.add('vis');
+    if (!skipModal) document.getElementById('rapportModal').classList.add('vis');
   }
 
   function eksporterRapportMarkdown() {
@@ -4366,9 +4429,9 @@
     md += `**Denne uken:** ${fmtPer(data.denneMandag, data.denneSondag)}  \n`;
     md += `**Generert:** ${fmtDato(data.iDag)} ${data.iDag.getFullYear()}\n\n---\n\n`;
     md += `## Nøkkeltall\n\n| | |\n|---|---|\n`;
-    md += `| Fullført forrige uke | ${data.fullfortForrige.length} |\n`;
-    md += `| Frister denne uken | ${data.fristerDenne.length} |\n`;
-    md += `| Frister neste 2 uker | ${data.fristerNeste.length} |\n`;
+    md += `| Fullført ${data.forrigeNavn.toLowerCase()} | ${data.fullfortForrige.length} |\n`;
+    md += `| Frister nå | ${data.fristerDenne.length} |\n`;
+    md += `| Frister neste | ${data.fristerNeste.length} |\n`;
     md += `| Forfalt | ${data.forfalt.length} |\n\n`;
 
     if (data.forfalt.length > 0) {
@@ -4380,7 +4443,7 @@
       md += `\n`;
     }
 
-    md += `## Denne uken (${fmtPer(data.denneMandag, data.denneSondag)})\n\n`;
+    md += `## ${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})\n\n`;
     if (data.aktDenne.length === 0 && data.fristerDenne.length === 0) md += `_Ingenting planlagt._\n\n`;
     else {
       data.aktDenne.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
@@ -4388,7 +4451,7 @@
       md += `\n`;
     }
 
-    md += `## Neste 2 uker (${fmtPer(data.nesteMandag, data.nesteSluttSondag)})\n\n`;
+    md += `## ${data.nesteNavn} (${fmtPer(data.nesteStart, data.nesteSlutt)})\n\n`;
     if (data.aktNeste.length === 0 && data.fristerNeste.length === 0) md += `_Ingenting planlagt._\n\n`;
     else {
       data.aktNeste.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
@@ -4396,7 +4459,7 @@
       md += `\n`;
     }
 
-    md += `## Fullført forrige uke (${fmtPer(data.forrigeMandag, data.forrigeSondag)})\n\n`;
+    md += `## Fullført ${data.forrigeNavn.toLowerCase()} (${fmtPer(data.forrigeStart, data.forrigeSlutt)})\n\n`;
     if (data.fullfortForrige.length === 0) md += `_Ingen registrerte fullføringer._\n\n`;
     else { data.fullfortForrige.forEach(item => { md += `- **${item.tittel}** _(${item.type}, ${fmtDatoFra(item.dato)})_\n`; }); md += `\n`; }
 
@@ -4442,7 +4505,7 @@
       body.appendChild(btn);
     };
 
-    lagValg('Hele prosjektet', 'Statusrapport for alle kategorier', 'var(--grønn)', () => åpneRapport());
+    lagValg('Hele prosjektet', 'Rapport for alle kategorier', 'var(--grønn)', () => åpneRapport());
 
     if (kategorier.length > 0) {
       const skille = document.createElement('div');
@@ -4472,9 +4535,53 @@
     if (oppgaver.length !== forOpp || todos.length !== forTod) lagre();
   }
 
+  function renderHovedFilter() {
+    const bar = document.getElementById('hovedFilterBar');
+    const knapper = document.getElementById('hovedFilterKnapper');
+    if (!bar || !knapper) return;
+    knapper.innerHTML = '';
+
+    // Alle-knapp
+    const alleBtn = document.createElement('button');
+    alleBtn.className = 'filter-pill' + (!globalKatFilter ? ' aktiv' : '');
+    alleBtn.textContent = 'Alle';
+    alleBtn.style.cssText = 'white-space:nowrap;';
+    alleBtn.onclick = () => settGlobalFilter(null);
+    knapper.appendChild(alleBtn);
+
+    kategorier.forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-pill' + (globalKatFilter === k.id ? ' aktiv-' + k.id : ' farge-' + k.id);
+      btn.textContent = k.label;
+      btn.style.cssText = 'white-space:nowrap;';
+      btn.onclick = () => settGlobalFilter(k.id);
+      knapper.appendChild(btn);
+    });
+
+    bar.style.display = kategorier.length > 0 ? 'flex' : 'none';
+  }
+
+  function settGlobalFilter(katId) {
+    globalKatFilter = katId;
+    renderHovedFilter();
+    oppdaterAktivPanel();
+  }
+
+  function matcherGlobalFilter(type, kategoriId, aktivitetId) {
+    if (!globalKatFilter) return true;
+    if (type === globalKatFilter) return true;
+    if (kategoriId === globalKatFilter) return true;
+    if (aktivitetId) {
+      const akt = aktiviteter.find(a => a.id === aktivitetId);
+      if (akt && akt.type === globalKatFilter) return true;
+    }
+    return false;
+  }
+
   function init() {
     hent();
     ryddFullforte();
+    renderHovedFilter();
     renderTodos();
     renderTidslinje();
     oppdaterForfaltBadge();
