@@ -1336,7 +1336,7 @@
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
-  <div class="versjon">v.1.79</div>
+  <div class="versjon">v.1.80</div>
 </main>
 
 <!-- Modal: Kategorioversikt -->
@@ -2665,8 +2665,10 @@
       const navnInput = document.createElement('input');
       navnInput.className = 'kat-navn-input';
       navnInput.value = k.label;
-      navnInput.onchange = () => {
+      navnInput.oninput = () => {
         k.label = navnInput.value.trim() || k.label;
+      };
+      navnInput.onblur = () => {
         lagre(); oppdaterAktivPanel();
       };
 
@@ -3601,7 +3603,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.79',
+      versjon: '1.80',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
