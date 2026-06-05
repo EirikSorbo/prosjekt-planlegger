@@ -199,6 +199,15 @@
       padding: 20px 12px 64px;
     }
 
+    /* Bredere layout på tablet/desktop */
+    @media (min-width: 700px) {
+      main { max-width: 1100px; padding: 24px 24px 80px; }
+      #panel-todo, #panel-liste, #panel-oppgaver { max-width: 720px; margin: 0 auto; }
+    }
+    @media (min-width: 1280px) {
+      main { max-width: 1280px; }
+    }
+
     .panel { display: none; }
     .panel.aktiv { display: block; }
 
@@ -1146,6 +1155,233 @@
     }
     .uke-hendelse:hover { opacity: 0.75; }
 
+    /* ── Tidslinje (Gantt) ── */
+    .tidslinje-skala {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 10px;
+      justify-content: flex-end;
+    }
+    .tidslinje-skala-knapp {
+      padding: 5px 10px;
+      border: 1px solid var(--kant);
+      border-radius: var(--rs);
+      background: var(--hvit);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--tekst-sek);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .tidslinje-skala-knapp:hover { border-color: var(--grønn-mid); color: var(--grønn); }
+    .tidslinje-skala-knapp.aktiv { background: var(--grønn); color: white; border-color: var(--grønn); }
+
+    .tidslinje-wrap {
+      background: var(--hvit);
+      border: 1px solid var(--kant);
+      border-radius: var(--r);
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tidslinje-grid {
+      position: relative;
+      min-width: 100%;
+    }
+    .tidslinje-mnd-rad {
+      display: flex;
+      border-bottom: 1px solid var(--kant);
+      background: var(--grønn-lys);
+      position: sticky; top: 0; z-index: 2;
+    }
+    .tidslinje-mnd-celle {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--grønn);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 4px;
+      text-align: center;
+      border-right: 1px solid var(--kant);
+      box-sizing: border-box;
+    }
+    .tidslinje-kat-rad {
+      position: relative;
+      border-bottom: 1px solid var(--kant);
+      min-height: 38px;
+      padding: 6px 0;
+    }
+    .tidslinje-kat-rad:last-child { border-bottom: none; }
+    .tidslinje-kat-label {
+      position: sticky;
+      left: 0;
+      background: var(--hvit);
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      color: var(--tekst);
+      z-index: 1;
+      border-right: 1px solid var(--kant);
+      width: 90px;
+      box-sizing: border-box;
+      float: left;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .tidslinje-spor {
+      position: relative;
+      margin-left: 90px;
+      height: 28px;
+    }
+    .tidslinje-bar {
+      position: absolute;
+      height: 18px;
+      top: 5px;
+      border-radius: 4px;
+      padding: 0 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      transition: opacity .15s;
+    }
+    .tidslinje-bar:hover { opacity: 0.85; }
+    .tidslinje-milepel {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      top: 7px;
+      transform: rotate(45deg);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: transform .15s;
+      margin-left: -7px;
+      border: 2px solid white;
+    }
+    .tidslinje-milepel:hover { transform: rotate(45deg) scale(1.2); }
+    .tidslinje-milepel.fullfort { opacity: 0.4; }
+    .tidslinje-idag-linje {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: #c0392b;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .tidslinje-idag-merke {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      background: #c0392b;
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+      z-index: 3;
+    }
+
+    /* ── Ukentlig oppsummering ── */
+    .rapport-modal { max-width: 720px !important; }
+    .rapport-body {
+      padding: 24px 28px;
+      max-height: 70vh;
+      overflow-y: auto;
+      font-family: 'Nunito', sans-serif;
+    }
+    .rapport-tittel-stor {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      color: var(--tekst);
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+    .rapport-undertittel {
+      font-size: 13px;
+      color: var(--tekst-sek);
+      margin-bottom: 28px;
+      font-weight: 500;
+    }
+    .rapport-seksjon { margin-bottom: 26px; }
+    .rapport-seksjon-tittel {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--grønn);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--grønn);
+      margin-bottom: 12px;
+    }
+    .rapport-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--kant);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .rapport-item:last-child { border-bottom: none; }
+    .rapport-item-tittel { font-weight: 700; font-size: 14px; color: var(--tekst); }
+    .rapport-item-meta { font-size: 12px; color: var(--tekst-sek); margin-top: 2px; }
+    .rapport-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border: 1.5px solid;
+      background: transparent;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .rapport-tom { font-size: 13px; color: var(--tekst-sek); font-style: italic; padding: 4px 0; }
+    .rapport-stat-rad {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .rapport-stat {
+      flex: 1;
+      background: var(--grønn-lys);
+      border-radius: var(--rs);
+      padding: 14px;
+      text-align: center;
+    }
+    .rapport-stat-tall {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      color: var(--grønn);
+      letter-spacing: -0.5px;
+    }
+    .rapport-stat-label {
+      font-size: 10px;
+      color: var(--tekst-sek);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      margin-top: 2px;
+    }
+
     /* ── Kategori-modal ── */
     .kat-rad {
       display: flex;
@@ -1249,7 +1485,7 @@
   <button class="fane aktiv" onclick="byttFane('todo', this)">To do</button>
   <button class="fane" onclick="byttFane('oppgaver', this)">Oppgaver</button>
   <button class="fane" onclick="byttFane('liste', this)">Aktiviteter</button>
-  <button class="fane" onclick="byttFane('kalender', this)">Kalender</button>
+  <button class="fane" onclick="byttFane('kalender', this)">Oversikt</button>
 </nav>
 
 <div id="varselBanner" style="display:none;background:var(--grønn-lys);border-bottom:1px solid var(--grønn-mid);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;">
@@ -1281,10 +1517,22 @@
       <button class="nav-knapp" id="nesteKnapp" onclick="nesteManad()">&#8250;</button>
     </div>
     <div class="kal-visning-toggle">
-      <button id="toggleMaaned" class="kal-toggle-knapp aktiv" onclick="byttKalVisning('maaned')">Måned</button>
-      <button id="toggleUke"    class="kal-toggle-knapp"       onclick="byttKalVisning('uke')">Uke</button>
+      <button id="toggleTidslinje" class="kal-toggle-knapp aktiv" onclick="byttKalVisning('tidslinje')">Tidslinje</button>
+      <button id="toggleMaaned"    class="kal-toggle-knapp"       onclick="byttKalVisning('maaned')">Måned</button>
+      <button id="toggleUke"       class="kal-toggle-knapp"       onclick="byttKalVisning('uke')">Uke</button>
     </div>
-    <div id="kalender-maaned-view">
+    <div id="kalender-tidslinje-view">
+      <div class="tidslinje-skala">
+        <button class="tidslinje-skala-knapp"      data-mnd="1" onclick="settTidslinjeSkala(1, this)">1 mnd</button>
+        <button class="tidslinje-skala-knapp aktiv" data-mnd="3" onclick="settTidslinjeSkala(3, this)">3 mnd</button>
+        <button class="tidslinje-skala-knapp"      data-mnd="6" onclick="settTidslinjeSkala(6, this)">6 mnd</button>
+        <button class="tidslinje-skala-knapp"      data-mnd="12" onclick="settTidslinjeSkala(12, this)">12 mnd</button>
+      </div>
+      <div class="tidslinje-wrap">
+        <div id="tidslinjeGrid"></div>
+      </div>
+    </div>
+    <div id="kalender-maaned-view" style="display:none;">
       <div class="kalender-grid">
         <div class="dag-navn-rad">
           <div class="dag-navn">Man</div>
@@ -1374,10 +1622,43 @@
         <button class="knapp-sek" onclick="document.getElementById('mergeInput').click()" style="flex:1;font-size:12px;">⇅ Slå sammen</button>
       </div>
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
+      <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Ukentlig oppsummering</button>
     </div>
-    <div class="versjon">v.1.80</div>
-    <div class="modal-footer" style="justify-content:flex-end;">
+    <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.90</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Rapport-velger -->
+<div class="modal-overlay" id="rapportVelgerModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-tittel">Velg rapport</div>
+      <button class="lukk-knapp" onclick="lukkModal('rapportVelgerModal')">×</button>
+    </div>
+    <div class="modal-body" id="rapportVelgerBody" style="gap:8px;"></div>
+    <div class="modal-footer" style="justify-content:flex-end;">
+      <button class="knapp-sek" onclick="lukkModal('rapportVelgerModal')">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ukentlig oppsummering -->
+<div class="modal-overlay" id="rapportModal">
+  <div class="modal rapport-modal">
+    <div class="modal-header">
+      <div class="modal-tittel">Ukentlig oppsummering</div>
+      <button class="lukk-knapp" onclick="lukkModal('rapportModal')">×</button>
+    </div>
+    <div class="rapport-body" id="rapportBody"></div>
+    <div class="modal-footer">
+      <button class="knapp-sek" onclick="lukkModal('rapportModal')">Lukk</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="eksporterRapportMarkdown()">Markdown</button>
+        <button class="knapp-primær" onclick="window.print()">Skriv ut / PDF</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1755,22 +2036,189 @@
     document.querySelectorAll('.fane').forEach(f => f.classList.remove('aktiv'));
     document.getElementById('panel-' + id).classList.add('aktiv');
     el.classList.add('aktiv');
-    if (id === 'kalender') renderKalender();
+    if (id === 'kalender') {
+      if (kalVisning === 'tidslinje') renderTidslinje();
+      else if (kalVisning === 'uke')  renderUke();
+      else                            renderKalender();
+    }
     if (id === 'liste')    renderListe();
     if (id === 'oppgaver') renderOppgaver();
   }
 
-  let kalVisning = 'maaned'; // 'maaned' | 'uke'
+  let kalVisning = 'tidslinje'; // 'maaned' | 'uke' | 'tidslinje'
   let ukeOffset  = 0; // uker relativt til i dag
+  let tidslinjeMnd = 3; // antall måneder å vise i tidslinje
 
   function byttKalVisning(visning) {
     kalVisning = visning;
-    document.getElementById('kalender-maaned-view').style.display = visning === 'maaned' ? '' : 'none';
-    document.getElementById('kalender-uke-view').style.display    = visning === 'uke'    ? '' : 'none';
-    document.getElementById('toggleMaaned').classList.toggle('aktiv', visning === 'maaned');
-    document.getElementById('toggleUke').classList.toggle('aktiv',    visning === 'uke');
-    if (visning === 'maaned') renderKalender();
-    else renderUke();
+    document.getElementById('kalender-maaned-view').style.display    = visning === 'maaned'    ? '' : 'none';
+    document.getElementById('kalender-uke-view').style.display       = visning === 'uke'       ? '' : 'none';
+    document.getElementById('kalender-tidslinje-view').style.display = visning === 'tidslinje' ? '' : 'none';
+    document.getElementById('toggleMaaned').classList.toggle('aktiv',    visning === 'maaned');
+    document.getElementById('toggleUke').classList.toggle('aktiv',       visning === 'uke');
+    document.getElementById('toggleTidslinje').classList.toggle('aktiv', visning === 'tidslinje');
+    if (visning === 'maaned')    renderKalender();
+    else if (visning === 'uke')  renderUke();
+    else                         renderTidslinje();
+  }
+
+  function settTidslinjeSkala(mnd, btn) {
+    tidslinjeMnd = mnd;
+    document.querySelectorAll('.tidslinje-skala-knapp').forEach(b => b.classList.remove('aktiv'));
+    btn.classList.add('aktiv');
+    renderTidslinje();
+  }
+
+  function renderTidslinje() {
+    const grid = document.getElementById('tidslinjeGrid');
+    if (!grid) return;
+    grid.className = 'tidslinje-grid';
+    grid.innerHTML = '';
+
+    const iDag = new Date(); iDag.setHours(0,0,0,0);
+    const start = tidslinjeMnd === 1
+      ? new Date(iDag.getFullYear(), iDag.getMonth(), 1)
+      : new Date(iDag.getFullYear(), iDag.getMonth() - 1, 1);
+    const slutt = new Date(start.getFullYear(), start.getMonth() + tidslinjeMnd, 1);
+    const totalDager = Math.round((slutt - start) / 86400000);
+
+    const pxPerDag = tidslinjeMnd === 1 ? 22 : tidslinjeMnd === 3 ? 8 : tidslinjeMnd === 6 ? 5 : 3;
+    const totalBredde = totalDager * pxPerDag + 90;
+    grid.style.width = totalBredde + 'px';
+
+    if (tidslinjeMnd === 1) {
+      document.getElementById('maanedTittel').textContent =
+        MAANEDER[start.getMonth()].charAt(0).toUpperCase() + MAANEDER[start.getMonth()].slice(1) +
+        ' ' + start.getFullYear();
+    } else {
+      document.getElementById('maanedTittel').textContent =
+        MAANEDER[start.getMonth()].slice(0,3) + ' ' + start.getFullYear() +
+        ' – ' + MAANEDER[(slutt.getMonth() + 11) % 12].slice(0,3) + ' ' +
+        (slutt.getMonth() === 0 ? slutt.getFullYear() - 1 : slutt.getFullYear());
+    }
+    document.getElementById('forrigeKnapp').onclick = null;
+    document.getElementById('nesteKnapp').onclick = null;
+
+    // Måned-header
+    const mndRad = document.createElement('div');
+    mndRad.className = 'tidslinje-mnd-rad';
+    const blank = document.createElement('div');
+    blank.style.cssText = 'width:90px;flex-shrink:0;border-right:1px solid var(--kant);background:var(--grønn-lys);';
+    mndRad.appendChild(blank);
+    const cursor = new Date(start);
+    while (cursor < slutt) {
+      const dagerIMnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+      const celle = document.createElement('div');
+      celle.className = 'tidslinje-mnd-celle';
+      celle.style.width = (dagerIMnd * pxPerDag) + 'px';
+      celle.style.flexShrink = '0';
+      celle.textContent = MAANEDER[cursor.getMonth()].slice(0,3) + (cursor.getMonth() === 0 ? ' ' + cursor.getFullYear() : '');
+      mndRad.appendChild(celle);
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    grid.appendChild(mndRad);
+
+    // Dag-numre for 1 mnd-visning
+    if (tidslinjeMnd === 1) {
+      const dagRad = document.createElement('div');
+      dagRad.style.cssText = 'display:flex;border-bottom:1px solid var(--kant);background:var(--hvit);position:sticky;top:30px;z-index:2;';
+      const dagBlank = document.createElement('div');
+      dagBlank.style.cssText = 'width:90px;flex-shrink:0;border-right:1px solid var(--kant);';
+      dagRad.appendChild(dagBlank);
+      const dagerIMnd = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+      for (let d = 1; d <= dagerIMnd; d++) {
+        const dCelle = document.createElement('div');
+        const erIDag = d === iDag.getDate() && start.getMonth() === iDag.getMonth() && start.getFullYear() === iDag.getFullYear();
+        dCelle.style.cssText = `width:${pxPerDag}px;flex-shrink:0;text-align:center;font-size:10px;font-weight:${erIDag?'800':'600'};color:${erIDag?'#c0392b':'var(--tekst-sek)'};padding:4px 0;border-right:1px solid ${d % 7 === 0 ? 'var(--kant)' : 'transparent'};`;
+        dCelle.textContent = d;
+        dagRad.appendChild(dCelle);
+      }
+      grid.appendChild(dagRad);
+    }
+
+    // I dag-linje
+    const iDagOffset = Math.round((iDag - start) / 86400000) * pxPerDag + 90;
+    const iDagLinje = document.createElement('div');
+    iDagLinje.className = 'tidslinje-idag-linje';
+    iDagLinje.style.left = iDagOffset + 'px';
+    iDagLinje.style.top = '30px';
+    grid.appendChild(iDagLinje);
+
+    const iDagMerke = document.createElement('div');
+    iDagMerke.className = 'tidslinje-idag-merke';
+    iDagMerke.style.left = iDagOffset + 'px';
+    iDagMerke.style.top = '6px';
+    iDagMerke.textContent = 'I DAG';
+    grid.appendChild(iDagMerke);
+
+    // En rad per kategori
+    const grupperKats = [...kategorier];
+    const harUkategorisert = aktiviteter.some(a => !a.type) || oppgaver.some(o => !o.kategoriId && !o.aktivitetId);
+    if (harUkategorisert) grupperKats.push({ id: null, label: 'Annet', farge: '#999' });
+
+    if (grupperKats.length === 0) {
+      const tom = document.createElement('div');
+      tom.style.cssText = 'padding:32px;text-align:center;color:var(--tekst-sek);font-size:13px;';
+      tom.textContent = 'Legg til kategorier og oppgaver for å se tidslinjen.';
+      grid.appendChild(tom);
+      return;
+    }
+
+    grupperKats.forEach(k => {
+      const rad = document.createElement('div');
+      rad.className = 'tidslinje-kat-rad';
+
+      const label = document.createElement('div');
+      label.className = 'tidslinje-kat-label';
+      label.textContent = k.label;
+      label.style.color = k.farge;
+      label.style.borderLeft = '3px solid ' + k.farge;
+      rad.appendChild(label);
+
+      const spor = document.createElement('div');
+      spor.className = 'tidslinje-spor';
+      spor.style.width = (totalDager * pxPerDag) + 'px';
+
+      // Aktiviteter
+      aktiviteter.filter(a => (k.id === null ? !a.type : a.type === k.id)).forEach(a => {
+        const d1 = new Date(a.dato + 'T00:00:00');
+        const d2 = new Date((a.datoTil || a.dato) + 'T00:00:00');
+        if (d2 < start || d1 >= slutt) return;
+        const offsetDager = Math.max(0, Math.round((d1 - start) / 86400000));
+        const sluttDager  = Math.min(totalDager, Math.round((d2 - start) / 86400000) + 1);
+        const bar = document.createElement('div');
+        bar.className = 'tidslinje-bar';
+        bar.style.left = (offsetDager * pxPerDag) + 'px';
+        bar.style.width = Math.max(8, (sluttDager - offsetDager) * pxPerDag) + 'px';
+        bar.style.background = k.farge;
+        bar.textContent = a.tittel;
+        bar.title = a.tittel;
+        bar.onclick = () => åpneAktivitetInfo(a.id);
+        spor.appendChild(bar);
+      });
+
+      // Oppgaver med frist
+      oppgaver.filter(o => {
+        if (!o.frist) return false;
+        const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+        const t = akt?.type || o.kategoriId || null;
+        return k.id === null ? !t : t === k.id;
+      }).forEach(o => {
+        const d = new Date(o.frist + 'T00:00:00');
+        if (d < start || d >= slutt) return;
+        const offsetDager = Math.round((d - start) / 86400000);
+        const mp = document.createElement('div');
+        mp.className = 'tidslinje-milepel' + (o.fullfort ? ' fullfort' : '');
+        mp.style.left = (offsetDager * pxPerDag) + 'px';
+        mp.style.background = k.farge;
+        mp.title = o.beskrivelse + (o.fullfort ? ' (fullført)' : '');
+        mp.onclick = () => åpneOppgaveInfo(o.id);
+        spor.appendChild(mp);
+      });
+
+      rad.appendChild(spor);
+      grid.appendChild(rad);
+    });
   }
 
   function renderUke() {
@@ -3560,6 +4008,7 @@
     if (aktiv === 'panel-todo')     renderTodos();
     if (aktiv === 'panel-kalender') {
       if (kalVisning === 'uke') renderUke();
+      else if (kalVisning === 'tidslinje') renderTidslinje();
       else { renderKalender(); if (valgtDato) renderValgtDag(valgtDato); }
     }
     if (aktiv === 'panel-liste')    renderListe();
@@ -3603,7 +4052,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.80',
+      versjon: '1.90',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
@@ -3714,6 +4163,304 @@
     leser.readAsText(fil);
     input.value = '';
   }
+  /* ──────────────────────────────
+     UKENTLIG OPPSUMMERING
+  ────────────────────────────── */
+  function beregnRapportData(katFilter = null) {
+    const iDag = new Date(); iDag.setHours(0,0,0,0);
+    const dagIUke = iDag.getDay() === 0 ? 6 : iDag.getDay() - 1;
+
+    const forrigeMandag = new Date(iDag); forrigeMandag.setDate(iDag.getDate() - dagIUke - 7);
+    const forrigeSondag = new Date(forrigeMandag); forrigeSondag.setDate(forrigeMandag.getDate() + 6);
+    const denneMandag = new Date(iDag); denneMandag.setDate(iDag.getDate() - dagIUke);
+    const denneSondag = new Date(denneMandag); denneSondag.setDate(denneMandag.getDate() + 6);
+    const nesteMandag = new Date(denneMandag); nesteMandag.setDate(denneMandag.getDate() + 7);
+    const nesteSluttSondag = new Date(nesteMandag); nesteSluttSondag.setDate(nesteMandag.getDate() + 13);
+
+    const fmt = d => d.toISOString().slice(0, 10);
+    const iPeriode = (datoStr, start, slutt) => datoStr >= fmt(start) && datoStr <= fmt(slutt);
+
+    const aktI = a => !katFilter || a.type === katFilter;
+    const oppI = o => {
+      if (!katFilter) return true;
+      if (o.kategoriId === katFilter) return true;
+      if (o.aktivitetId) {
+        const a = aktiviteter.find(a => a.id === o.aktivitetId);
+        if (a && a.type === katFilter) return true;
+      }
+      return false;
+    };
+    const todoI = t => {
+      if (!katFilter) return true;
+      if (t.kategoriId === katFilter) return true;
+      if (t.oppgaveId) {
+        const o = oppgaver.find(o => o.id === t.oppgaveId);
+        if (o && oppI(o)) return true;
+      }
+      return false;
+    };
+
+    const fullfortForrige = [
+      ...oppgaver.filter(o => oppI(o) && o.fullfort && o.fullfortDato && iPeriode(o.fullfortDato, forrigeMandag, forrigeSondag))
+        .map(o => ({ type: 'oppgave', tittel: o.beskrivelse, dato: o.fullfortDato, obj: o })),
+      ...todos.filter(t => todoI(t) && t.fullfort && t.fullfortDato && iPeriode(t.fullfortDato, forrigeMandag, forrigeSondag))
+        .map(t => ({ type: 'to do', tittel: t.tittel, dato: t.fullfortDato, obj: t }))
+    ].sort((a,b) => a.dato.localeCompare(b.dato));
+
+    const aktDenne = aktiviteter.filter(a => aktI(a) && (
+      iPeriode(a.dato, denneMandag, denneSondag) ||
+      (a.datoTil && a.datoTil >= fmt(denneMandag) && a.dato <= fmt(denneSondag))
+    )).sort((a,b) => a.dato.localeCompare(b.dato));
+
+    const fristerDenne = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && iPeriode(o.frist, denneMandag, denneSondag))
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+
+    const aktNeste = aktiviteter.filter(a => aktI(a) && (
+      iPeriode(a.dato, nesteMandag, nesteSluttSondag) ||
+      (a.datoTil && a.datoTil >= fmt(nesteMandag) && a.dato <= fmt(nesteSluttSondag))
+    )).sort((a,b) => a.dato.localeCompare(b.dato));
+
+    const fristerNeste = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && iPeriode(o.frist, nesteMandag, nesteSluttSondag))
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+
+    const forfalt = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && o.frist < fmt(iDag))
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+
+    return {
+      iDag, forrigeMandag, forrigeSondag, denneMandag, denneSondag, nesteMandag, nesteSluttSondag,
+      fullfortForrige, aktDenne, fristerDenne, aktNeste, fristerNeste, forfalt,
+      katFilter, kat: katFilter ? getKat(katFilter) : null
+    };
+  }
+
+  function fmtDato(d) {
+    return d.getDate() + '. ' + MAANEDER[d.getMonth()];
+  }
+  function fmtDatoFra(str) {
+    const d = new Date(str + 'T00:00:00');
+    return fmtDato(d);
+  }
+
+  function åpneRapport(katFilter = null) {
+    window._aktivRapportKatFilter = katFilter || null;
+    const data = beregnRapportData(katFilter);
+    const body = document.getElementById('rapportBody');
+
+    const fmtPer = (a, b) => `${fmtDato(a)} – ${fmtDato(b)}`;
+    const tittel = data.kat
+      ? `Statusrapport — <span style="color:${data.kat.farge}">${data.kat.label}</span>`
+      : 'Statusrapport';
+
+    document.querySelector('#rapportModal .modal-tittel').textContent =
+      data.kat ? `Rapport: ${data.kat.label}` : 'Ukentlig oppsummering';
+
+    let html = `<div class="rapport-tittel-stor">${tittel}</div>
+      <div class="rapport-undertittel">Denne uken: ${fmtPer(data.denneMandag, data.denneSondag)} · Generert ${fmtDato(data.iDag)} ${data.iDag.getFullYear()}</div>
+      <div class="rapport-stat-rad">
+        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fullfortForrige.length}</div><div class="rapport-stat-label">Fullført forrige uke</div></div>
+        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fristerDenne.length}</div><div class="rapport-stat-label">Frister denne uken</div></div>
+        <div class="rapport-stat"><div class="rapport-stat-tall">${data.fristerNeste.length}</div><div class="rapport-stat-label">Frister neste 2 uker</div></div>
+        <div class="rapport-stat" style="${data.forfalt.length > 0 ? 'background:#fdeaea;' : ''}"><div class="rapport-stat-tall" style="${data.forfalt.length > 0 ? 'color:#c0392b;' : ''}">${data.forfalt.length}</div><div class="rapport-stat-label">Forfalt</div></div>
+      </div>`;
+
+    if (data.forfalt.length > 0) {
+      html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel" style="color:#c0392b;border-bottom-color:#c0392b;">Forfalte oppgaver</div>`;
+      data.forfalt.forEach(o => {
+        const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
+        const diff = Math.round((data.iDag - new Date(o.frist + 'T00:00:00')) / 86400000);
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${o.beskrivelse}</div>
+            <div class="rapport-item-meta" style="color:#c0392b;font-weight:600;">${diff} dag${diff===1?'':'er'} over fristen (${fmtDatoFra(o.frist)})</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Denne uken (${fmtPer(data.denneMandag, data.denneSondag)})</div>`;
+    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0) {
+      html += `<div class="rapport-tom">Ingenting planlagt denne uken.</div>`;
+    } else {
+      data.aktDenne.forEach(a => {
+        const kat = getKat(a.type);
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${a.tittel}</div>
+            <div class="rapport-item-meta">${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' · kl. ' + a.tid : ''}</div>
+          </div>
+        </div>`;
+      });
+      data.fristerDenne.forEach(o => {
+        const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${o.beskrivelse}</div>
+            <div class="rapport-item-meta">Frist ${fmtDatoFra(o.frist)}</div>
+          </div>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+
+    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Neste 2 uker (${fmtPer(data.nesteMandag, data.nesteSluttSondag)})</div>`;
+    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0) {
+      html += `<div class="rapport-tom">Ingenting planlagt de neste to ukene.</div>`;
+    } else {
+      data.aktNeste.forEach(a => {
+        const kat = getKat(a.type);
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${a.tittel}</div>
+            <div class="rapport-item-meta">${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' · kl. ' + a.tid : ''}</div>
+          </div>
+        </div>`;
+      });
+      data.fristerNeste.forEach(o => {
+        const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${o.beskrivelse}</div>
+            <div class="rapport-item-meta">Frist ${fmtDatoFra(o.frist)}</div>
+          </div>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+
+    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Fullført forrige uke (${fmtPer(data.forrigeMandag, data.forrigeSondag)})</div>`;
+    if (data.fullfortForrige.length === 0) {
+      html += `<div class="rapport-tom">Ingen registrerte fullføringer denne perioden.</div>`;
+    } else {
+      data.fullfortForrige.forEach(item => {
+        const kat = item.obj.kategoriId ? getKat(item.obj.kategoriId) :
+                    (item.obj.aktivitetId ? getKat(aktiviteter.find(a => a.id === item.obj.aktivitetId)?.type) :
+                    (item.obj.oppgaveId ? getKat(oppgaver.find(o => o.id === item.obj.oppgaveId)?.kategoriId) : null));
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : `<span class="rapport-pill" style="border-color:var(--kant);color:var(--tekst-sek);">${item.type}</span>`}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${item.tittel}</div>
+            <div class="rapport-item-meta">Fullført ${fmtDatoFra(item.dato)}</div>
+          </div>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+
+    body.innerHTML = html;
+    document.getElementById('rapportModal').classList.add('vis');
+  }
+
+  function eksporterRapportMarkdown() {
+    const katFilter = window._aktivRapportKatFilter || null;
+    const data = beregnRapportData(katFilter);
+    const fmtPer = (a, b) => `${fmtDato(a)} – ${fmtDato(b)}`;
+    const tittel = data.kat ? `Statusrapport — ${data.kat.label}` : `Statusrapport — MishMash WP4`;
+
+    let md = `# ${tittel}\n\n`;
+    md += `**Denne uken:** ${fmtPer(data.denneMandag, data.denneSondag)}  \n`;
+    md += `**Generert:** ${fmtDato(data.iDag)} ${data.iDag.getFullYear()}\n\n---\n\n`;
+    md += `## Nøkkeltall\n\n| | |\n|---|---|\n`;
+    md += `| Fullført forrige uke | ${data.fullfortForrige.length} |\n`;
+    md += `| Frister denne uken | ${data.fristerDenne.length} |\n`;
+    md += `| Frister neste 2 uker | ${data.fristerNeste.length} |\n`;
+    md += `| Forfalt | ${data.forfalt.length} |\n\n`;
+
+    if (data.forfalt.length > 0) {
+      md += `## Forfalte oppgaver\n\n`;
+      data.forfalt.forEach(o => {
+        const diff = Math.round((data.iDag - new Date(o.frist + 'T00:00:00')) / 86400000);
+        md += `- **${o.beskrivelse}** — ${diff} dag${diff===1?'':'er'} over fristen (${fmtDatoFra(o.frist)})\n`;
+      });
+      md += `\n`;
+    }
+
+    md += `## Denne uken (${fmtPer(data.denneMandag, data.denneSondag)})\n\n`;
+    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0) md += `_Ingenting planlagt._\n\n`;
+    else {
+      data.aktDenne.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
+      data.fristerDenne.forEach(o => { const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — frist ${fmtDatoFra(o.frist)}\n`; });
+      md += `\n`;
+    }
+
+    md += `## Neste 2 uker (${fmtPer(data.nesteMandag, data.nesteSluttSondag)})\n\n`;
+    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0) md += `_Ingenting planlagt._\n\n`;
+    else {
+      data.aktNeste.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
+      data.fristerNeste.forEach(o => { const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — frist ${fmtDatoFra(o.frist)}\n`; });
+      md += `\n`;
+    }
+
+    md += `## Fullført forrige uke (${fmtPer(data.forrigeMandag, data.forrigeSondag)})\n\n`;
+    if (data.fullfortForrige.length === 0) md += `_Ingen registrerte fullføringer._\n\n`;
+    else { data.fullfortForrige.forEach(item => { md += `- **${item.tittel}** _(${item.type}, ${fmtDatoFra(item.dato)})_\n`; }); md += `\n`; }
+
+    md += `---\n\n_Generert av MishMash WP4._\n`;
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const navnDel = data.kat ? '-' + data.kat.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+    a.download = `statusrapport${navnDel}-${data.iDag.toISOString().slice(0,10)}.md`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function åpneRapportVelger() {
+    const body = document.getElementById('rapportVelgerBody');
+    body.innerHTML = '';
+    body.style.cssText = 'padding:18px 22px;display:flex;flex-direction:column;gap:8px;';
+
+    const lagValg = (label, sub, farge, onClick) => {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--kant);border-radius:var(--rs);background:var(--hvit);cursor:pointer;text-align:left;transition:all .15s;font-family:\'Nunito\',sans-serif;';
+      btn.onmouseover = () => { btn.style.borderColor = farge; btn.style.background = farge + '12'; };
+      btn.onmouseout  = () => { btn.style.borderColor = 'var(--kant)'; btn.style.background = 'var(--hvit)'; };
+      btn.onclick = () => { lukkModal('rapportVelgerModal'); onClick(); };
+
+      const dot = document.createElement('div');
+      dot.style.cssText = `width:14px;height:14px;border-radius:50%;background:${farge};flex-shrink:0;`;
+      btn.appendChild(dot);
+
+      const txt = document.createElement('div');
+      txt.style.flex = '1';
+      txt.innerHTML = `<div style="font-weight:700;font-size:14px;color:var(--tekst);">${label}</div>
+        ${sub ? `<div style="font-size:11px;color:var(--tekst-sek);margin-top:2px;">${sub}</div>` : ''}`;
+      btn.appendChild(txt);
+
+      const pil = document.createElement('div');
+      pil.style.cssText = 'color:var(--tekst-sek);font-size:16px;';
+      pil.textContent = '›';
+      btn.appendChild(pil);
+
+      body.appendChild(btn);
+    };
+
+    lagValg('Hele prosjektet', 'Statusrapport for alle kategorier', 'var(--grønn)', () => åpneRapport());
+
+    if (kategorier.length > 0) {
+      const skille = document.createElement('div');
+      skille.style.cssText = 'font-size:10px;font-weight:700;font-family:"Syne",sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px;margin-bottom:-2px;padding:0 2px;';
+      skille.textContent = 'Eller velg kategori';
+      body.appendChild(skille);
+      kategorier.forEach(k => {
+        const stats = oppgaver.filter(o => {
+          const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+          return (akt?.type || o.kategoriId) === k.id;
+        }).length;
+        lagValg(k.label, `${stats} oppgave${stats === 1 ? '' : 'r'}`, k.farge, () => åpneRapport(k.id));
+      });
+    }
+
+    document.getElementById('rapportVelgerModal').classList.add('vis');
+  }
+
   function ryddFullforte() {
     const iDag = new Date();
     const grense = new Date(iDag); grense.setDate(iDag.getDate() - 3);
@@ -3729,7 +4476,7 @@
     hent();
     ryddFullforte();
     renderTodos();
-    renderKalender();
+    renderTidslinje();
     oppdaterForfaltBadge();
   }
 
