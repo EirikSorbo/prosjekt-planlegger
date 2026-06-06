@@ -1570,13 +1570,6 @@
       </div>
       <div id="valgtDagListe"></div>
     </div>
-    <div id="brukerInfo" style="display:none;justify-content:space-between;align-items:center;padding:10px 4px 0;">
-      <button onclick="åpneKategoriModal()" class="knapp-sek" style="font-size:11px;padding:5px 10px;">Rediger kategorier</button>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span id="brukerNavn" style="font-size:11px;font-family:'Nunito',sans-serif;color:var(--tekst-sek);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;"></span>
-        <button class="header-knapp" onclick="window._fbSignOut()" title="Logg ut" style="font-size:14px;">⏏</button>
-      </div>
-    </div>
   </div>
 
   <!-- Aktiviteter / liste -->
@@ -1643,8 +1636,15 @@
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
+    <div id="innstillingerBruker" style="display:none;padding:12px 22px 14px;border-top:1px solid var(--kant);align-items:center;gap:10px;">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--grønn-lys);border:1px solid var(--grønn-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <span id="innstillingerBrukerNavn" style="flex:1;font-size:13px;font-weight:600;color:var(--tekst);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
+    </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.94</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.95</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -4118,7 +4118,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.94',
+      versjon: '1.95',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
@@ -4713,14 +4713,15 @@
   // ── Auth-tilstand ──
   onAuthStateChanged(auth, async bruker => {
     const loginOverlay = document.getElementById('loginOverlay');
-    const brukerInfo   = document.getElementById('brukerInfo');
-    const brukerNavn   = document.getElementById('brukerNavn');
 
     if (bruker) {
       // Logget inn
       loginOverlay.style.display = 'none';
-      brukerNavn.textContent = bruker.displayName || bruker.email;
-      brukerInfo.style.display = 'flex';
+      const navn = bruker.displayName || bruker.email;
+      const innstBruker = document.getElementById('innstillingerBruker');
+      const innstNavn   = document.getElementById('innstillingerBrukerNavn');
+      if (innstBruker) innstBruker.style.display = 'flex';
+      if (innstNavn)   innstNavn.textContent = navn;
       window._currentUid = bruker.uid;
 
       // Hent data fra Firestore
@@ -4778,7 +4779,8 @@
       // Ikke logget inn
       if (window._unsub) window._unsub();
       loginOverlay.style.display = 'flex';
-      brukerInfo.style.display = 'none';
+      const innstBruker = document.getElementById('innstillingerBruker');
+      if (innstBruker) innstBruker.style.display = 'none';
       window._currentUid = null;
     }
   });
