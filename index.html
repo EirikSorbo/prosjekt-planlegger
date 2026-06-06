@@ -103,6 +103,12 @@
       top: 0;
       z-index: 100;
     }
+    @media (min-width: 700px) {
+      header, .faner { max-width: 1100px; margin-left: auto; margin-right: auto; }
+    }
+    @media (min-width: 1280px) {
+      header, .faner { max-width: 1280px; }
+    }
 
     .header-handlinger {
       display: flex;
@@ -1473,7 +1479,8 @@
     MishMash WP4
   </div>
   <div class="header-handlinger">
-    <button class="header-knapp" onclick="åpneKategoriModal()" title="Rediger kategorier">
+    <span id="filterBadge" style="display:none;font-family:'Syne',sans-serif;font-weight:700;font-size:10px;color:white;padding:3px 8px;border-radius:10px;letter-spacing:0.3px;cursor:pointer;text-transform:uppercase;" onclick="åpneKategoriModal()"></span>
+    <button class="header-knapp" onclick="åpneKategoriModal()" title="Innstillinger">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importerData(this)"/>
@@ -1487,10 +1494,6 @@
   <button class="fane" onclick="byttFane('liste', this)">Aktiviteter</button>
   <button class="fane" onclick="byttFane('kalender', this)">Oversikt</button>
 </nav>
-<div id="hovedFilterBar" style="display:none;background:var(--hvit);border-bottom:1px solid var(--kant);padding:6px 12px;display:none;align-items:center;gap:6px;overflow-x:auto;position:sticky;top:104px;z-index:98;">
-  <span style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.6px;color:var(--tekst-sek);white-space:nowrap;margin-right:4px;">Filter:</span>
-  <div id="hovedFilterKnapper" style="display:flex;gap:5px;flex-wrap:nowrap;"></div>
-</div>
 
 <div id="varselBanner" style="display:none;background:var(--grønn-lys);border-bottom:1px solid var(--grønn-mid);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;">
   <span style="font-size:12px;color:var(--tekst);font-family:'Nunito',sans-serif;">🔔 Tillat varsler for å se forfalte oppgaver på ikonet</span>
@@ -1618,6 +1621,10 @@
     <div style="padding:10px 22px 16px;border-bottom:1px solid var(--kant);">
       <button class="knapp-primær" onclick="leggTilKategori()" style="width:100%;">+ Legg til kategori</button>
     </div>
+    <div style="padding:14px 22px 14px;border-bottom:1px solid var(--kant);">
+      <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Hovedfilter</div>
+      <div id="hovedFilterKnapper" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+    </div>
     <div style="padding:16px 22px 8px;">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Data</div>
       <div style="display:flex;gap:8px;">
@@ -1629,7 +1636,7 @@
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.91</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.92</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2162,10 +2169,14 @@
     iDagMerke.textContent = 'I DAG';
     grid.appendChild(iDagMerke);
 
-    // En rad per kategori
-    const grupperKats = [...kategorier];
-    const harUkategorisert = aktiviteter.some(a => !a.type) || oppgaver.some(o => !o.kategoriId && !o.aktivitetId);
-    if (harUkategorisert) grupperKats.push({ id: null, label: 'Annet', farge: '#999' });
+    // En rad per kategori (filtrert av hovedfilter)
+    let grupperKats = globalKatFilter
+      ? kategorier.filter(k => k.id === globalKatFilter)
+      : [...kategorier];
+    if (!globalKatFilter) {
+      const harUkategorisert = aktiviteter.some(a => !a.type) || oppgaver.some(o => !o.kategoriId && !o.aktivitetId);
+      if (harUkategorisert) grupperKats.push({ id: null, label: 'Annet', farge: '#999' });
+    }
 
     if (grupperKats.length === 0) {
       const tom = document.createElement('div');
@@ -4072,7 +4083,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.91',
+      versjon: '1.92',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
@@ -4536,16 +4547,14 @@
   }
 
   function renderHovedFilter() {
-    const bar = document.getElementById('hovedFilterBar');
     const knapper = document.getElementById('hovedFilterKnapper');
-    if (!bar || !knapper) return;
+    if (!knapper) return;
     knapper.innerHTML = '';
 
     // Alle-knapp
     const alleBtn = document.createElement('button');
     alleBtn.className = 'filter-pill' + (!globalKatFilter ? ' aktiv' : '');
     alleBtn.textContent = 'Alle';
-    alleBtn.style.cssText = 'white-space:nowrap;';
     alleBtn.onclick = () => settGlobalFilter(null);
     knapper.appendChild(alleBtn);
 
@@ -4553,18 +4562,27 @@
       const btn = document.createElement('button');
       btn.className = 'filter-pill' + (globalKatFilter === k.id ? ' aktiv-' + k.id : ' farge-' + k.id);
       btn.textContent = k.label;
-      btn.style.cssText = 'white-space:nowrap;';
       btn.onclick = () => settGlobalFilter(k.id);
       knapper.appendChild(btn);
     });
-
-    bar.style.display = kategorier.length > 0 ? 'flex' : 'none';
   }
 
   function settGlobalFilter(katId) {
     globalKatFilter = katId;
     renderHovedFilter();
     oppdaterAktivPanel();
+    // Vis aktiv filter-indikator i header
+    const kat = katId ? getKat(katId) : null;
+    const badge = document.getElementById('filterBadge');
+    if (badge) {
+      if (kat) {
+        badge.textContent = kat.label;
+        badge.style.display = 'inline-block';
+        badge.style.background = kat.farge;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
   }
 
   function matcherGlobalFilter(type, kategoriId, aktivitetId) {
