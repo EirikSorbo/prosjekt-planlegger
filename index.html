@@ -1261,7 +1261,7 @@
       padding: 0 6px;
       font-size: 10px;
       font-weight: 700;
-      color: white;
+      color: transparent;
       display: flex;
       align-items: center;
       white-space: nowrap;
@@ -1269,9 +1269,9 @@
       text-overflow: ellipsis;
       cursor: pointer;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      transition: opacity .15s;
+      transition: opacity .15s, color .15s;
     }
-    .tidslinje-bar:hover { opacity: 0.85; }
+    .tidslinje-bar:hover { opacity: 0.9; color: white; }
     .tidslinje-milepel {
       position: absolute;
       width: 14px;
@@ -1644,7 +1644,7 @@
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.93</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.94</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -4118,7 +4118,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.93',
+      versjon: '1.94',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
