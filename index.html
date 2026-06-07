@@ -2093,14 +2093,15 @@
 
   let kalVisning = 'tidslinje'; // 'maaned' | 'uke' | 'tidslinje'
   let ukeOffset  = 0; // uker relativt til i dag
-  let tidslinjeMnd = 3; // zoom-nivå: antall måneder som vises i viewport
+  let tidslinjeMnd = null; // null = ikke initialisert; settes til korteste zoom på første render
+  let _tidslinjeZoomInit = false;   // true etter at tidslinjeMnd er satt til prosjektets korteste zoom
   let _currentPxPerDag = 8; // siste beregnede pxPerDag – brukes til scroll-bevaring ved zoom
 
   // Tidslinje grensedatoer (scrollbart område)
   const _tlRaw = JSON.parse(localStorage.getItem('lp_tl') || '{}');
   let tidslinjeStartGrense = _tlRaw.start || null; // null = auto: i dag - 1 år
   let tidslinjeSluttGrense = _tlRaw.slutt || null; // null = auto: i dag + 2 år
-  let _tidslinjeReady = false;       // true etter første render (vet scroll-posisjon)
+  let _tidslinjeReady = false;       // true etter første synlige render (vet scroll-posisjon)
   let _tidslinjeScrollTarget = null; // sett ved zoom-endring: px-pos å gjenopprette
 
   function _tlDefault() {
@@ -2190,6 +2191,12 @@
     const labelBredde = 90;
     const totalDager = Math.max(1, Math.round((slutt - start) / 86400000));
     const totalMnd = totalDager / 30.44;
+
+    // Sett korteste zoom som default første gang (prosjektavhengig)
+    if (!_tidslinjeZoomInit) {
+      tidslinjeMnd = _genererZoomNivaaer(totalMnd)[0];
+      _tidslinjeZoomInit = true;
+    }
 
     // Dynamisk pxPerDag: basert på faktisk viewport-bredde og valgt zoom-nivå
     const viewportW = Math.max(200, (wrap?.clientWidth || 600) - labelBredde);
@@ -2439,7 +2446,6 @@
     }
 
     // Scroll-posisjonering etter render
-    const iDagScrollPx = Math.max(0, Math.round((iDag - start) / 86400000) * pxPerDag);
     requestAnimationFrame(() => {
       if (!wrap) return;
       if (_tidslinjeScrollTarget !== null) {
@@ -2447,9 +2453,17 @@
         wrap.scrollLeft = Math.max(0, Math.min(_tidslinjeScrollTarget, wrap.scrollWidth - wrap.clientWidth));
         _tidslinjeScrollTarget = null;
       } else if (!_tidslinjeReady) {
-        // Første render: scroll til i dag
-        wrap.scrollLeft = iDagScrollPx;
-        _tidslinjeReady = true;
+        // Første synlige render: scroll til i dag (venstre kant = i dag)
+        // Beregn på nytt her så vi bruker faktisk clientWidth, ikke fallback-verdien
+        if (wrap.clientWidth > 0) {
+          const actualViewportW = Math.max(200, wrap.clientWidth - labelBredde);
+          const actualPxPerDag = _pxPerDagForZoom(tidslinjeMnd, totalDager, actualViewportW);
+          const iDagScrollPx = Math.max(0, Math.round((iDag - start) / 86400000) * actualPxPerDag);
+          wrap.scrollLeft = iDagScrollPx;
+          _tidslinjeReady = true;
+        }
+        // Hvis wrap er skjult (clientWidth=0): behold _tidslinjeReady=false så
+        // neste synlige render kan gjøre scroll-til-i-dag korrekt
       } else {
         // Data-endring re-render: bevar brukerens scroll-posisjon
         wrap.scrollLeft = prevScroll;
@@ -3395,7 +3409,8 @@
     tidslinjeSluttGrense = document.getElementById('tidslinjeSluttInput').value || null;
     localStorage.setItem('lp_tl', JSON.stringify({ start: tidslinjeStartGrense, slutt: tidslinjeSluttGrense }));
     if (kalVisning === 'tidslinje') {
-      _tidslinjeReady = false; // scroll til i dag igjen
+      _tidslinjeReady = false;    // scroll til i dag igjen
+      _tidslinjeZoomInit = false; // beregn korteste zoom på nytt for ny prosjektlengde
       renderTidslinje();
     }
   }
