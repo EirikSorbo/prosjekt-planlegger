@@ -1231,8 +1231,8 @@
       color: var(--tekst);
       z-index: 1;
       border-right: 1px solid var(--kant);
-      width: 90px;
-      min-width: 90px;
+      width: 120px;      /* overskrevet av JS med dynamisk bredde */
+      min-width: 100px;
       box-sizing: border-box;
       display: flex;
       align-items: center;
@@ -2188,7 +2188,18 @@
     // Bevar scroll før innholdet nullstilles
     const prevScroll = wrap ? wrap.scrollLeft : 0;
 
-    const labelBredde = 90;
+    // Dynamisk label-bredde: mål lengste kategorinavn med canvas
+    const _lblCanvas = document.createElement('canvas');
+    const _lblCtx = _lblCanvas.getContext('2d');
+    _lblCtx.font = '700 11px Syne, sans-serif';
+    const _allLabels = [...kategorier.map(k => k.label), 'Annet'];
+    const _maxTxtW = Math.max(..._allLabels.map(l => {
+      const t = l.toUpperCase();
+      return _lblCtx.measureText(t).width + t.length * 0.3; // letter-spacing ≈ 0.3px/tegn
+    }));
+    // padding 8px × 2 + venstre fargeborder 3px + høyre kant 1px = 20px ekstra; min 100, maks 200
+    const labelBredde = Math.max(100, Math.min(200, Math.ceil(_maxTxtW) + 20));
+
     const totalDager = Math.max(1, Math.round((slutt - start) / 86400000));
     const totalMnd = totalDager / 30.44;
 
@@ -2375,6 +2386,7 @@
         rad.className = 'tidslinje-kat-rad';
         const label = document.createElement('div');
         label.className = 'tidslinje-kat-label';
+        label.style.width = label.style.minWidth = labelBredde + 'px';
         label.textContent = k.label;
         label.style.color = k.farge;
         label.style.borderLeft = '3px solid ' + k.farge;
