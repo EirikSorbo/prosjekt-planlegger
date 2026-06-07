@@ -4341,6 +4341,7 @@
     if (id) {
       const a = aktiviteter.find(a => a.id === id);
       if (!a) return;
+      redigAktivitetId = id;                         // ← nødvendig for at lagreAktivitet() oppdaterer riktig
       const erMilepel = a.leveranseType === 'milepæl';
       document.getElementById('aktivitetModalTittel').textContent = erMilepel ? 'Rediger milepæl' : 'Rediger aktivitet';
       settLeveranseModalType(a.leveranseType || 'aktivitet');
@@ -4353,6 +4354,7 @@
       document.getElementById('feltBesk').value   = a.beskrivelse || '';
       slettKnapp.style.display = 'block';
     } else {
+      redigAktivitetId = null;
       document.getElementById('aktivitetModalTittel').textContent = 'Ny aktivitet';
       settLeveranseModalType('aktivitet');
       document.getElementById('feltTittel').value  = '';
