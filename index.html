@@ -1286,6 +1286,14 @@
     }
     .tidslinje-milepel:hover { transform: rotate(45deg) scale(1.2); }
     .tidslinje-milepel.fullfort { opacity: 0.4; }
+    .tidslinje-milepel.tidslinje-milepel-stor {
+      width: 20px;
+      height: 20px;
+      top: 2px;
+      margin-left: -10px;
+      border: 2.5px solid white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
     .tidslinje-idag-linje {
       position: absolute;
       top: 0; bottom: 0;
@@ -1499,7 +1507,7 @@
 <nav class="faner">
   <button class="fane aktiv" onclick="byttFane('todo', this)">To do</button>
   <button class="fane" onclick="byttFane('oppgaver', this)">Oppgaver</button>
-  <button class="fane" onclick="byttFane('liste', this)">Aktiviteter</button>
+  <button class="fane" onclick="byttFane('liste', this)">Leveranser</button>
   <button class="fane" onclick="byttFane('kalender', this)">Oversikt</button>
 </nav>
 
@@ -1517,7 +1525,7 @@
   <div id="panel-todo" class="panel aktiv">
     <div class="todo-hurtigknapper">
       <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
-      <button class="todo-hurtig-knapp" onclick="åpneAktivitetModal()">+ Aktivitet</button>
+      <button class="todo-hurtig-knapp" onclick="åpneAktivitetModal()">+ Leveranse</button>
       <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
     </div>
     <div class="kat-oversikt-rad" id="katOversiktRad"></div>
@@ -1572,11 +1580,14 @@
     </div>
   </div>
 
-  <!-- Aktiviteter / liste -->
+  <!-- Leveranser / liste -->
   <div id="panel-liste" class="panel">
     <div class="seksjon-header">
-      <div class="seksjon-tittel">Alle aktiviteter</div>
-      <button class="legg-til-knapp" onclick="åpneAktivitetModal()">+ Legg til aktivitet</button>
+      <div class="seksjon-tittel">Alle leveranser</div>
+      <div style="display:flex;gap:6px;">
+        <button class="legg-til-knapp" onclick="åpneAktivitetModal()">+ Aktivitet</button>
+        <button class="legg-til-knapp" onclick="åpneMilepelModal()">+ Milepæl</button>
+      </div>
     </div>
     <div class="filter-rad" id="aktivitetFilterRad"></div>
     <div class="kort-container" id="aktivitetListe"></div>
@@ -1644,7 +1655,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.1.95</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.0</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1783,7 +1794,7 @@
   </div>
 </div>
 
-<!-- Modal: Aktivitet info -->
+<!-- Modal: Leveranse info (aktivitet/milepæl) -->
 <div class="modal-overlay" id="aktivitetInfoModal">
   <div class="modal">
     <div class="modal-header">
@@ -1806,7 +1817,7 @@
   </div>
 </div>
 
-<!-- Modal: Aktivitet -->
+<!-- Modal: Leveranse (aktivitet / milepæl) -->
 <div class="modal-overlay" id="aktivitetModal">
   <div class="modal">
     <div class="modal-header">
@@ -1814,6 +1825,7 @@
       <button class="lukk-knapp" onclick="lukkModal('aktivitetModal')">×</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="feltLeveranseType" value="aktivitet" />
       <div class="felt">
         <label>Tittel</label>
         <input type="text" id="feltTittel" />
@@ -1822,17 +1834,17 @@
         <label>Kategori</label>
         <select id="feltType"></select>
       </div>
-      <div class="felt-rad">
+      <div id="feltDatoRad" class="felt-rad">
         <div class="felt">
           <label>Fra dato</label>
           <input type="date" id="feltDato" oninput="synkDatoTil(this.value)" />
         </div>
-        <div class="felt">
+        <div class="felt" id="feltDatoTilWrap">
           <label>Til dato</label>
           <input type="date" id="feltDatoTil" />
         </div>
       </div>
-      <div class="felt-rad">
+      <div class="felt-rad" id="feltTidRad">
         <div class="felt">
           <label>Fra kl.</label>
           <input type="time" id="feltTid" />
@@ -1870,7 +1882,7 @@
         <input type="text" id="oppFeltBesk" />
       </div>
       <div class="felt">
-        <label>Koble til aktivitet</label>
+        <label>Koble til leveranse</label>
         <select id="oppFeltAktivitet">
           <option value="">— Frittstående —</option>
         </select>
@@ -2196,12 +2208,14 @@
 
     grupperKats.forEach(k => {
       // Samle innhold i dette vinduet (fix 3: skip tomme kategorier)
-      const katAkt = aktiviteter.filter(a => {
+      const katAktAlle = aktiviteter.filter(a => {
         if (k.id === null ? !!a.type : a.type !== k.id) return false;
         const d1 = new Date(a.dato + 'T00:00:00');
         const d2 = new Date((a.datoTil || a.dato) + 'T00:00:00');
         return !(d2 < start || d1 >= slutt);
       });
+      const katAkt = katAktAlle.filter(a => a.leveranseType !== 'milepæl');
+      const katMilepeler = katAktAlle.filter(a => a.leveranseType === 'milepæl');
 
       const katOpp = oppgaver.filter(o => {
         if (!o.frist) return false;
@@ -2212,7 +2226,7 @@
         return !(d < start || d >= slutt);
       });
 
-      if (katAkt.length === 0 && katOpp.length === 0) return;
+      if (katAkt.length === 0 && katMilepeler.length === 0 && katOpp.length === 0) return;
 
       const rad = document.createElement('div');
       rad.className = 'tidslinje-kat-rad';
@@ -2252,7 +2266,28 @@
         sporer.appendChild(spor);
       }
 
-      // Spor 2: Oppgaver/frister (diamanter)
+      // Spor 2: Milepæler (store diamanter)
+      if (katMilepeler.length > 0) {
+        const sporMP = document.createElement('div');
+        sporMP.className = 'tidslinje-spor tidslinje-spor-milepel';
+        sporMP.style.width = (totalDager * pxPerDag) + 'px';
+
+        katMilepeler.forEach(a => {
+          const d = new Date(a.dato + 'T00:00:00');
+          const offsetDager = Math.round((d - start) / 86400000);
+          const mp = document.createElement('div');
+          mp.className = 'tidslinje-milepel tidslinje-milepel-stor';
+          mp.style.left = (offsetDager * pxPerDag) + 'px';
+          mp.style.background = k.farge;
+          mp.title = '◆ ' + a.tittel;
+          mp.onclick = () => åpneAktivitetInfo(a.id);
+          sporMP.appendChild(mp);
+        });
+
+        sporer.appendChild(sporMP);
+      }
+
+      // Spor 3: Oppgaver/frister (små diamanter)
       if (katOpp.length > 0) {
         const sporM = document.createElement('div');
         sporM.className = 'tidslinje-spor tidslinje-spor-milepel';
@@ -2340,14 +2375,16 @@
       header.appendChild(prikker);
       dagEl.appendChild(header);
 
-      // Vis aktiviteter
+      // Vis leveranser (aktiviteter + milepæler)
       dagAkt.forEach(a => {
         const el = document.createElement('div');
         el.className = 'uke-hendelse';
         el.style.borderLeftColor = getKat(a.type)?.farge || '#ccc';
         el.style.background = (getKat(a.type)?.farge || '#ccc') + '18';
-        const tid = a.tid ? ' · ' + a.tid : '';
-        el.textContent = a.tittel + tid;
+        const erMilepel = a.leveranseType === 'milepæl';
+        const tid = (!erMilepel && a.tid) ? ' · ' + a.tid : '';
+        el.textContent = (erMilepel ? '◆ ' : '') + a.tittel + tid;
+        if (erMilepel) el.style.fontWeight = '700';
         el.onclick = e => { e.stopPropagation(); åpneAktivitetInfo(a.id); };
         dagEl.appendChild(el);
       });
@@ -2449,6 +2486,10 @@
         const p = document.createElement('div');
         p.className = 'prikk';
         p.style.background = getKat(a.type)?.farge || '#999';
+        if (a.leveranseType === 'milepæl') {
+          p.style.borderRadius = '1px';
+          p.style.transform = 'rotate(45deg)';
+        }
         rad.appendChild(p);
       });
       if (dagOpp.length > 0) {
@@ -2502,12 +2543,12 @@
     listEl.innerHTML = '';
 
     // Alltid vis begge seksjoner med sine + Legg til-knapper
-    listEl.appendChild(lagDagSeksjon('Aktiviteter', () => åpneAktivitetModal(null, ds)));
+    listEl.appendChild(lagDagSeksjon('Leveranser', () => åpneAktivitetModal(null, ds)));
     if (dagAkt.length === 0) {
       const tom = document.createElement('div');
       tom.className = 'tom-melding';
       tom.style.cssText = 'padding:14px 20px;font-size:13px;';
-      tom.textContent = 'Ingen aktiviteter.';
+      tom.textContent = 'Ingen leveranser.';
       listEl.appendChild(tom);
     } else {
       dagAkt.forEach(a => listEl.appendChild(lagAktivitetKort(a, true)));
@@ -2649,7 +2690,7 @@
 
     if (filtrert.length === 0) {
       container.innerHTML =
-        '<div class="tom-melding">Ingen aktiviteter ennå.<br>Trykk «+ Legg til aktivitet» for å starte.</div>';
+        '<div class="tom-melding">Ingen leveranser ennå.<br>Trykk «+ Aktivitet» eller «+ Milepæl» for å starte.</div>';
       return;
     }
 
@@ -2721,20 +2762,21 @@
       return a?.type === katId || (!o.aktivitetId && o.kategoriId === katId);
     });
 
-    // Helper: render en aktivitet med oppgaver og todos
+    // Helper: render en leveranse med oppgaver og todos
     function renderAktMedOppgaver(a, seksjon) {
+        const erMilepel = a.leveranseType === 'milepæl';
         const d = new Date(a.dato + 'T00:00:00');
         let datoStr = d.getDate() + '. ' + MAANEDER[d.getMonth()];
-        if (a.datoTil && a.datoTil !== a.dato) {
+        if (!erMilepel && a.datoTil && a.datoTil !== a.dato) {
           const dTil = new Date(a.datoTil + 'T00:00:00');
           datoStr += ' – ' + dTil.getDate() + '. ' + MAANEDER[dTil.getMonth()];
         }
-        const tidStr = a.tid ? ' · ' + a.tid + (a.tidTil ? '–' + a.tidTil : '') : '';
+        const tidStr = (!erMilepel && a.tid) ? ' · ' + a.tid + (a.tidTil ? '–' + a.tidTil : '') : '';
 
         const aktEl = document.createElement('div');
         aktEl.className = 'kat-oversikt-akt';
         aktEl.onclick = () => { lukkModal('katOversiktModal'); åpneAktivitetInfo(a.id); };
-        aktEl.innerHTML = `<div class="kat-oversikt-akt-tittel">${a.tittel}</div>
+        aktEl.innerHTML = `<div class="kat-oversikt-akt-tittel">${erMilepel ? '◆ ' : ''}${a.tittel}</div>
           <div class="kat-oversikt-akt-dato">${datoStr}${tidStr}</div>`;
         seksjon.appendChild(aktEl);
 
@@ -2776,7 +2818,7 @@
       seksjon.className = 'kat-oversikt-seksjon';
       const tittel = document.createElement('div');
       tittel.className = 'kat-oversikt-seksjon-tittel';
-      tittel.textContent = `Kommende aktiviteter (${kommendeAkt.length})`;
+      tittel.textContent = `Kommende leveranser (${kommendeAkt.length})`;
       seksjon.appendChild(tittel);
       kommendeAkt.forEach(a => renderAktMedOppgaver(a, seksjon));
       body.appendChild(seksjon);
@@ -2804,14 +2846,14 @@
       body.appendChild(seksjon);
     }
 
-    // ── Tidligere aktiviteter ──
+    // ── Tidligere leveranser ──
     if (tidligereAkt.length > 0) {
       const seksjon = document.createElement('div');
       seksjon.className = 'kat-oversikt-seksjon';
       seksjon.style.opacity = '0.6';
       const tittel = document.createElement('div');
       tittel.className = 'kat-oversikt-seksjon-tittel';
-      tittel.textContent = `Tidligere aktiviteter (${tidligereAkt.length})`;
+      tittel.textContent = `Tidligere leveranser (${tidligereAkt.length})`;
       seksjon.appendChild(tittel);
       tidligereAkt.forEach(a => renderAktMedOppgaver(a, seksjon));
       body.appendChild(seksjon);
@@ -3372,19 +3414,23 @@
     kort.style.cursor = 'pointer';
     kort.onclick = () => åpneAktivitetInfo(a.id);
 
+    const erMilepel = a.leveranseType === 'milep\u00e6l';
     const badge = document.createElement('span');
-    if (a.type) {
+    if (erMilepel) {
+      badge.style.cssText = `display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.3px;background:${getKat(a.type)?.farge || 'var(--tekst-sek)'};color:white;white-space:nowrap;flex-shrink:0;`;
+      badge.textContent = '\u25c6 Milep\u00e6l';
+    } else if (a.type) {
       badge.className = `type-badge ${a.type}`;
       badge.textContent = getKat(a.type)?.label || a.type;
     }
 
     const d = new Date(a.dato + 'T00:00:00');
     let datoStr = UKEDAGER_K[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()];
-    if (a.datoTil && a.datoTil !== a.dato) {
+    if (!erMilepel && a.datoTil && a.datoTil !== a.dato) {
       const dTil = new Date(a.datoTil + 'T00:00:00');
       datoStr += '\u2013' + dTil.getDate() + '. ' + MAANEDER[dTil.getMonth()];
     }
-    const tidStr = a.tid ? ('kl.\u00a0' + a.tid + (a.tidTil ? '\u2013' + a.tidTil : '')) : '';
+    const tidStr = (!erMilepel && a.tid) ? ('kl.\u00a0' + a.tid + (a.tidTil ? '\u2013' + a.tidTil : '')) : '';
 
     const info = document.createElement('div');
     info.className = 'aktivitet-info';
@@ -3402,7 +3448,7 @@
         const ob = document.createElement('span');
         ob.className = 'oppgave-badge badge-' + a.type;
         ob.textContent = '!';
-        ob.title = antallUferdige + ' oppgave(r) knyttet til denne aktiviteten';
+        ob.title = antallUferdige + ' oppgave(r) knyttet til denne leveransen';
         ob.onclick = e => {
           e.stopPropagation();
           åpneAktivitetInfo(a.id);
@@ -3449,7 +3495,7 @@
       const akt   = aktiviteter.find(a => a.id === aktId);
       const pill  = document.createElement('button');
       pill.className = 'filter-pill aktiv';
-      pill.textContent = '← ' + (akt ? akt.tittel : 'Aktivitet');
+      pill.textContent = '← ' + (akt ? akt.tittel : 'Leveranse');
       pill.onclick = () => { aktivFilter = null; renderOppgaver(); };
       filterRad.appendChild(pill);
     } else {
@@ -3631,7 +3677,7 @@
     if (akt) {
       const ad = new Date(akt.dato + 'T00:00:00');
       html += `<div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet aktivitet</div>
+        <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet leveranse</div>
         <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--grønn-lys);border-radius:var(--rs);cursor:pointer;" onclick="lukkModal('oppgaveInfoModal');åpneAktivitetInfo('${akt.id}')">
           <span class="type-badge ${akt.type || ''}" style="font-size:10px;">${getKat(akt.type)?.label || ''}</span>
           <span style="font-size:13px;font-weight:600;color:var(--tekst);">${akt.tittel}</span>
@@ -3724,22 +3770,28 @@
   function åpneAktivitetInfo(id) {
     const a = aktiviteter.find(a => a.id === id);
     if (!a) return;
+    const erMilepel = a.leveranseType === 'milepæl';
 
     const d = new Date(a.dato + 'T00:00:00');
     let datoStr = UKEDAGER_K[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
-    if (a.datoTil && a.datoTil !== a.dato) {
+    if (!erMilepel && a.datoTil && a.datoTil !== a.dato) {
       const dTil = new Date(a.datoTil + 'T00:00:00');
       datoStr += ' – ' + dTil.getDate() + '. ' + MAANEDER[dTil.getMonth()];
     }
-    const tidStr = a.tid ? ('kl. ' + a.tid + (a.tidTil ? '–' + a.tidTil : '')) : '';
+    const tidStr = (!erMilepel && a.tid) ? ('kl. ' + a.tid + (a.tidTil ? '–' + a.tidTil : '')) : '';
 
     document.getElementById('infoModalTittel').textContent = a.tittel;
 
     const body = document.getElementById('infoModalBody');
 
+    const typeBadgeHtml = erMilepel
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.3px;background:${getKat(a.type)?.farge || 'var(--tekst-sek)'};color:white;">◆ Milepæl</span>`
+      : '';
+    const katBadgeHtml = a.type ? `<span class="type-badge ${a.type}">${getKat(a.type)?.label || a.type}</span>` : '';
+
     let html = `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-        ${a.type ? `<span class="type-badge ${a.type}">${getKat(a.type)?.label || a.type}</span>` : ''}
+        ${typeBadgeHtml}${katBadgeHtml}
       </div>
       <div style="font-size:13px;color:var(--tekst-sek);margin-bottom:4px;">${datoStr}${tidStr ? ' · ' + tidStr : ''}</div>`;
 
@@ -3803,16 +3855,17 @@
     } else {
       const tom = document.createElement('div');
       tom.style.cssText = 'margin-top:18px;font-size:13px;color:var(--tekst-sek);';
-      tom.textContent = 'Ingen oppgaver knyttet til denne aktiviteten.';
+      tom.textContent = 'Ingen oppgaver knyttet til denne leveransen.';
       body.appendChild(tom);
     }
 
     document.getElementById('infoModalRedigKnapp').onclick = () => {
       lukkModal('aktivitetInfoModal');
-      åpneAktivitetModal(id);
+      if (a.leveranseType === 'milepæl') åpneMilepelModal(id);
+      else åpneAktivitetModal(id);
     };
     document.getElementById('infoModalSlettKnapp').onclick = () => {
-      if (!confirm('Slett denne aktiviteten?')) return;
+      if (!confirm('Slett denne leveransen?')) return;
       aktiviteter = aktiviteter.filter(x => x.id !== id);
       oppgaver.forEach(o => { if (o.aktivitetId === id) o.aktivitetId = null; });
       lagre(); lukkModal('aktivitetInfoModal'); oppdaterAktivPanel();
@@ -3825,8 +3878,16 @@
     document.getElementById('aktivitetInfoModal').classList.add('vis');
   }
 
+  function settLeveranseModalType(type) {
+    const erMilepel = type === 'milepæl';
+    document.getElementById('feltLeveranseType').value = type;
+    document.getElementById('feltDatoTilWrap').style.display = erMilepel ? 'none' : '';
+    document.getElementById('feltTidRad').style.display = erMilepel ? 'none' : '';
+    const datoLabel = document.querySelector('#feltDatoRad .felt:first-child label');
+    if (datoLabel) datoLabel.textContent = erMilepel ? 'Dato' : 'Fra dato';
+  }
+
   function åpneAktivitetModal(id = null, dato = null) {
-    // Fyll kategorier dynamisk
     const feltType = document.getElementById('feltType');
     feltType.innerHTML = '';
     kategorier.forEach(k => {
@@ -3839,7 +3900,9 @@
     if (id) {
       const a = aktiviteter.find(a => a.id === id);
       if (!a) return;
-      document.getElementById('aktivitetModalTittel').textContent = 'Rediger aktivitet';
+      const erMilepel = a.leveranseType === 'milepæl';
+      document.getElementById('aktivitetModalTittel').textContent = erMilepel ? 'Rediger milepæl' : 'Rediger aktivitet';
+      settLeveranseModalType(a.leveranseType || 'aktivitet');
       document.getElementById('feltTittel').value  = a.tittel;
       document.getElementById('feltType').value    = a.type;
       document.getElementById('feltDato').value    = a.dato;
@@ -3850,6 +3913,7 @@
       slettKnapp.style.display = 'block';
     } else {
       document.getElementById('aktivitetModalTittel').textContent = 'Ny aktivitet';
+      settLeveranseModalType('aktivitet');
       document.getElementById('feltTittel').value  = '';
       document.getElementById('feltType').value    = kategorier[0]?.id || '';
       const defaultDato = dato || new Date().toISOString().slice(0, 10);
@@ -3864,23 +3928,52 @@
     setTimeout(() => document.getElementById('feltTittel').focus(), 100);
   }
 
+  function åpneMilepelModal(id = null, dato = null) {
+    if (id) {
+      åpneAktivitetModal(id, dato);
+      return;
+    }
+    const feltType = document.getElementById('feltType');
+    feltType.innerHTML = '';
+    kategorier.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k.id; opt.textContent = k.label;
+      feltType.appendChild(opt);
+    });
+    document.getElementById('aktivitetModalTittel').textContent = 'Ny milepæl';
+    settLeveranseModalType('milepæl');
+    document.getElementById('feltTittel').value  = '';
+    document.getElementById('feltType').value    = kategorier[0]?.id || '';
+    const defaultDato = dato || new Date().toISOString().slice(0, 10);
+    document.getElementById('feltDato').value    = defaultDato;
+    document.getElementById('feltDatoTil').value = '';
+    document.getElementById('feltTid').value     = '';
+    document.getElementById('feltTidTil').value  = '';
+    document.getElementById('feltBesk').value   = '';
+    document.getElementById('slettAktivitetKnapp').style.display = 'none';
+    document.getElementById('aktivitetModal').classList.add('vis');
+    setTimeout(() => document.getElementById('feltTittel').focus(), 100);
+  }
+
   function lagreAktivitet() {
-    const tittel  = document.getElementById('feltTittel').value.trim();
-    const type    = document.getElementById('feltType').value;
-    const dato    = document.getElementById('feltDato').value;
-    const datoTil = document.getElementById('feltDatoTil').value || dato;
-    const tid     = document.getElementById('feltTid').value;
-    const tidTil  = document.getElementById('feltTidTil').value;
-    const besk    = document.getElementById('feltBesk').value.trim();
+    const tittel        = document.getElementById('feltTittel').value.trim();
+    const type          = document.getElementById('feltType').value;
+    const dato          = document.getElementById('feltDato').value;
+    const leveranseType = document.getElementById('feltLeveranseType').value || 'aktivitet';
+    const erMilepel     = leveranseType === 'milepæl';
+    const datoTil       = erMilepel ? dato : (document.getElementById('feltDatoTil').value || dato);
+    const tid           = erMilepel ? '' : document.getElementById('feltTid').value;
+    const tidTil        = erMilepel ? '' : document.getElementById('feltTidTil').value;
+    const besk          = document.getElementById('feltBesk').value.trim();
 
     if (!tittel) { alert('Tittel er påkrevd.'); return; }
     if (!dato)   { alert('Dato er påkrevd.'); return; }
 
     if (redigAktivitetId) {
       const a = aktiviteter.find(a => a.id === redigAktivitetId);
-      Object.assign(a, { tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk });
+      Object.assign(a, { tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk, leveranseType });
     } else {
-      aktiviteter.push({ id: uid(), tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk });
+      aktiviteter.push({ id: uid(), tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk, leveranseType });
     }
 
     lagre();
@@ -3890,7 +3983,7 @@
   }
 
   function slettAktivitet() {
-    if (!confirm('Slett denne aktiviteten?')) return;
+    if (!confirm('Slett denne leveransen?')) return;
     aktiviteter = aktiviteter.filter(a => a.id !== redigAktivitetId);
     oppgaver.forEach(o => { if (o.aktivitetId === redigAktivitetId) o.aktivitetId = null; });
     lagre();
@@ -3957,7 +4050,7 @@
       katSelect.appendChild(opt);
     });
 
-    // Fyll aktivitetsliste – kun fremtidige/pågående (behold gjeldende valg om det finnes)
+    // Fyll leveranseliste – kun fremtidige/pågående (behold gjeldende valg om det finnes)
     const iDagStr = new Date().toISOString().slice(0, 10);
     const currentAktId = id ? (oppgaver.find(o => o.id === id)?.aktivitetId || null) : null;
     select.innerHTML = '<option value="">— Frittstående —</option>';
@@ -3966,9 +4059,10 @@
       .sort((a, b) => a.dato.localeCompare(b.dato))
       .forEach(a => {
         const d   = new Date(a.dato + 'T00:00:00');
+        const prefix = a.leveranseType === 'milepæl' ? '◆ ' : '';
         const opt = document.createElement('option');
         opt.value       = a.id;
-        opt.textContent = `${a.tittel}  (${d.getDate()}. ${MAANEDER[d.getMonth()]})`;
+        opt.textContent = `${prefix}${a.tittel}  (${d.getDate()}. ${MAANEDER[d.getMonth()]})`;
         select.appendChild(opt);
       });
 
@@ -4118,7 +4212,7 @@
   ────────────────────────────── */
   function eksporterData() {
     const payload = {
-      versjon: '1.95',
+      versjon: '2.0',
       eksportert: new Date().toISOString(),
       aktiviteter, oppgaver, todos, kategorier
     };
@@ -4172,7 +4266,7 @@
           alert('Filen ser ikke ut til å være en gyldig MishMash WP4-eksport.'); return;
         }
         const bekreft = confirm(
-          'Dette vil erstatte alle eksisterende aktiviteter og oppgaver med dataene fra filen.\n\nFortsette?'
+          'Dette vil erstatte alle eksisterende leveranser og oppgaver med dataene fra filen.\n\nFortsette?'
         );
         if (!bekreft) return;
         taSnapshot();
@@ -4221,7 +4315,7 @@
 
         lagre();
         oppdaterAktivPanel();
-        alert(`✓ Slått sammen: ${nyeAkt.length} nye aktiviteter og ${nyeOpp.length} nye oppgaver lagt til.`);
+        alert(`✓ Slått sammen: ${nyeAkt.length} nye leveranser og ${nyeOpp.length} nye oppgaver lagt til.`);
       } catch {
         alert('Kunne ikke lese filen. Sjekk at det er en gyldig .json-fil.');
       }
