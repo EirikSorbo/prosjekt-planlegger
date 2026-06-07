@@ -1748,6 +1748,12 @@
         <textarea id="todoFeltBesk" style="min-height:64px;"></textarea>
       </div>
       <div class="felt">
+        <label>Koble til leveranse</label>
+        <select id="todoFeltLeveranse">
+          <option value="">— Ingen —</option>
+        </select>
+      </div>
+      <div class="felt">
         <label>Koble til oppgave</label>
         <select id="todoFeltOppgave">
           <option value="">— Ingen —</option>
@@ -3048,18 +3054,31 @@
     if (!oppgaveId) return;
     const o = oppgaver.find(o => o.id === oppgaveId);
     if (!o) return;
-    // Sett kategori fra oppgaven
     if (o.kategoriId) document.getElementById('todoFeltKategori').value = o.kategoriId;
-    // Sett leveranse-felt hvis det finnes (vises i info-feltet)
     if (o.aktivitetId) {
-      window._todoPreLeveranseId = o.aktivitetId;
+      document.getElementById('todoFeltLeveranse').value = o.aktivitetId;
+      // Kategori fra leveransen hvis oppgaven mangler kategoriId
+      if (!o.kategoriId) {
+        const lev = aktiviteter.find(a => a.id === o.aktivitetId);
+        if (lev?.type) document.getElementById('todoFeltKategori').value = lev.type;
+      }
     }
   }
 
   function åpneTodoModal(id = null, preOppgaveId = null, preLeveranseId = null) {
     redigTodoId = id;
-    window._todoPreLeveranseId = preLeveranseId || null;
     const slettKnapp = document.getElementById('slettTodoKnapp');
+
+    // Fyll leveranse-select
+    const levSelect = document.getElementById('todoFeltLeveranse');
+    levSelect.innerHTML = '<option value="">— Ingen —</option>';
+    [...aktiviteter].sort((a,b) => a.dato.localeCompare(b.dato)).forEach(a => {
+      const kat = getKat(a.type);
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel + (kat ? ` [${kat.label}]` : '');
+      levSelect.appendChild(opt);
+    });
 
     // Fyll oppgaveliste – kun ikke-fullførte
     const select = document.getElementById('todoFeltOppgave');
@@ -3088,6 +3107,7 @@
       document.getElementById('todoFeltTittel').value = t.tittel;
       document.getElementById('todoFeltBesk').value   = t.beskrivelse || '';
       document.getElementById('todoFeltFrist').value  = t.frist || '';
+      levSelect.value = t.aktivitetId || '';
       select.value = t.oppgaveId || '';
       todoKatSelect.value = t.kategoriId || '';
       slettKnapp.style.display = 'inline-flex';
@@ -3096,15 +3116,15 @@
       document.getElementById('todoFeltTittel').value = '';
       document.getElementById('todoFeltBesk').value   = '';
       document.getElementById('todoFeltFrist').value  = '';
+      levSelect.value = '';
       todoKatSelect.value = '';
       slettKnapp.style.display = 'none';
 
-      // Forhåndsvalg: oppgave og/eller leveranse
       if (preOppgaveId) {
         select.value = preOppgaveId;
         synkTodoFraOppgave(preOppgaveId);
       } else if (preLeveranseId) {
-        // Finn kategori fra leveransen
+        levSelect.value = preLeveranseId;
         const lev = aktiviteter.find(a => a.id === preLeveranseId);
         if (lev?.type) todoKatSelect.value = lev.type;
       }
@@ -3116,16 +3136,17 @@
   function lagreTodo() {
     const tittel = document.getElementById('todoFeltTittel').value.trim();
     if (!tittel) { alert('Tittel er påkrevd.'); return; }
-    const besk       = document.getElementById('todoFeltBesk').value.trim();
-    const frist      = document.getElementById('todoFeltFrist').value || null;
-    const oppgaveId  = document.getElementById('todoFeltOppgave').value || null;
-    const kategoriId = document.getElementById('todoFeltKategori').value || null;
+    const besk        = document.getElementById('todoFeltBesk').value.trim();
+    const frist       = document.getElementById('todoFeltFrist').value || null;
+    const aktivitetId = document.getElementById('todoFeltLeveranse').value || null;
+    const oppgaveId   = document.getElementById('todoFeltOppgave').value || null;
+    const kategoriId  = document.getElementById('todoFeltKategori').value || null;
 
     if (redigTodoId) {
       const t = todos.find(t => t.id === redigTodoId);
-      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; }
+      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.aktivitetId = aktivitetId; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; }
     } else {
-      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, oppgaveId, kategoriId, fullfort: false });
+      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, aktivitetId, oppgaveId, kategoriId, fullfort: false });
     }
     lagre(); lukkModal('todoModal'); renderTodos();
   }
@@ -3894,11 +3915,67 @@
           body.appendChild(todoListe);
         }
       });
+
+      // Todos koblet direkte til leveransen (ikke via oppgave)
+      const direkteTodos = todos.filter(t => t.aktivitetId === a.id && !t.oppgaveId);
+      if (direkteTodos.length > 0) {
+        const dtHeader = document.createElement('div');
+        dtHeader.style.cssText = 'margin-top:14px;font-size:11px;font-weight:700;font-family:"Syne",sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;';
+        dtHeader.textContent = `To do (${direkteTodos.length})`;
+        body.appendChild(dtHeader);
+        const dtListe = document.createElement('div');
+        dtListe.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+        direkteTodos.forEach(t => {
+          const el = document.createElement('div');
+          el.style.cssText = `display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--rs);background:var(--grønn-lys);font-size:12px;color:${t.fullfort ? 'var(--tekst-sek)' : 'var(--tekst)'};cursor:pointer;`;
+          el.onclick = () => { lukkModal('aktivitetInfoModal'); åpneTodoInfo(t.id); };
+          const sirk = document.createElement('span');
+          sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--tekst-sek)' : 'var(--grønn)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:${t.fullfort ? 'var(--tekst-sek)' : 'var(--grønn)'};`;
+          sirk.textContent = t.fullfort ? '✓' : '';
+          const tekst = document.createElement('span');
+          tekst.style.cssText = (t.fullfort ? 'text-decoration:line-through;opacity:0.7;' : '') + 'flex:1;';
+          tekst.textContent = t.tittel;
+          el.appendChild(sirk);
+          el.appendChild(tekst);
+          if (t.frist && !t.fullfort) {
+            const fristEl = document.createElement('span');
+            fristEl.style.cssText = 'font-size:11px;color:var(--tekst-sek);white-space:nowrap;';
+            fristEl.textContent = fmtDatoFra(t.frist);
+            el.appendChild(fristEl);
+          }
+          dtListe.appendChild(el);
+        });
+        body.appendChild(dtListe);
+      }
     } else {
-      const tom = document.createElement('div');
-      tom.style.cssText = 'margin-top:18px;font-size:13px;color:var(--tekst-sek);';
-      tom.textContent = 'Ingen oppgaver knyttet til denne leveransen.';
-      body.appendChild(tom);
+      // Sjekk om det finnes direktekoblede todos selv om ingen oppgaver
+      const direkteTodosAlone = todos.filter(t => t.aktivitetId === a.id && !t.oppgaveId);
+      if (direkteTodosAlone.length === 0) {
+        const tom = document.createElement('div');
+        tom.style.cssText = 'margin-top:18px;font-size:13px;color:var(--tekst-sek);';
+        tom.textContent = 'Ingen oppgaver knyttet til denne leveransen.';
+        body.appendChild(tom);
+      }
+      direkteTodosAlone.forEach(t => {
+        const el = document.createElement('div');
+        el.style.cssText = `display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--rs);background:var(--grønn-lys);font-size:12px;color:${t.fullfort ? 'var(--tekst-sek)' : 'var(--tekst)'};cursor:pointer;margin-top:4px;`;
+        el.onclick = () => { lukkModal('aktivitetInfoModal'); åpneTodoInfo(t.id); };
+        const sirk = document.createElement('span');
+        sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--tekst-sek)' : 'var(--grønn)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:${t.fullfort ? 'var(--tekst-sek)' : 'var(--grønn)'};`;
+        sirk.textContent = t.fullfort ? '✓' : '';
+        const tekst = document.createElement('span');
+        tekst.style.cssText = (t.fullfort ? 'text-decoration:line-through;opacity:0.7;' : '') + 'flex:1;';
+        tekst.textContent = t.tittel;
+        el.appendChild(sirk);
+        el.appendChild(tekst);
+        if (t.frist && !t.fullfort) {
+          const fristEl = document.createElement('span');
+          fristEl.style.cssText = 'font-size:11px;color:var(--tekst-sek);white-space:nowrap;';
+          fristEl.textContent = fmtDatoFra(t.frist);
+          el.appendChild(fristEl);
+        }
+        body.appendChild(el);
+      });
     }
 
     document.getElementById('infoModalRedigKnapp').onclick = () => {
@@ -4208,6 +4285,12 @@
     synkTodoFraOppgave(this.value);
   });
 
+  // Auto-fyll kategori når leveranse velges direkte i todo-modal
+  document.getElementById('todoFeltLeveranse').addEventListener('change', function() {
+    const lev = aktiviteter.find(a => a.id === this.value);
+    if (lev?.type) document.getElementById('todoFeltKategori').value = lev.type;
+  });
+
   // Oppdater fristinfo og kategori når aktivitet endres
   document.getElementById('oppFeltAktivitet').addEventListener('change', function() {
     oppdaterFristInfo();
@@ -4402,6 +4485,10 @@
     const todoI = t => {
       if (!katFilter) return true;
       if (t.kategoriId === katFilter) return true;
+      if (t.aktivitetId) {
+        const a = aktiviteter.find(a => a.id === t.aktivitetId);
+        if (a && aktI(a)) return true;
+      }
       if (t.oppgaveId) {
         const o = oppgaver.find(o => o.id === t.oppgaveId);
         if (o && oppI(o)) return true;
@@ -4533,6 +4620,16 @@
               </div>
             </div>`;
           });
+        });
+        // Todos koblet direkte til leveransen (uten via oppgave)
+        todoListe.filter(t => t.aktivitetId === a.id && !bruktTodo.has(t.id)).forEach(t => {
+          bruktTodo.add(t.id);
+          h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--kant);padding-left:10px;margin-top:2px;">
+            <div style="flex:1;">
+              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${t.tittel}</div>
+              <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
+            </div>
+          </div>`;
         });
       });
 
