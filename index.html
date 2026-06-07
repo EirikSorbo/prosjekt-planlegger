@@ -4499,78 +4499,83 @@
       html += `</div>`;
     }
 
-    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})</div>`;
-    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0 && data.todosDenne.length === 0) {
-      html += `<div class="rapport-tom">Ingenting planlagt i denne perioden.</div>`;
-    } else {
-      data.aktDenne.forEach(a => {
+    // Hierarkisk periode-rendering: leveranse → oppgave → todo
+    const renderPeriodeHtml = (aktListe, oppListe, todoListe, tomTekst) => {
+      if (aktListe.length === 0 && oppListe.length === 0 && todoListe.length === 0)
+        return `<div class="rapport-tom">${tomTekst}</div>`;
+      let h = '';
+      const bruktOpp = new Set(), bruktTodo = new Set();
+
+      aktListe.forEach(a => {
         const kat = getKat(a.type);
-        html += `<div class="rapport-item">
+        const erMp = a.leveranseType === 'milepæl';
+        h += `<div class="rapport-item">
           ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
           <div style="flex:1;">
-            <div class="rapport-item-tittel">${a.tittel}</div>
+            <div class="rapport-item-tittel">${erMp ? '◆ ' : ''}${a.tittel}</div>
             <div class="rapport-item-meta">${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' · kl. ' + a.tid : ''}</div>
           </div>
         </div>`;
+        oppListe.filter(o => o.aktivitetId === a.id).forEach(o => {
+          bruktOpp.add(o.id);
+          h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--kant);padding-left:10px;margin-top:2px;">
+            <div style="flex:1;">
+              <div class="rapport-item-tittel" style="font-size:13px;">↳ ${o.beskrivelse}</div>
+              <div class="rapport-item-meta">Oppgave · Frist ${fmtDatoFra(o.frist)}</div>
+            </div>
+          </div>`;
+          todoListe.filter(t => t.oppgaveId === o.id).forEach(t => {
+            bruktTodo.add(t.id);
+            h += `<div class="rapport-item" style="margin-left:28px;border-left:2px solid var(--kant);padding-left:10px;margin-top:2px;">
+              <div style="flex:1;">
+                <div class="rapport-item-tittel" style="font-size:12px;">◻ ${t.tittel}</div>
+                <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
+              </div>
+            </div>`;
+          });
+        });
       });
-      data.fristerDenne.forEach(o => {
+
+      oppListe.filter(o => !bruktOpp.has(o.id)).forEach(o => {
         const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
-        html += `<div class="rapport-item">
+        h += `<div class="rapport-item">
           ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
           <div style="flex:1;">
             <div class="rapport-item-tittel">${o.beskrivelse}</div>
-            <div class="rapport-item-meta">Frist ${fmtDatoFra(o.frist)}</div>
+            <div class="rapport-item-meta">Oppgave · Frist ${fmtDatoFra(o.frist)}</div>
           </div>
         </div>`;
+        todoListe.filter(t => t.oppgaveId === o.id).forEach(t => {
+          bruktTodo.add(t.id);
+          h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--kant);padding-left:10px;margin-top:2px;">
+            <div style="flex:1;">
+              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${t.tittel}</div>
+              <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
+            </div>
+          </div>`;
+        });
       });
-      data.todosDenne.forEach(t => {
+
+      todoListe.filter(t => !bruktTodo.has(t.id)).forEach(t => {
         const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null);
-        html += `<div class="rapport-item">
+        h += `<div class="rapport-item">
           ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : '<span class="rapport-pill" style="border-color:var(--kant);color:var(--tekst-sek);">To do</span>'}
           <div style="flex:1;">
-            <div class="rapport-item-tittel">${t.tittel}</div>
+            <div class="rapport-item-tittel">◻ ${t.tittel}</div>
             <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
           </div>
         </div>`;
       });
-    }
+
+      return h;
+    };
+
+    html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})</div>`;
+    html += renderPeriodeHtml(data.aktDenne, data.fristerDenne, data.todosDenne, 'Ingenting planlagt i denne perioden.');
     html += `</div>`;
 
     html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">${data.nesteNavn} (${fmtPer(data.nesteStart, data.nesteSlutt)})</div>`;
-    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0 && data.todosNeste.length === 0) {
-      html += `<div class="rapport-tom">Ingenting planlagt i neste periode.</div>`;
-    } else {
-      data.aktNeste.forEach(a => {
-        const kat = getKat(a.type);
-        html += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
-          <div style="flex:1;">
-            <div class="rapport-item-tittel">${a.tittel}</div>
-            <div class="rapport-item-meta">${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' · kl. ' + a.tid : ''}</div>
-          </div>
-        </div>`;
-      });
-      data.fristerNeste.forEach(o => {
-        const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
-        html += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
-          <div style="flex:1;">
-            <div class="rapport-item-tittel">${o.beskrivelse}</div>
-            <div class="rapport-item-meta">Frist ${fmtDatoFra(o.frist)}</div>
-          </div>
-        </div>`;
-      });
-      data.todosNeste.forEach(t => {
-        const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null);
-        html += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : '<span class="rapport-pill" style="border-color:var(--kant);color:var(--tekst-sek);">To do</span>'}
-          <div style="flex:1;">
-            <div class="rapport-item-tittel">${t.tittel}</div>
-            <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
-          </div>
-        </div>`;
-      });
-    }
+    html += renderPeriodeHtml(data.aktNeste, data.fristerNeste, data.todosNeste, 'Ingenting planlagt i neste periode.');
     html += `</div>`;
 
     html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">Fullført ${data.forrigeNavn.toLowerCase()} (${fmtPer(data.forrigeStart, data.forrigeSlutt)})</div>`;
@@ -4620,23 +4625,37 @@
       md += `\n`;
     }
 
-    md += `## ${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})\n\n`;
-    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0 && data.todosDenne.length === 0) md += `_Ingenting planlagt._\n\n`;
-    else {
-      data.aktDenne.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
-      data.fristerDenne.forEach(o => { const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — frist ${fmtDatoFra(o.frist)}\n`; });
-      data.todosDenne.forEach(t => { const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null); md += `- ${kat ? `[${kat.label}] ` : ''}☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
+    // Hierarkisk markdown-periode: leveranse → oppgave → todo
+    const mdPeriode = (aktListe, oppListe, todoListe) => {
+      if (aktListe.length === 0 && oppListe.length === 0 && todoListe.length === 0) { md += `_Ingenting planlagt._\n\n`; return; }
+      const bruktOpp = new Set(), bruktTodo = new Set();
+      aktListe.forEach(a => {
+        const kat = getKat(a.type);
+        const erMp = a.leveranseType === 'milepæl';
+        md += `- ${kat ? `[${kat.label}] ` : ''}**${erMp ? '◆ ' : ''}${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`;
+        oppListe.filter(o => o.aktivitetId === a.id).forEach(o => {
+          bruktOpp.add(o.id);
+          md += `  - ↳ ${o.beskrivelse} — oppgave, frist ${fmtDatoFra(o.frist)}\n`;
+          todoListe.filter(t => t.oppgaveId === o.id).forEach(t => { bruktTodo.add(t.id); md += `    - ☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
+        });
+      });
+      oppListe.filter(o => !bruktOpp.has(o.id)).forEach(o => {
+        const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
+        md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — oppgave, frist ${fmtDatoFra(o.frist)}\n`;
+        todoListe.filter(t => t.oppgaveId === o.id).forEach(t => { bruktTodo.add(t.id); md += `  - ☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
+      });
+      todoListe.filter(t => !bruktTodo.has(t.id)).forEach(t => {
+        const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null);
+        md += `- ${kat ? `[${kat.label}] ` : ''}☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`;
+      });
       md += `\n`;
-    }
+    };
+
+    md += `## ${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})\n\n`;
+    mdPeriode(data.aktDenne, data.fristerDenne, data.todosDenne);
 
     md += `## ${data.nesteNavn} (${fmtPer(data.nesteStart, data.nesteSlutt)})\n\n`;
-    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0 && data.todosNeste.length === 0) md += `_Ingenting planlagt._\n\n`;
-    else {
-      data.aktNeste.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
-      data.fristerNeste.forEach(o => { const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — frist ${fmtDatoFra(o.frist)}\n`; });
-      data.todosNeste.forEach(t => { const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null); md += `- ${kat ? `[${kat.label}] ` : ''}☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
-      md += `\n`;
-    }
+    mdPeriode(data.aktNeste, data.fristerNeste, data.todosNeste);
 
     md += `## Fullført ${data.forrigeNavn.toLowerCase()} (${fmtPer(data.forrigeStart, data.forrigeSlutt)})\n\n`;
     if (data.fullfortForrige.length === 0) md += `_Ingen registrerte fullføringer._\n\n`;
