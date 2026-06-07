@@ -1658,6 +1658,7 @@
         <button class="knapp-sek" onclick="document.getElementById('mergeInput').click()" style="flex:1;font-size:12px;">⇅ Slå sammen</button>
       </div>
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
+      <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiv</button>
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
     <div id="innstillingerBruker" style="display:none;padding:12px 22px 14px;border-top:1px solid var(--kant);align-items:center;gap:10px;">
@@ -1668,8 +1669,22 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.3</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.4</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Arkiv -->
+<div class="modal-overlay" id="arkivModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <div class="modal-tittel">Arkiv</div>
+      <button class="lukk-knapp" onclick="lukkModal('arkivModal')">×</button>
+    </div>
+    <div class="modal-body" id="arkivBody" style="padding:0;gap:0;"></div>
+    <div class="modal-footer">
+      <button class="knapp-sek" onclick="lukkModal('arkivModal')">Lukk</button>
     </div>
   </div>
 </div>
@@ -1823,6 +1838,7 @@
     <div class="modal-body" id="infoModalBody"></div>
     <div class="modal-footer">
       <button class="knapp-sek" onclick="lukkModal('aktivitetInfoModal')">Lukk</button>
+      <button class="knapp-sek" id="infoModalFullfortKnapp" style="display:none;"></button>
       <div class="knapp-gruppe" style="align-items:center;">
         <button class="knapp-sek" id="infoModalLeggTilTodoKnapp">+ To do</button>
         <button class="knapp-sek" id="infoModalLeggTilOppgaveKnapp">+ Oppgave</button>
@@ -2293,10 +2309,10 @@
             const d = new Date(a.dato + 'T00:00:00');
             const offsetDager = Math.round((d - start) / 86400000);
             const mp = document.createElement('div');
-            mp.className = 'tidslinje-milepel tidslinje-milepel-stor';
+            mp.className = 'tidslinje-milepel tidslinje-milepel-stor' + (a.fullfort ? ' fullfort' : '');
             mp.style.left = (offsetDager * pxPerDag) + 'px';
             mp.style.background = k.farge;
-            mp.title = '◆ ' + a.tittel;
+            mp.title = (a.fullfort ? '✓ ' : '◆ ') + a.tittel;
             mp.onclick = () => åpneAktivitetInfo(a.id);
             sporMP.appendChild(mp);
           });
@@ -2711,7 +2727,12 @@
       filterRad.appendChild(pill);
     });
 
-    let filtrert = [...aktiviteter];
+    const iDagStr = new Date().toISOString().slice(0, 10);
+    let filtrert = [...aktiviteter].filter(a => {
+      if (a.leveranseType === 'milepæl' && a.fullfort) return false; // fullfort milepæl → arkiv
+      if (a.leveranseType !== 'milepæl' && (a.datoTil || a.dato) < iDagStr) return false; // fortid → arkiv
+      return true;
+    });
     if (globalKatFilter) filtrert = filtrert.filter(a => a.type === globalKatFilter);
     const harKun = katIds().some(k => aktivitetFilterState[k] === 2);
     if (harKun) {
@@ -2722,7 +2743,7 @@
 
     if (filtrert.length === 0) {
       container.innerHTML =
-        '<div class="tom-melding">Ingen leveranser ennå.<br>Trykk «+ Aktivitet» eller «+ Milepæl» for å starte.</div>';
+        '<div class="tom-melding">Ingen aktive leveranser.<br>Sjekk arkivet for fullførte og tidligere leveranser.</div>';
       return;
     }
 
@@ -4040,6 +4061,20 @@
       });
     }
 
+    // Fullfort-knapp (kun milepæler)
+    const fullfortKnapp = document.getElementById('infoModalFullfortKnapp');
+    if (erMilepel) {
+      fullfortKnapp.style.display = '';
+      fullfortKnapp.textContent = a.fullfort ? '↩ Angre fullføring' : '✓ Fullført';
+      fullfortKnapp.style.background = a.fullfort ? '' : 'var(--grønn)';
+      fullfortKnapp.style.color = a.fullfort ? '' : 'white';
+      fullfortKnapp.style.borderColor = a.fullfort ? '' : 'var(--grønn)';
+      fullfortKnapp.onclick = () => fullfortMilepel(id);
+    } else {
+      fullfortKnapp.style.display = 'none';
+      fullfortKnapp.onclick = null;
+    }
+
     document.getElementById('infoModalRedigKnapp').onclick = () => {
       lukkModal('aktivitetInfoModal');
       if (a.leveranseType === 'milepæl') åpneMilepelModal(id);
@@ -4061,6 +4096,98 @@
       åpneOppgaveModal(null, id);
     };
     document.getElementById('aktivitetInfoModal').classList.add('vis');
+  }
+
+  function fullfortMilepel(id) {
+    const a = aktiviteter.find(a => a.id === id);
+    if (!a) return;
+    a.fullfort = !a.fullfort;
+    a.fullfortDato = a.fullfort ? new Date().toISOString().slice(0, 10) : null;
+    lagre();
+    lukkModal('aktivitetInfoModal');
+    oppdaterAktivPanel();
+  }
+
+  function åpneArkiv() {
+    const iDagStr = new Date().toISOString().slice(0, 10);
+    const body = document.getElementById('arkivBody');
+    body.innerHTML = '';
+
+    const fullforteMilepeler = aktiviteter
+      .filter(a => a.leveranseType === 'milepæl' && a.fullfort)
+      .sort((a,b) => (b.fullfortDato || b.dato).localeCompare(a.fullfortDato || a.dato));
+
+    const tidligereAkt = aktiviteter
+      .filter(a => a.leveranseType !== 'milepæl' && (a.datoTil || a.dato) < iDagStr)
+      .sort((a,b) => b.dato.localeCompare(a.dato));
+
+    if (fullforteMilepeler.length === 0 && tidligereAkt.length === 0) {
+      body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--tekst-sek);font-size:13px;">Arkivet er tomt.</div>';
+      document.getElementById('arkivModal').classList.add('vis');
+      return;
+    }
+
+    const lagArkivItem = (a, ekstraInfo, knappTekst, knappOnClick) => {
+      const kat = getKat(a.type);
+      const erMp = a.leveranseType === 'milepæl';
+      const d = new Date(a.dato + 'T00:00:00');
+      const datoStr = d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
+      const el = document.createElement('div');
+      el.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--kant);cursor:pointer;';
+      el.onmouseover = () => el.style.background = 'var(--grønn-lys)';
+      el.onmouseout  = () => el.style.background = '';
+      el.onclick = () => { lukkModal('arkivModal'); åpneAktivitetInfo(a.id); };
+
+      const katPill = document.createElement('span');
+      if (erMp && kat) {
+        katPill.style.cssText = `flex-shrink:0;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;font-family:'Syne',sans-serif;background:${kat.farge};color:white;`;
+        katPill.textContent = '◆';
+      } else if (kat) {
+        katPill.style.cssText = `flex-shrink:0;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;font-family:'Syne',sans-serif;border:1.5px solid ${kat.farge};color:${kat.farge};`;
+        katPill.textContent = kat.label;
+      }
+      el.appendChild(katPill);
+
+      const tekst = document.createElement('div');
+      tekst.style.cssText = 'flex:1;min-width:0;';
+      tekst.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--tekst);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.tittel}</div>
+        <div style="font-size:11px;color:var(--tekst-sek);">${datoStr}${ekstraInfo ? ' · ' + ekstraInfo : ''}</div>`;
+      el.appendChild(tekst);
+
+      if (knappTekst) {
+        const knapp = document.createElement('button');
+        knapp.className = 'knapp-sek';
+        knapp.style.cssText = 'font-size:11px;padding:4px 10px;flex-shrink:0;white-space:nowrap;';
+        knapp.textContent = knappTekst;
+        knapp.onclick = e => { e.stopPropagation(); knappOnClick(); };
+        el.appendChild(knapp);
+      }
+      return el;
+    };
+
+    if (fullforteMilepeler.length > 0) {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:12px 18px 6px;font-size:10px;font-weight:700;font-family:"Syne",sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);background:var(--grønn-lys);border-bottom:1px solid var(--kant);';
+      hdr.textContent = `◆ Fullførte milepæler (${fullforteMilepeler.length})`;
+      body.appendChild(hdr);
+      fullforteMilepeler.forEach(a => {
+        const info = a.fullfortDato ? 'Fullført ' + fmtDatoFra(a.fullfortDato) : '';
+        body.appendChild(lagArkivItem(a, info, '↩ Angre', () => { fullfortMilepel(a.id); åpneArkiv(); }));
+      });
+    }
+
+    if (tidligereAkt.length > 0) {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:12px 18px 6px;font-size:10px;font-weight:700;font-family:"Syne",sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);background:var(--grønn-lys);border-bottom:1px solid var(--kant);border-top:1px solid var(--kant);';
+      hdr.textContent = `Tidligere aktiviteter (${tidligereAkt.length})`;
+      body.appendChild(hdr);
+      tidligereAkt.forEach(a => {
+        const dTil = a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : '';
+        body.appendChild(lagArkivItem(a, fmtDatoFra(a.dato) + dTil, null, null));
+      });
+    }
+
+    document.getElementById('arkivModal').classList.add('vis');
   }
 
   function settLeveranseModalType(type) {
