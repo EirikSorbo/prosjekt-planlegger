@@ -1545,12 +1545,7 @@
       <button id="toggleUke"       class="kal-toggle-knapp"       onclick="byttKalVisning('uke')">Uke</button>
     </div>
     <div id="kalender-tidslinje-view">
-      <div class="tidslinje-skala">
-        <button class="tidslinje-skala-knapp"      data-mnd="1" onclick="settTidslinjeSkala(1, this)">1 mnd</button>
-        <button class="tidslinje-skala-knapp aktiv" data-mnd="3" onclick="settTidslinjeSkala(3, this)">3 mnd</button>
-        <button class="tidslinje-skala-knapp"      data-mnd="6" onclick="settTidslinjeSkala(6, this)">6 mnd</button>
-        <button class="tidslinje-skala-knapp"      data-mnd="12" onclick="settTidslinjeSkala(12, this)">12 mnd</button>
-      </div>
+      <div class="tidslinje-skala" id="tidslinjeSkalaRad"><!-- zoom-knapper genereres dynamisk --></div>
       <div class="tidslinje-wrap">
         <div id="tidslinjeGrid"></div>
       </div>
@@ -1669,7 +1664,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.4</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.5</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2099,6 +2094,7 @@
   let kalVisning = 'tidslinje'; // 'maaned' | 'uke' | 'tidslinje'
   let ukeOffset  = 0; // uker relativt til i dag
   let tidslinjeMnd = 3; // zoom-nivå: antall måneder som vises i viewport
+  let _currentPxPerDag = 8; // siste beregnede pxPerDag – brukes til scroll-bevaring ved zoom
 
   // Tidslinje grensedatoer (scrollbart område)
   const _tlRaw = JSON.parse(localStorage.getItem('lp_tl') || '{}');
@@ -2128,17 +2124,53 @@
     else                         renderTidslinje();
   }
 
-  function settTidslinjeSkala(mnd, btn) {
-    // Bevar scroll-posisjon: konverter px → dager → ny px
+  // Generer 2-4 logiske zoom-nivåer (måneder) basert på prosjektlengden
+  function _genererZoomNivaaer(totalMnd) {
+    totalMnd = Math.max(1, Math.round(totalMnd));
+    let nivaaer;
+    if      (totalMnd <= 2)  nivaaer = [1, totalMnd];
+    else if (totalMnd <= 3)  nivaaer = [1, totalMnd];
+    else if (totalMnd <= 6)  nivaaer = [1, 3, totalMnd];
+    else if (totalMnd <= 18) nivaaer = [1, 3, 6, totalMnd];
+    else if (totalMnd <= 24) nivaaer = [1, 3, 12, totalMnd];
+    else if (totalMnd <= 36) nivaaer = [1, 6, 12, totalMnd];
+    else if (totalMnd <= 60) nivaaer = [1, 6, 24, totalMnd];
+    else                     nivaaer = [1, 12, 36, totalMnd];
+    return [...new Set(nivaaer)].sort((a, b) => a - b);
+  }
+
+  // Menneskevennlig etikett for et zoom-nivå
+  function _formatZoomLabel(mnd, totalMnd) {
+    if (mnd >= totalMnd) return 'Alt';
+    if (mnd < 12) return mnd + ' mnd';
+    if (mnd % 12 === 0) return (mnd / 12) + ' år';
+    return mnd + ' mnd';
+  }
+
+  // Beregn pxPerDag for et gitt zoom-nivå (måneder) og viewport-bredde
+  function _pxPerDagForZoom(mnd, totalDager, viewportW) {
+    const totalMndEst = totalDager / 30.44;
+    if (mnd >= totalMndEst * 0.98) {
+      // "Alt"-zoom: hele prosjektet passer i viewport
+      return Math.max(0.3, viewportW / totalDager);
+    }
+    return Math.max(0.3, viewportW / (mnd * 30.44));
+  }
+
+  function settTidslinjeZoom(mnd) {
+    // Bevar scroll-posisjon: konverter px → dager → ny px med nytt zoom-nivå
     const wrap = document.querySelector('.tidslinje-wrap');
-    if (wrap) {
-      const pxD = { 1: 22, 3: 8, 6: 5, 12: 3 };
-      const dager = wrap.scrollLeft / pxD[tidslinjeMnd];
-      _tidslinjeScrollTarget = Math.round(dager * pxD[mnd]);
+    if (wrap && _currentPxPerDag > 0) {
+      const scrollDager = wrap.scrollLeft / _currentPxPerDag;
+      const def = _tlDefault();
+      const start = new Date((tidslinjeStartGrense || def.start) + 'T00:00:00');
+      const slutt = new Date((tidslinjeSluttGrense || def.slutt) + 'T00:00:00');
+      const totDager = Math.max(1, Math.round((slutt - start) / 86400000));
+      const viewportW = Math.max(200, wrap.clientWidth - 90);
+      const nyPxPerDag = _pxPerDagForZoom(mnd, totDager, viewportW);
+      _tidslinjeScrollTarget = Math.round(scrollDager * nyPxPerDag);
     }
     tidslinjeMnd = mnd;
-    document.querySelectorAll('.tidslinje-skala-knapp').forEach(b => b.classList.remove('aktiv'));
-    btn.classList.add('aktiv');
     renderTidslinje();
   }
 
@@ -2155,10 +2187,42 @@
     // Bevar scroll før innholdet nullstilles
     const prevScroll = wrap ? wrap.scrollLeft : 0;
 
-    const pxPerDag = { 1: 22, 3: 8, 6: 5, 12: 3 }[tidslinjeMnd];
     const labelBredde = 90;
     const totalDager = Math.max(1, Math.round((slutt - start) / 86400000));
+    const totalMnd = totalDager / 30.44;
+
+    // Dynamisk pxPerDag: basert på faktisk viewport-bredde og valgt zoom-nivå
+    const viewportW = Math.max(200, (wrap?.clientWidth || 600) - labelBredde);
+    const pxPerDag = _pxPerDagForZoom(tidslinjeMnd, totalDager, viewportW);
+    _currentPxPerDag = pxPerDag; // lagre for scroll-bevaring ved neste zoom-endring
+
     const totalBredde = totalDager * pxPerDag + labelBredde;
+
+    // ── Generer zoom-knapper dynamisk ──
+    const skalaRad = document.getElementById('tidslinjeSkalaRad');
+    if (skalaRad) {
+      const nivaaer = _genererZoomNivaaer(totalMnd);
+      // Sjekk om vi trenger å bygge om knappene (unngå unødvendig DOM-reset)
+      const eksisterendeMnd = [...skalaRad.querySelectorAll('.tidslinje-skala-knapp')]
+        .map(b => Number(b.dataset.mnd));
+      const sameSet = nivaaer.length === eksisterendeMnd.length &&
+        nivaaer.every((v, i) => v === eksisterendeMnd[i]);
+      if (!sameSet) {
+        skalaRad.innerHTML = '';
+        nivaaer.forEach(mnd => {
+          const btn = document.createElement('button');
+          btn.className = 'tidslinje-skala-knapp';
+          btn.dataset.mnd = mnd;
+          btn.textContent = _formatZoomLabel(mnd, Math.round(totalMnd));
+          btn.onclick = () => settTidslinjeZoom(mnd);
+          skalaRad.appendChild(btn);
+        });
+      }
+      // Merk aktiv knapp
+      skalaRad.querySelectorAll('.tidslinje-skala-knapp').forEach(b => {
+        b.classList.toggle('aktiv', Number(b.dataset.mnd) === tidslinjeMnd);
+      });
+    }
 
     grid.className = 'tidslinje-grid';
     grid.innerHTML = '';
@@ -2228,8 +2292,8 @@
     }
     grid.appendChild(mndRad);
 
-    // ── Dagnummer-rad ved 1 mnd-zoom ──
-    if (tidslinjeMnd === 1) {
+    // ── Dagnummer-rad ved høy zoom (pxPerDag >= 12 ≈ 1 mnd i viewport) ──
+    if (pxPerDag >= 12) {
       const dagRad = document.createElement('div');
       dagRad.style.cssText = `display:flex;border-bottom:1px solid var(--kant);background:var(--hvit);position:sticky;top:${yrRowH + mndRowH}px;z-index:2;`;
       const dagBlank = document.createElement('div');
