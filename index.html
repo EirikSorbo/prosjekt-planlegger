@@ -1805,6 +1805,7 @@
     <div class="modal-footer">
       <button class="knapp-sek" onclick="lukkModal('aktivitetInfoModal')">Lukk</button>
       <div class="knapp-gruppe" style="align-items:center;">
+        <button class="knapp-sek" id="infoModalLeggTilTodoKnapp">+ To do</button>
         <button class="knapp-sek" id="infoModalLeggTilOppgaveKnapp">+ Oppgave</button>
         <button class="info-ikon-knapp" id="infoModalRedigKnapp" title="Rediger">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -3911,6 +3912,10 @@
       oppgaver.forEach(o => { if (o.aktivitetId === id) o.aktivitetId = null; });
       lagre(); lukkModal('aktivitetInfoModal'); oppdaterAktivPanel();
       if (valgtDato) renderValgtDag(valgtDato);
+    };
+    document.getElementById('infoModalLeggTilTodoKnapp').onclick = () => {
+      lukkModal('aktivitetInfoModal');
+      åpneTodoModal(null, null, id);
     };
     document.getElementById('infoModalLeggTilOppgaveKnapp').onclick = () => {
       lukkModal('aktivitetInfoModal');
