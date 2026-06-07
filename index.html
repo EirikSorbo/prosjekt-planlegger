@@ -1655,7 +1655,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.1</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.2</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3865,6 +3865,33 @@
           åpneAktivitetInfo(id);
         });
         body.appendChild(ytre);
+
+        // Todos knyttet til denne oppgaven
+        const oTodos = todos.filter(t => t.oppgaveId === o.id);
+        if (oTodos.length > 0) {
+          const todoListe = document.createElement('div');
+          todoListe.style.cssText = 'margin:1px 0 7px 20px;border-left:2px solid var(--kant);padding-left:10px;';
+          oTodos.forEach(t => {
+            const todoEl = document.createElement('div');
+            todoEl.style.cssText = `display:flex;align-items:center;gap:7px;padding:3px 0;font-size:12px;color:${t.fullfort ? 'var(--tekst-sek)' : 'var(--tekst)'};`;
+            const sirk = document.createElement('span');
+            sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--tekst-sek)' : 'var(--grønn)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:${t.fullfort ? 'var(--tekst-sek)' : 'var(--grønn)'};`;
+            sirk.textContent = t.fullfort ? '✓' : '';
+            const tekst = document.createElement('span');
+            tekst.style.cssText = t.fullfort ? 'text-decoration:line-through;flex:1;opacity:0.7;' : 'flex:1;';
+            tekst.textContent = t.tittel;
+            todoEl.appendChild(sirk);
+            todoEl.appendChild(tekst);
+            if (t.frist && !t.fullfort) {
+              const fristEl = document.createElement('span');
+              fristEl.style.cssText = 'font-size:11px;color:var(--tekst-sek);white-space:nowrap;';
+              fristEl.textContent = fmtDatoFra(t.frist);
+              todoEl.appendChild(fristEl);
+            }
+            todoListe.appendChild(todoEl);
+          });
+          body.appendChild(todoListe);
+        }
       });
     } else {
       const tom = document.createElement('div');
@@ -4400,6 +4427,12 @@
     const fristerNeste = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && iPeriode(o.frist, nesteStart, nesteSlutt))
       .sort((a,b) => a.frist.localeCompare(b.frist));
 
+    const todosDenne = todos.filter(t => todoI(t) && !t.fullfort && t.frist && iPeriode(t.frist, denneStart, denneSlutt))
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+
+    const todosNeste = todos.filter(t => todoI(t) && !t.fullfort && t.frist && iPeriode(t.frist, nesteStart, nesteSlutt))
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+
     const forfalt = oppgaver.filter(o => oppI(o) && !o.fullfort && o.frist && o.frist < fmt(iDag))
       .sort((a,b) => a.frist.localeCompare(b.frist));
 
@@ -4409,7 +4442,7 @@
 
     return {
       iDag, forrigeStart, forrigeSlutt, denneStart, denneSlutt, nesteStart, nesteSlutt,
-      fullfortForrige, aktDenne, fristerDenne, aktNeste, fristerNeste, forfalt,
+      fullfortForrige, aktDenne, fristerDenne, todosDenne, aktNeste, fristerNeste, todosNeste, forfalt,
       katFilter, kat: katFilter ? getKat(katFilter) : null,
       periodeNavn, forrigeNavn, nesteNavn
     };
@@ -4462,7 +4495,7 @@
     }
 
     html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})</div>`;
-    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0) {
+    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0 && data.todosDenne.length === 0) {
       html += `<div class="rapport-tom">Ingenting planlagt i denne perioden.</div>`;
     } else {
       data.aktDenne.forEach(a => {
@@ -4485,11 +4518,21 @@
           </div>
         </div>`;
       });
+      data.todosDenne.forEach(t => {
+        const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null);
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : '<span class="rapport-pill" style="border-color:var(--kant);color:var(--tekst-sek);">To do</span>'}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${t.tittel}</div>
+            <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
+          </div>
+        </div>`;
+      });
     }
     html += `</div>`;
 
     html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel">${data.nesteNavn} (${fmtPer(data.nesteStart, data.nesteSlutt)})</div>`;
-    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0) {
+    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0 && data.todosNeste.length === 0) {
       html += `<div class="rapport-tom">Ingenting planlagt i neste periode.</div>`;
     } else {
       data.aktNeste.forEach(a => {
@@ -4509,6 +4552,16 @@
           <div style="flex:1;">
             <div class="rapport-item-tittel">${o.beskrivelse}</div>
             <div class="rapport-item-meta">Frist ${fmtDatoFra(o.frist)}</div>
+          </div>
+        </div>`;
+      });
+      data.todosNeste.forEach(t => {
+        const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null);
+        html += `<div class="rapport-item">
+          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : '<span class="rapport-pill" style="border-color:var(--kant);color:var(--tekst-sek);">To do</span>'}
+          <div style="flex:1;">
+            <div class="rapport-item-tittel">${t.tittel}</div>
+            <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
           </div>
         </div>`;
       });
@@ -4563,18 +4616,20 @@
     }
 
     md += `## ${data.periodeNavn} (${fmtPer(data.denneStart, data.denneSlutt)})\n\n`;
-    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0) md += `_Ingenting planlagt._\n\n`;
+    if (data.aktDenne.length === 0 && data.fristerDenne.length === 0 && data.todosDenne.length === 0) md += `_Ingenting planlagt._\n\n`;
     else {
       data.aktDenne.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
       data.fristerDenne.forEach(o => { const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — frist ${fmtDatoFra(o.frist)}\n`; });
+      data.todosDenne.forEach(t => { const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null); md += `- ${kat ? `[${kat.label}] ` : ''}☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
       md += `\n`;
     }
 
     md += `## ${data.nesteNavn} (${fmtPer(data.nesteStart, data.nesteSlutt)})\n\n`;
-    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0) md += `_Ingenting planlagt._\n\n`;
+    if (data.aktNeste.length === 0 && data.fristerNeste.length === 0 && data.todosNeste.length === 0) md += `_Ingenting planlagt._\n\n`;
     else {
       data.aktNeste.forEach(a => { const kat = getKat(a.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`; });
       data.fristerNeste.forEach(o => { const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type); md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — frist ${fmtDatoFra(o.frist)}\n`; });
+      data.todosNeste.forEach(t => { const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null); md += `- ${kat ? `[${kat.label}] ` : ''}☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
       md += `\n`;
     }
 
