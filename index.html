@@ -2192,8 +2192,13 @@
       if (days > 0) {
         const w = days * pxPerDag;
         const yCell = document.createElement('div');
-        yCell.style.cssText = `width:${w}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--grønn);letter-spacing:1px;border-right:2px solid var(--kant);box-sizing:border-box;overflow:hidden;padding:0 4px;`;
-        yCell.textContent = w > 28 ? String(yr) : '';
+        // Cellen spenner over hele året – ingen overflow:hidden slik at sticky-tekst kan bevege seg
+        yCell.style.cssText = `position:relative;width:${w}px;flex-shrink:0;display:flex;align-items:center;border-right:2px solid var(--kant);box-sizing:border-box;`;
+        const yLabel = document.createElement('span');
+        // Sticky left = labelBredde + litt margin, slik at teksten alltid er synlig mens man scroller gjennom året
+        yLabel.style.cssText = `position:sticky;left:${labelBredde + 8}px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--grønn);letter-spacing:1px;white-space:nowrap;pointer-events:none;`;
+        yLabel.textContent = w > 16 ? String(yr) : '';
+        yCell.appendChild(yLabel);
         yearRad.appendChild(yCell);
       }
       yc = nextYr;
