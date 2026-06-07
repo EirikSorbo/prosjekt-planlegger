@@ -2172,16 +2172,44 @@
     document.getElementById('forrigeKnapp').onclick = null;
     document.getElementById('nesteKnapp').onclick = null;
 
-    // Måned-header
+    const yrRowH  = 20; // px — år-raden
+    const mndRowH = 30; // px — måneds-raden (omtrent, fra CSS padding)
+    const dagRowH = 22; // px — dagnummer-raden (1 mnd-zoom)
+
+    // ── År-rad (sticky top:0) ──
+    const yearRad = document.createElement('div');
+    yearRad.style.cssText = `display:flex;border-bottom:2px solid var(--kant);background:var(--grønn-lys);position:sticky;top:0;z-index:3;height:${yrRowH}px;box-sizing:border-box;`;
+    const yearBlank = document.createElement('div');
+    yearBlank.style.cssText = `width:${labelBredde}px;flex-shrink:0;border-right:1px solid var(--kant);`;
+    yearRad.appendChild(yearBlank);
+    let yc = new Date(start.getFullYear(), 0, 1);
+    while (yc < slutt) {
+      const yr = yc.getFullYear();
+      const yrStart = yc < start ? start : yc;
+      const nextYr = new Date(yr + 1, 0, 1);
+      const yrEnd = nextYr > slutt ? slutt : nextYr;
+      const days = Math.round((yrEnd - yrStart) / 86400000);
+      if (days > 0) {
+        const w = days * pxPerDag;
+        const yCell = document.createElement('div');
+        yCell.style.cssText = `width:${w}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--grønn);letter-spacing:1px;border-right:2px solid var(--kant);box-sizing:border-box;overflow:hidden;padding:0 4px;`;
+        yCell.textContent = w > 28 ? String(yr) : '';
+        yearRad.appendChild(yCell);
+      }
+      yc = nextYr;
+    }
+    grid.appendChild(yearRad);
+
+    // ── Måneds-rad (sticky top:yrRowH) ──
     const mndRad = document.createElement('div');
     mndRad.className = 'tidslinje-mnd-rad';
+    mndRad.style.top = yrRowH + 'px';
     const blank = document.createElement('div');
     blank.style.cssText = `width:${labelBredde}px;flex-shrink:0;border-right:1px solid var(--kant);background:var(--grønn-lys);`;
     mndRad.appendChild(blank);
     const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
     while (cursor < slutt) {
       const dagerIMnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
-      // Klipp første måned hvis start ikke er 1. i måneden
       const startDag = (cursor.getFullYear() === start.getFullYear() && cursor.getMonth() === start.getMonth())
         ? start.getDate() - 1 : 0;
       const visibleDager = dagerIMnd - startDag;
@@ -2189,18 +2217,16 @@
       celle.className = 'tidslinje-mnd-celle';
       celle.style.width = (visibleDager * pxPerDag) + 'px';
       celle.style.flexShrink = '0';
-      celle.textContent = MAANEDER[cursor.getMonth()].slice(0,3) +
-        (cursor.getMonth() === 0 || (cursor.getFullYear() === start.getFullYear() && cursor.getMonth() === start.getMonth())
-          ? ' ' + cursor.getFullYear() : '');
+      celle.textContent = MAANEDER[cursor.getMonth()].slice(0,3); // kun mnd, ikke år (håndteres av år-rad)
       mndRad.appendChild(celle);
       cursor.setMonth(cursor.getMonth() + 1);
     }
     grid.appendChild(mndRad);
 
-    // Dag-numre ved 1 mnd-zoom (over hele perioden)
+    // ── Dagnummer-rad ved 1 mnd-zoom ──
     if (tidslinjeMnd === 1) {
       const dagRad = document.createElement('div');
-      dagRad.style.cssText = 'display:flex;border-bottom:1px solid var(--kant);background:var(--hvit);position:sticky;top:30px;z-index:2;';
+      dagRad.style.cssText = `display:flex;border-bottom:1px solid var(--kant);background:var(--hvit);position:sticky;top:${yrRowH + mndRowH}px;z-index:2;`;
       const dagBlank = document.createElement('div');
       dagBlank.style.cssText = `width:${labelBredde}px;flex-shrink:0;border-right:1px solid var(--kant);`;
       dagRad.appendChild(dagBlank);
@@ -2218,18 +2244,19 @@
       grid.appendChild(dagRad);
     }
 
-    // I dag-linje og merke
+    // ── I dag-linje og merke ──
     const iDagOffset = Math.round((iDag - start) / 86400000) * pxPerDag + labelBredde;
     if (iDag >= start && iDag < slutt) {
       const iDagLinje = document.createElement('div');
       iDagLinje.className = 'tidslinje-idag-linje';
       iDagLinje.style.left = iDagOffset + 'px';
-      iDagLinje.style.top = '30px';
+      iDagLinje.style.top = yrRowH + 'px';
       grid.appendChild(iDagLinje);
       const iDagMerke = document.createElement('div');
       iDagMerke.className = 'tidslinje-idag-merke';
+      iDagMerke.style.cssText += `;z-index:4;`;
       iDagMerke.style.left = iDagOffset + 'px';
-      iDagMerke.style.top = '6px';
+      iDagMerke.style.top = '3px'; // midt i år-raden
       iDagMerke.textContent = 'I DAG';
       grid.appendChild(iDagMerke);
     }
@@ -4069,8 +4096,8 @@
     if (erMilepel) {
       fullfortKnapp.style.display = '';
       fullfortKnapp.title = a.fullfort ? 'Angre fullføring' : 'Merk som fullført';
-      fullfortKnapp.style.background = a.fullfort ? '' : 'var(--grønn)';
-      fullfortKnapp.style.color = a.fullfort ? '' : 'white';
+      fullfortKnapp.style.background = '';
+      fullfortKnapp.style.color = a.fullfort ? '' : 'var(--grønn)';
       fullfortKnapp.style.borderColor = a.fullfort ? '' : 'var(--grønn)';
       fullfortKnapp.innerHTML = a.fullfort
         ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`
