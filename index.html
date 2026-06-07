@@ -1637,6 +1637,19 @@
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Hovedfilter</div>
       <div id="hovedFilterKnapper" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
     </div>
+    <div style="padding:14px 22px 14px;border-bottom:1px solid var(--kant);">
+      <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Tidslinje</div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;">
+          <label style="display:block;font-size:11px;color:var(--tekst-sek);margin-bottom:4px;font-weight:600;">Startdato</label>
+          <input type="date" id="tidslinjeStartInput" oninput="oppdaterTidslinjeGrensedatoer()" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;" />
+        </div>
+        <div style="flex:1;">
+          <label style="display:block;font-size:11px;color:var(--tekst-sek);margin-bottom:4px;font-weight:600;">Sluttdato</label>
+          <input type="date" id="tidslinjeSluttInput" oninput="oppdaterTidslinjeGrensedatoer()" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;" />
+        </div>
+      </div>
+    </div>
     <div style="padding:16px 22px 8px;">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Data</div>
       <div style="display:flex;gap:8px;">
@@ -1655,7 +1668,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.2</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.2.3</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2069,7 +2082,22 @@
 
   let kalVisning = 'tidslinje'; // 'maaned' | 'uke' | 'tidslinje'
   let ukeOffset  = 0; // uker relativt til i dag
-  let tidslinjeMnd = 3; // antall måneder å vise i tidslinje
+  let tidslinjeMnd = 3; // zoom-nivå: antall måneder som vises i viewport
+
+  // Tidslinje grensedatoer (scrollbart område)
+  const _tlRaw = JSON.parse(localStorage.getItem('lp_tl') || '{}');
+  let tidslinjeStartGrense = _tlRaw.start || null; // null = auto: i dag - 1 år
+  let tidslinjeSluttGrense = _tlRaw.slutt || null; // null = auto: i dag + 2 år
+  let _tidslinjeReady = false;       // true etter første render (vet scroll-posisjon)
+  let _tidslinjeScrollTarget = null; // sett ved zoom-endring: px-pos å gjenopprette
+
+  function _tlDefault() {
+    const n = new Date(); n.setHours(0,0,0,0);
+    return {
+      start: new Date(n.getFullYear() - 1, n.getMonth(), 1).toISOString().slice(0,10),
+      slutt: new Date(n.getFullYear() + 2, n.getMonth(), 1).toISOString().slice(0,10)
+    };
+  }
 
   function byttKalVisning(visning) {
     kalVisning = visning;
@@ -2085,6 +2113,13 @@
   }
 
   function settTidslinjeSkala(mnd, btn) {
+    // Bevar scroll-posisjon: konverter px → dager → ny px
+    const wrap = document.querySelector('.tidslinje-wrap');
+    if (wrap) {
+      const pxD = { 1: 22, 3: 8, 6: 5, 12: 3 };
+      const dager = wrap.scrollLeft / pxD[tidslinjeMnd];
+      _tidslinjeScrollTarget = Math.round(dager * pxD[mnd]);
+    }
     tidslinjeMnd = mnd;
     document.querySelectorAll('.tidslinje-skala-knapp').forEach(b => b.classList.remove('aktiv'));
     btn.classList.add('aktiv');
@@ -2092,32 +2127,32 @@
   }
 
   function renderTidslinje() {
+    const wrap = document.querySelector('.tidslinje-wrap');
     const grid = document.getElementById('tidslinjeGrid');
     if (!grid) return;
-    grid.className = 'tidslinje-grid';
-    grid.innerHTML = '';
 
     const iDag = new Date(); iDag.setHours(0,0,0,0);
-    const start = tidslinjeMnd === 1
-      ? new Date(iDag.getFullYear(), iDag.getMonth(), 1)
-      : new Date(iDag.getFullYear(), iDag.getMonth() - 1, 1);
-    const slutt = new Date(start.getFullYear(), start.getMonth() + tidslinjeMnd, 1);
-    const totalDager = Math.round((slutt - start) / 86400000);
+    const def = _tlDefault();
+    const start = new Date((tidslinjeStartGrense || def.start) + 'T00:00:00');
+    const slutt = new Date((tidslinjeSluttGrense || def.slutt) + 'T00:00:00');
 
-    const pxPerDag = tidslinjeMnd === 1 ? 22 : tidslinjeMnd === 3 ? 8 : tidslinjeMnd === 6 ? 5 : 3;
-    const totalBredde = totalDager * pxPerDag + 90;
+    // Bevar scroll før innholdet nullstilles
+    const prevScroll = wrap ? wrap.scrollLeft : 0;
+
+    const pxPerDag = { 1: 22, 3: 8, 6: 5, 12: 3 }[tidslinjeMnd];
+    const labelBredde = 90;
+    const totalDager = Math.max(1, Math.round((slutt - start) / 86400000));
+    const totalBredde = totalDager * pxPerDag + labelBredde;
+
+    grid.className = 'tidslinje-grid';
+    grid.innerHTML = '';
     grid.style.width = totalBredde + 'px';
 
-    if (tidslinjeMnd === 1) {
-      document.getElementById('maanedTittel').textContent =
-        MAANEDER[start.getMonth()].charAt(0).toUpperCase() + MAANEDER[start.getMonth()].slice(1) +
-        ' ' + start.getFullYear();
-    } else {
-      document.getElementById('maanedTittel').textContent =
-        MAANEDER[start.getMonth()].slice(0,3) + ' ' + start.getFullYear() +
-        ' – ' + MAANEDER[(slutt.getMonth() + 11) % 12].slice(0,3) + ' ' +
-        (slutt.getMonth() === 0 ? slutt.getFullYear() - 1 : slutt.getFullYear());
-    }
+    // Header-tittel viser hele prosjektperioden
+    const sluttVis = new Date(slutt - 1);
+    document.getElementById('maanedTittel').textContent =
+      MAANEDER[start.getMonth()].slice(0,3) + ' ' + start.getFullYear() +
+      ' – ' + MAANEDER[sluttVis.getMonth()].slice(0,3) + ' ' + sluttVis.getFullYear();
     document.getElementById('forrigeKnapp').onclick = null;
     document.getElementById('nesteKnapp').onclick = null;
 
@@ -2125,55 +2160,65 @@
     const mndRad = document.createElement('div');
     mndRad.className = 'tidslinje-mnd-rad';
     const blank = document.createElement('div');
-    blank.style.cssText = 'width:90px;flex-shrink:0;border-right:1px solid var(--kant);background:var(--grønn-lys);';
+    blank.style.cssText = `width:${labelBredde}px;flex-shrink:0;border-right:1px solid var(--kant);background:var(--grønn-lys);`;
     mndRad.appendChild(blank);
-    const cursor = new Date(start);
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
     while (cursor < slutt) {
       const dagerIMnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+      // Klipp første måned hvis start ikke er 1. i måneden
+      const startDag = (cursor.getFullYear() === start.getFullYear() && cursor.getMonth() === start.getMonth())
+        ? start.getDate() - 1 : 0;
+      const visibleDager = dagerIMnd - startDag;
       const celle = document.createElement('div');
       celle.className = 'tidslinje-mnd-celle';
-      celle.style.width = (dagerIMnd * pxPerDag) + 'px';
+      celle.style.width = (visibleDager * pxPerDag) + 'px';
       celle.style.flexShrink = '0';
-      celle.textContent = MAANEDER[cursor.getMonth()].slice(0,3) + (cursor.getMonth() === 0 ? ' ' + cursor.getFullYear() : '');
+      celle.textContent = MAANEDER[cursor.getMonth()].slice(0,3) +
+        (cursor.getMonth() === 0 || (cursor.getFullYear() === start.getFullYear() && cursor.getMonth() === start.getMonth())
+          ? ' ' + cursor.getFullYear() : '');
       mndRad.appendChild(celle);
       cursor.setMonth(cursor.getMonth() + 1);
     }
     grid.appendChild(mndRad);
 
-    // Dag-numre for 1 mnd-visning
+    // Dag-numre ved 1 mnd-zoom (over hele perioden)
     if (tidslinjeMnd === 1) {
       const dagRad = document.createElement('div');
       dagRad.style.cssText = 'display:flex;border-bottom:1px solid var(--kant);background:var(--hvit);position:sticky;top:30px;z-index:2;';
       const dagBlank = document.createElement('div');
-      dagBlank.style.cssText = 'width:90px;flex-shrink:0;border-right:1px solid var(--kant);';
+      dagBlank.style.cssText = `width:${labelBredde}px;flex-shrink:0;border-right:1px solid var(--kant);`;
       dagRad.appendChild(dagBlank);
-      const dagerIMnd = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
-      for (let d = 1; d <= dagerIMnd; d++) {
+      const dagCursor = new Date(start);
+      while (dagCursor < slutt) {
+        const d = dagCursor.getDate();
+        const erIDag = dagCursor.toISOString().slice(0,10) === iDag.toISOString().slice(0,10);
+        const erSøndag = dagCursor.getDay() === 0;
         const dCelle = document.createElement('div');
-        const erIDag = d === iDag.getDate() && start.getMonth() === iDag.getMonth() && start.getFullYear() === iDag.getFullYear();
-        dCelle.style.cssText = `width:${pxPerDag}px;flex-shrink:0;text-align:center;font-size:10px;font-weight:${erIDag?'800':'600'};color:${erIDag?'#c0392b':'var(--tekst-sek)'};padding:4px 0;border-right:1px solid ${d % 7 === 0 ? 'var(--kant)' : 'transparent'};`;
+        dCelle.style.cssText = `width:${pxPerDag}px;flex-shrink:0;text-align:center;font-size:10px;font-weight:${erIDag?'800':'600'};color:${erIDag?'#c0392b':'var(--tekst-sek)'};padding:4px 0;border-right:1px solid ${erSøndag ? 'var(--kant)' : 'transparent'};`;
         dCelle.textContent = d;
         dagRad.appendChild(dCelle);
+        dagCursor.setDate(dagCursor.getDate() + 1);
       }
       grid.appendChild(dagRad);
     }
 
-    // I dag-linje
-    const iDagOffset = Math.round((iDag - start) / 86400000) * pxPerDag + 90;
-    const iDagLinje = document.createElement('div');
-    iDagLinje.className = 'tidslinje-idag-linje';
-    iDagLinje.style.left = iDagOffset + 'px';
-    iDagLinje.style.top = '30px';
-    grid.appendChild(iDagLinje);
+    // I dag-linje og merke
+    const iDagOffset = Math.round((iDag - start) / 86400000) * pxPerDag + labelBredde;
+    if (iDag >= start && iDag < slutt) {
+      const iDagLinje = document.createElement('div');
+      iDagLinje.className = 'tidslinje-idag-linje';
+      iDagLinje.style.left = iDagOffset + 'px';
+      iDagLinje.style.top = '30px';
+      grid.appendChild(iDagLinje);
+      const iDagMerke = document.createElement('div');
+      iDagMerke.className = 'tidslinje-idag-merke';
+      iDagMerke.style.left = iDagOffset + 'px';
+      iDagMerke.style.top = '6px';
+      iDagMerke.textContent = 'I DAG';
+      grid.appendChild(iDagMerke);
+    }
 
-    const iDagMerke = document.createElement('div');
-    iDagMerke.className = 'tidslinje-idag-merke';
-    iDagMerke.style.left = iDagOffset + 'px';
-    iDagMerke.style.top = '6px';
-    iDagMerke.textContent = 'I DAG';
-    grid.appendChild(iDagMerke);
-
-    // En rad per kategori (filtrert av hovedfilter)
+    // Kategori-rader (filtrert av hovedfilter)
     let grupperKats = globalKatFilter
       ? kategorier.filter(k => k.id === globalKatFilter)
       : [...kategorier];
@@ -2187,113 +2232,116 @@
       tom.style.cssText = 'padding:32px;text-align:center;color:var(--tekst-sek);font-size:13px;';
       tom.textContent = 'Legg til kategorier og oppgaver for å se tidslinjen.';
       grid.appendChild(tom);
-      return;
-    }
-
-    grupperKats.forEach(k => {
-      // Samle innhold i dette vinduet (fix 3: skip tomme kategorier)
-      const katAktAlle = aktiviteter.filter(a => {
-        if (k.id === null ? !!a.type : a.type !== k.id) return false;
-        const d1 = new Date(a.dato + 'T00:00:00');
-        const d2 = new Date((a.datoTil || a.dato) + 'T00:00:00');
-        return !(d2 < start || d1 >= slutt);
-      });
-      const katAkt = katAktAlle.filter(a => a.leveranseType !== 'milepæl');
-      const katMilepeler = katAktAlle.filter(a => a.leveranseType === 'milepæl');
-
-      const katOpp = oppgaver.filter(o => {
-        if (!o.frist) return false;
-        const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
-        const t = akt?.type || o.kategoriId || null;
-        if (k.id === null ? !!t : t !== k.id) return false;
-        const d = new Date(o.frist + 'T00:00:00');
-        return !(d < start || d >= slutt);
-      });
-
-      if (katAkt.length === 0 && katMilepeler.length === 0 && katOpp.length === 0) return;
-
-      const rad = document.createElement('div');
-      rad.className = 'tidslinje-kat-rad';
-
-      const label = document.createElement('div');
-      label.className = 'tidslinje-kat-label';
-      label.textContent = k.label;
-      label.style.color = k.farge;
-      label.style.borderLeft = '3px solid ' + k.farge;
-      rad.appendChild(label);
-
-      const sporer = document.createElement('div');
-      sporer.className = 'tidslinje-sporer';
-
-      // Spor 1: Aktiviteter (barer)
-      if (katAkt.length > 0) {
-        const spor = document.createElement('div');
-        spor.className = 'tidslinje-spor';
-        spor.style.width = (totalDager * pxPerDag) + 'px';
-
-        katAkt.forEach(a => {
+    } else {
+      grupperKats.forEach(k => {
+        const katAktAlle = aktiviteter.filter(a => {
+          if (k.id === null ? !!a.type : a.type !== k.id) return false;
           const d1 = new Date(a.dato + 'T00:00:00');
           const d2 = new Date((a.datoTil || a.dato) + 'T00:00:00');
-          const offsetDager = Math.max(0, Math.round((d1 - start) / 86400000));
-          const sluttDager  = Math.min(totalDager, Math.round((d2 - start) / 86400000) + 1);
-          const bar = document.createElement('div');
-          bar.className = 'tidslinje-bar';
-          bar.style.left = (offsetDager * pxPerDag) + 'px';
-          bar.style.width = Math.max(8, (sluttDager - offsetDager) * pxPerDag) + 'px';
-          bar.style.background = k.farge;
-          bar.textContent = a.tittel;
-          bar.title = a.tittel;
-          bar.onclick = () => åpneAktivitetInfo(a.id);
-          spor.appendChild(bar);
+          return !(d2 < start || d1 >= slutt);
         });
-
-        sporer.appendChild(spor);
-      }
-
-      // Spor 2: Milepæler (store diamanter)
-      if (katMilepeler.length > 0) {
-        const sporMP = document.createElement('div');
-        sporMP.className = 'tidslinje-spor tidslinje-spor-milepel';
-        sporMP.style.width = (totalDager * pxPerDag) + 'px';
-
-        katMilepeler.forEach(a => {
-          const d = new Date(a.dato + 'T00:00:00');
-          const offsetDager = Math.round((d - start) / 86400000);
-          const mp = document.createElement('div');
-          mp.className = 'tidslinje-milepel tidslinje-milepel-stor';
-          mp.style.left = (offsetDager * pxPerDag) + 'px';
-          mp.style.background = k.farge;
-          mp.title = '◆ ' + a.tittel;
-          mp.onclick = () => åpneAktivitetInfo(a.id);
-          sporMP.appendChild(mp);
-        });
-
-        sporer.appendChild(sporMP);
-      }
-
-      // Spor 3: Oppgaver/frister (små diamanter)
-      if (katOpp.length > 0) {
-        const sporM = document.createElement('div');
-        sporM.className = 'tidslinje-spor tidslinje-spor-milepel';
-        sporM.style.width = (totalDager * pxPerDag) + 'px';
-
-        katOpp.forEach(o => {
+        const katAkt = katAktAlle.filter(a => a.leveranseType !== 'milepæl');
+        const katMilepeler = katAktAlle.filter(a => a.leveranseType === 'milepæl');
+        const katOpp = oppgaver.filter(o => {
+          if (!o.frist) return false;
+          const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+          const t = akt?.type || o.kategoriId || null;
+          if (k.id === null ? !!t : t !== k.id) return false;
           const d = new Date(o.frist + 'T00:00:00');
-          const offsetDager = Math.round((d - start) / 86400000);
-          const mp = document.createElement('div');
-          mp.className = 'tidslinje-milepel' + (o.fullfort ? ' fullfort' : '');
-          mp.style.left = (offsetDager * pxPerDag) + 'px';
-          mp.style.background = k.farge;
-          mp.title = o.beskrivelse + (o.fullfort ? ' (fullført)' : '');
-          mp.onclick = () => åpneOppgaveInfo(o.id);
-          sporM.appendChild(mp);
+          return d >= start && d < slutt;
         });
+        if (katAkt.length === 0 && katMilepeler.length === 0 && katOpp.length === 0) return;
 
-        sporer.appendChild(sporM);
+        const rad = document.createElement('div');
+        rad.className = 'tidslinje-kat-rad';
+        const label = document.createElement('div');
+        label.className = 'tidslinje-kat-label';
+        label.textContent = k.label;
+        label.style.color = k.farge;
+        label.style.borderLeft = '3px solid ' + k.farge;
+        rad.appendChild(label);
+        const sporer = document.createElement('div');
+        sporer.className = 'tidslinje-sporer';
+
+        if (katAkt.length > 0) {
+          const spor = document.createElement('div');
+          spor.className = 'tidslinje-spor';
+          spor.style.width = (totalDager * pxPerDag) + 'px';
+          katAkt.forEach(a => {
+            const d1 = new Date(a.dato + 'T00:00:00');
+            const d2 = new Date((a.datoTil || a.dato) + 'T00:00:00');
+            const offsetDager = Math.max(0, Math.round((d1 - start) / 86400000));
+            const sluttDager  = Math.min(totalDager, Math.round((d2 - start) / 86400000) + 1);
+            const bar = document.createElement('div');
+            bar.className = 'tidslinje-bar';
+            bar.style.left = (offsetDager * pxPerDag) + 'px';
+            bar.style.width = Math.max(8, (sluttDager - offsetDager) * pxPerDag) + 'px';
+            bar.style.background = k.farge;
+            bar.textContent = a.tittel;
+            bar.title = a.tittel;
+            bar.onclick = () => åpneAktivitetInfo(a.id);
+            spor.appendChild(bar);
+          });
+          sporer.appendChild(spor);
+        }
+
+        if (katMilepeler.length > 0) {
+          const sporMP = document.createElement('div');
+          sporMP.className = 'tidslinje-spor tidslinje-spor-milepel';
+          sporMP.style.width = (totalDager * pxPerDag) + 'px';
+          katMilepeler.forEach(a => {
+            const d = new Date(a.dato + 'T00:00:00');
+            const offsetDager = Math.round((d - start) / 86400000);
+            const mp = document.createElement('div');
+            mp.className = 'tidslinje-milepel tidslinje-milepel-stor';
+            mp.style.left = (offsetDager * pxPerDag) + 'px';
+            mp.style.background = k.farge;
+            mp.title = '◆ ' + a.tittel;
+            mp.onclick = () => åpneAktivitetInfo(a.id);
+            sporMP.appendChild(mp);
+          });
+          sporer.appendChild(sporMP);
+        }
+
+        if (katOpp.length > 0) {
+          const sporM = document.createElement('div');
+          sporM.className = 'tidslinje-spor tidslinje-spor-milepel';
+          sporM.style.width = (totalDager * pxPerDag) + 'px';
+          katOpp.forEach(o => {
+            const d = new Date(o.frist + 'T00:00:00');
+            const offsetDager = Math.round((d - start) / 86400000);
+            const mp = document.createElement('div');
+            mp.className = 'tidslinje-milepel' + (o.fullfort ? ' fullfort' : '');
+            mp.style.left = (offsetDager * pxPerDag) + 'px';
+            mp.style.background = k.farge;
+            mp.title = o.beskrivelse + (o.fullfort ? ' (fullført)' : '');
+            mp.onclick = () => åpneOppgaveInfo(o.id);
+            sporM.appendChild(mp);
+          });
+          sporer.appendChild(sporM);
+        }
+
+        rad.appendChild(sporer);
+        grid.appendChild(rad);
+      });
+    }
+
+    // Scroll-posisjonering etter render
+    const iDagScrollPx = Math.max(0, Math.round((iDag - start) / 86400000) * pxPerDag);
+    requestAnimationFrame(() => {
+      if (!wrap) return;
+      if (_tidslinjeScrollTarget !== null) {
+        // Zoom-endring: gjenopprett dag-justert posisjon
+        wrap.scrollLeft = Math.max(0, Math.min(_tidslinjeScrollTarget, wrap.scrollWidth - wrap.clientWidth));
+        _tidslinjeScrollTarget = null;
+      } else if (!_tidslinjeReady) {
+        // Første render: scroll til i dag
+        wrap.scrollLeft = iDagScrollPx;
+        _tidslinjeReady = true;
+      } else {
+        // Data-endring re-render: bevar brukerens scroll-posisjon
+        wrap.scrollLeft = prevScroll;
       }
-
-      rad.appendChild(sporer);
-      grid.appendChild(rad);
     });
   }
 
@@ -3218,7 +3266,21 @@
 
   function åpneKategoriModal() {
     renderKategoriModal();
+    // Fyll tidslinje-datoinputs
+    const def = _tlDefault();
+    document.getElementById('tidslinjeStartInput').value = tidslinjeStartGrense || def.start;
+    document.getElementById('tidslinjeSluttInput').value = tidslinjeSluttGrense || def.slutt;
     document.getElementById('kategoriModal').classList.add('vis');
+  }
+
+  function oppdaterTidslinjeGrensedatoer() {
+    tidslinjeStartGrense = document.getElementById('tidslinjeStartInput').value || null;
+    tidslinjeSluttGrense = document.getElementById('tidslinjeSluttInput').value || null;
+    localStorage.setItem('lp_tl', JSON.stringify({ start: tidslinjeStartGrense, slutt: tidslinjeSluttGrense }));
+    if (kalVisning === 'tidslinje') {
+      _tidslinjeReady = false; // scroll til i dag igjen
+      renderTidslinje();
+    }
   }
 
   function renderKategoriModal() {
