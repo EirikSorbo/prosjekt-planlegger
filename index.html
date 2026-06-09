@@ -1563,7 +1563,10 @@
       <button id="toggleUke"       class="kal-toggle-knapp"       onclick="byttKalVisning('uke')">Uke</button>
     </div>
     <div id="kalender-tidslinje-view">
-      <div class="tidslinje-skala" id="tidslinjeSkalaRad"><!-- zoom-knapper genereres dynamisk --></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:0 12px 4px;">
+        <div class="tidslinje-skala" id="tidslinjeSkalaRad" style="flex:1;"><!-- zoom-knapper genereres dynamisk --></div>
+        <button id="metaTidslinjeKnapp" class="filter-pill" onclick="toggleMetaTidslinje()" style="font-size:10px;padding:4px 10px;white-space:nowrap;display:none;">Meta</button>
+      </div>
       <div class="tidslinje-wrap">
         <div id="tidslinjeGrid"></div>
       </div>
@@ -1693,7 +1696,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.1</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.2</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2260,6 +2263,7 @@
   let tidslinjeSluttGrense = null; // null = auto: i dag + 2 år
   let _tidslinjeReady = false;       // true etter første synlige render (vet scroll-posisjon)
   let _tidslinjeScrollTarget = null; // sett ved zoom-endring: px-pos å gjenopprette
+  let _metaTidslinjeAktiv = false;   // true når meta-tidslinje (alle prosjekter) er synlig
 
   function _tlDefault() {
     const n = new Date(); n.setHours(0,0,0,0);
@@ -2337,10 +2341,27 @@
     const grid = document.getElementById('tidslinjeGrid');
     if (!grid) return;
 
+    // Vis/skjul meta-knapp basert på antall prosjekter
+    const metaBtn = document.getElementById('metaTidslinjeKnapp');
+    if (metaBtn) metaBtn.style.display = prosjekter.length > 1 ? '' : 'none';
+
+    // Meta-tidslinje: midlertidig bytt til samlet data
+    let _metaBak = null;
+    let _metaStart = null, _metaSlutt = null;
+    if (_metaTidslinjeAktiv) {
+      const meta = _hentMetaTidslinjeData();
+      _metaBak = { aktiviteter, kategorier, oppgaver };
+      aktiviteter = meta.aktiviteter;
+      kategorier = meta.kategorier;
+      oppgaver = [];
+      _metaStart = meta.start;
+      _metaSlutt = meta.slutt;
+    }
+
     const iDag = new Date(); iDag.setHours(0,0,0,0);
     const def = _tlDefault();
-    const start = new Date((tidslinjeStartGrense || def.start) + 'T00:00:00');
-    const slutt = new Date((tidslinjeSluttGrense || def.slutt) + 'T00:00:00');
+    const start = new Date((_metaTidslinjeAktiv && _metaStart ? _metaStart : (tidslinjeStartGrense || def.start)) + 'T00:00:00');
+    const slutt = new Date((_metaTidslinjeAktiv && _metaSlutt ? _metaSlutt : (tidslinjeSluttGrense || def.slutt)) + 'T00:00:00');
 
     // Bevar scroll før innholdet nullstilles
     const prevScroll = wrap ? wrap.scrollLeft : 0;
@@ -2354,8 +2375,9 @@
       const t = l.toUpperCase();
       return _lblCtx.measureText(t).width + t.length * 0.3; // letter-spacing ≈ 0.3px/tegn
     }));
-    // padding 8px × 2 + venstre fargeborder 3px + høyre kant 1px = 20px ekstra; min 100, maks 200
-    const labelBredde = Math.max(100, Math.min(200, Math.ceil(_maxTxtW) + 20));
+    // padding 8px × 2 + venstre fargeborder 3px + høyre kant 1px = 20px ekstra; min 100, maks 200 (300 i meta)
+    const labelMaks = _metaTidslinjeAktiv ? 300 : 200;
+    const labelBredde = Math.max(100, Math.min(labelMaks, Math.ceil(_maxTxtW) + 20));
 
     const totalDager = Math.max(1, Math.round((slutt - start) / 86400000));
     const totalMnd = totalDager / 30.44;
@@ -2405,9 +2427,10 @@
 
     // Header-tittel viser hele prosjektperioden
     const sluttVis = new Date(slutt - 1);
-    document.getElementById('maanedTittel').textContent =
-      MAANEDER[start.getMonth()].slice(0,3) + ' ' + start.getFullYear() +
+    const periodeStr = MAANEDER[start.getMonth()].slice(0,3) + ' ' + start.getFullYear() +
       ' – ' + MAANEDER[sluttVis.getMonth()].slice(0,3) + ' ' + sluttVis.getFullYear();
+    document.getElementById('maanedTittel').textContent =
+      (_metaTidslinjeAktiv ? 'Meta: ' : '') + periodeStr;
     document.getElementById('forrigeKnapp').onclick = null;
     document.getElementById('nesteKnapp').onclick = null;
 
@@ -2638,6 +2661,57 @@
         wrap.scrollLeft = prevScroll;
       }
     });
+
+    // Gjenopprett globale variabler etter meta-tidslinje
+    if (_metaBak) {
+      aktiviteter = _metaBak.aktiviteter;
+      kategorier = _metaBak.kategorier;
+      oppgaver = _metaBak.oppgaver;
+    }
+  }
+
+  function toggleMetaTidslinje() {
+    _metaTidslinjeAktiv = !_metaTidslinjeAktiv;
+    const btn = document.getElementById('metaTidslinjeKnapp');
+    if (btn) btn.classList.toggle('aktiv', _metaTidslinjeAktiv);
+    _tidslinjeReady = false;
+    _tidslinjeZoomInit = false;
+    renderTidslinje();
+  }
+
+  // Henter samlet aktiviteter + kategorier fra alle prosjekter for meta-tidslinje
+  function _hentMetaTidslinjeData() {
+    const samlet = { aktiviteter: [], kategorier: [] };
+    let globalStart = null, globalSlutt = null;
+    prosjekter.forEach(p => {
+      const erAktivt = p.id === aktivtProsjektId;
+      const data = erAktivt ? { aktiviteter, kategorier } : _hentProsjektData(p.id);
+      const tl = erAktivt ? { start: tidslinjeStartGrense, slutt: tidslinjeSluttGrense }
+                          : (JSON.parse(localStorage.getItem('lp_' + p.id + '_tl') || '{}'));
+      // Legg til prosjekt-kategorier med prosjektnavn-prefix
+      data.kategorier.forEach(k => {
+        samlet.kategorier.push({
+          ...k,
+          label: p.navn + ' · ' + k.label,
+          _prosjektFarge: p.farge,
+          _prosjektId: p.id,
+          id: p.id + '__' + k.id // unikt ID per prosjekt
+        });
+      });
+      // Legg til aktiviteter med mappet type
+      data.aktiviteter.forEach(a => {
+        samlet.aktiviteter.push({
+          ...a,
+          type: p.id + '__' + a.type,
+          _prosjektNavn: p.navn,
+          _prosjektFarge: p.farge
+        });
+      });
+      // Beregn global start/slutt
+      if (tl.start && (!globalStart || tl.start < globalStart)) globalStart = tl.start;
+      if (tl.slutt && (!globalSlutt || tl.slutt > globalSlutt)) globalSlutt = tl.slutt;
+    });
+    return { aktiviteter: samlet.aktiviteter, kategorier: samlet.kategorier, start: globalStart, slutt: globalSlutt };
   }
 
   function renderUke() {
@@ -5401,6 +5475,18 @@
     URL.revokeObjectURL(url);
   }
 
+  // ── Hjelpefunksjon: hent data fra et annet prosjekt ──
+  function _hentProsjektData(prosjektId) {
+    const pk = s => 'lp_' + prosjektId + '_' + s;
+    return {
+      aktiviteter: JSON.parse(localStorage.getItem(pk('a')) || '[]'),
+      oppgaver:    JSON.parse(localStorage.getItem(pk('o')) || '[]'),
+      todos:       JSON.parse(localStorage.getItem(pk('t')) || '[]'),
+      kategorier:  JSON.parse(localStorage.getItem(pk('k')) || '[]'),
+      tidslinjeGrenser: JSON.parse(localStorage.getItem(pk('tl')) || '{}')
+    };
+  }
+
   function åpneRapportVelger() {
     const body = document.getElementById('rapportVelgerBody');
     body.innerHTML = '';
@@ -5411,7 +5497,7 @@
       btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--kant);border-radius:var(--rs);background:var(--hvit);cursor:pointer;text-align:left;transition:all .15s;font-family:\'Nunito\',sans-serif;';
       btn.onmouseover = () => { btn.style.borderColor = farge; btn.style.background = farge + '12'; };
       btn.onmouseout  = () => { btn.style.borderColor = 'var(--kant)'; btn.style.background = 'var(--hvit)'; };
-      btn.onclick = () => { lukkModal('rapportVelgerModal'); onClick(); };
+      btn.onclick = () => onClick();
 
       const dot = document.createElement('div');
       dot.style.cssText = `width:14px;height:14px;border-radius:50%;background:${farge};flex-shrink:0;`;
@@ -5431,23 +5517,149 @@
       body.appendChild(btn);
     };
 
-    lagValg('Hele prosjektet', 'Rapport for alle kategorier', 'var(--grønn)', () => åpneRapport());
-
-    if (kategorier.length > 0) {
+    const lagSkille = (tekst) => {
       const skille = document.createElement('div');
       skille.style.cssText = 'font-size:10px;font-weight:700;font-family:"Syne",sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px;margin-bottom:-2px;padding:0 2px;';
-      skille.textContent = 'Eller velg kategori';
+      skille.textContent = tekst;
       body.appendChild(skille);
-      kategorier.forEach(k => {
-        const stats = oppgaver.filter(o => {
-          const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
-          return (akt?.type || o.kategoriId) === k.id;
-        }).length;
-        lagValg(k.label, `${stats} oppgave${stats === 1 ? '' : 'r'}`, k.farge, () => åpneRapport(k.id));
+    };
+
+    // ── Steg 1: prosjektvalg ──
+    const visProsjektValg = () => {
+      body.innerHTML = '';
+      document.querySelector('#rapportVelgerModal .modal-tittel').textContent = 'Velg rapport';
+
+      // Nåværende prosjekt (default, rett til kategori-valg)
+      const aktivtP = prosjekter.find(p => p.id === aktivtProsjektId);
+      if (aktivtP) {
+        lagValg(aktivtP.navn, 'Nåværende prosjekt', aktivtP.farge, () => visKategoriValg(aktivtProsjektId));
+      }
+
+      // Flere prosjekter
+      if (prosjekter.length > 1) {
+        lagSkille('Andre prosjekter');
+        prosjekter.filter(p => p.id !== aktivtProsjektId).forEach(p => {
+          lagValg(p.navn, '', p.farge, () => visKategoriValg(p.id));
+        });
+      }
+
+      // Alle prosjekter samlet
+      if (prosjekter.length > 1) {
+        lagSkille('Samlet');
+        lagValg('Alle prosjekter', 'Tverrprosjekt-rapport', '#555', () => {
+          lukkModal('rapportVelgerModal');
+          åpneRapportMulti(prosjekter.map(p => p.id));
+        });
+      }
+    };
+
+    // ── Steg 2: kategori-valg innen valgt prosjekt ──
+    const visKategoriValg = (prosjektId) => {
+      body.innerHTML = '';
+      const p = prosjekter.find(p => p.id === prosjektId);
+      document.querySelector('#rapportVelgerModal .modal-tittel').textContent = p ? p.navn : 'Velg kategori';
+
+      // Tilbake-knapp
+      if (prosjekter.length > 1) {
+        const tilbake = document.createElement('button');
+        tilbake.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 2px;border:none;background:none;cursor:pointer;font-family:"Nunito",sans-serif;font-size:12px;color:var(--tekst-sek);margin-bottom:-4px;';
+        tilbake.innerHTML = '‹ Tilbake til prosjekter';
+        tilbake.onclick = visProsjektValg;
+        body.appendChild(tilbake);
+      }
+
+      // Hent data for valgt prosjekt
+      const erAktivt = prosjektId === aktivtProsjektId;
+      const pData = erAktivt ? { aktiviteter, oppgaver, todos, kategorier } : _hentProsjektData(prosjektId);
+
+      lagValg('Hele prosjektet', 'Alle kategorier', p ? p.farge : 'var(--grønn)', () => {
+        lukkModal('rapportVelgerModal');
+        if (erAktivt) { åpneRapport(); }
+        else { åpneRapportForProsjekt(prosjektId); }
       });
+
+      if (pData.kategorier.length > 0) {
+        lagSkille('Eller velg kategori');
+        pData.kategorier.forEach(k => {
+          const stats = pData.oppgaver.filter(o => {
+            const akt = o.aktivitetId ? pData.aktiviteter.find(a => a.id === o.aktivitetId) : null;
+            return (akt?.type || o.kategoriId) === k.id;
+          }).length;
+          lagValg(k.label, `${stats} oppgave${stats === 1 ? '' : 'r'}`, k.farge, () => {
+            lukkModal('rapportVelgerModal');
+            if (erAktivt) { åpneRapport(k.id); }
+            else { åpneRapportForProsjekt(prosjektId, k.id); }
+          });
+        });
+      }
+    };
+
+    // Hvis bare ett prosjekt, gå rett til kategori-valg
+    if (prosjekter.length <= 1) {
+      visKategoriValg(aktivtProsjektId);
+    } else {
+      visProsjektValg();
     }
 
     document.getElementById('rapportVelgerModal').classList.add('vis');
+  }
+
+  // ── Rapport for et annet prosjekt (midlertidig bytt data) ──
+  function åpneRapportForProsjekt(prosjektId, katFilter = null) {
+    const pData = _hentProsjektData(prosjektId);
+    const p = prosjekter.find(p => p.id === prosjektId);
+    // Midlertidig bytt globale variabler
+    const bak = { aktiviteter, oppgaver, todos, kategorier };
+    aktiviteter = pData.aktiviteter;
+    oppgaver = pData.oppgaver;
+    todos = pData.todos;
+    kategorier = pData.kategorier;
+    genererKategoriCSS();
+    åpneRapport(katFilter);
+    // Sett prosjektnavn i tittelen
+    const tittelEl = document.querySelector('#rapportModal .modal-tittel');
+    if (tittelEl && p) {
+      const katNavn = katFilter ? (kategorier.find(k => k.id === katFilter)?.label || '') : '';
+      tittelEl.textContent = katNavn ? `${p.navn}: ${katNavn}` : `Rapport: ${p.navn}`;
+    }
+    // Gjenopprett
+    aktiviteter = bak.aktiviteter;
+    oppgaver = bak.oppgaver;
+    todos = bak.todos;
+    kategorier = bak.kategorier;
+    genererKategoriCSS();
+  }
+
+  // ── Tverrprosjekt-rapport ──
+  function åpneRapportMulti(prosjektIder) {
+    // Samle all data fra valgte prosjekter
+    const samlet = { aktiviteter: [], oppgaver: [], todos: [], kategorier: [] };
+    prosjektIder.forEach(pid => {
+      const erAktivt = pid === aktivtProsjektId;
+      const d = erAktivt ? { aktiviteter, oppgaver, todos, kategorier } : _hentProsjektData(pid);
+      const p = prosjekter.find(p => p.id === pid);
+      const prefix = p ? p.navn + ': ' : '';
+      // Legg til med prosjekt-prefix på titler for lesbarhet
+      d.aktiviteter.forEach(a => samlet.aktiviteter.push({ ...a, tittel: prefix + a.tittel }));
+      d.oppgaver.forEach(o => samlet.oppgaver.push({ ...o, beskrivelse: prefix + o.beskrivelse }));
+      d.todos.forEach(t => samlet.todos.push({ ...t, tittel: prefix + t.tittel }));
+      d.kategorier.forEach(k => { if (!samlet.kategorier.find(sk => sk.id === k.id)) samlet.kategorier.push(k); });
+    });
+    const bak = { aktiviteter, oppgaver, todos, kategorier };
+    aktiviteter = samlet.aktiviteter;
+    oppgaver = samlet.oppgaver;
+    todos = samlet.todos;
+    kategorier = samlet.kategorier;
+    genererKategoriCSS();
+    åpneRapport();
+    document.querySelector('#rapportModal .modal-tittel').textContent = 'Rapport: Alle prosjekter';
+    const tittelEl = document.querySelector('.rapport-tittel-stor');
+    if (tittelEl) tittelEl.textContent = 'Statusrapport — alle prosjekter';
+    aktiviteter = bak.aktiviteter;
+    oppgaver = bak.oppgaver;
+    todos = bak.todos;
+    kategorier = bak.kategorier;
+    genererKategoriCSS();
   }
 
   function ryddFullforte() {
