@@ -1512,6 +1512,7 @@
     <div id="prosjektMeny" style="display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--hvit);border:1px solid var(--kant);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px;z-index:200;overflow:hidden;"></div>
   </div>
   <div class="header-handlinger">
+    <span id="dagerIgjenBadge" style="display:none;font-family:'Syne',sans-serif;font-weight:600;font-size:11px;color:var(--tekst-sek);letter-spacing:0.3px;white-space:nowrap;opacity:0.7;"></span>
     <span id="filterBadge" style="display:none;font-family:'Syne',sans-serif;font-weight:700;font-size:10px;color:white;padding:3px 8px;border-radius:10px;letter-spacing:0.3px;cursor:pointer;text-transform:uppercase;" onclick="åpneKategoriModal()"></span>
     <button class="header-knapp" onclick="åpneKategoriModal()" title="Innstillinger">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1543,7 +1544,7 @@
     <div class="todo-hurtigknapper">
       <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
       <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
-      <button class="todo-hurtig-knapp" onclick="åpneAktivitetModal()">+ Leveranse</button>
+      <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
     </div>
     <div class="kat-oversikt-rad" id="katOversiktRad"></div>
     <div class="kort-container" id="todoListe"></div>
@@ -1692,7 +1693,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.0</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.1</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2087,6 +2088,23 @@
     document.title = p.navn;
   }
 
+  function oppdaterDagerIgjen() {
+    const badge = document.getElementById('dagerIgjenBadge');
+    if (!badge) return;
+    if (!tidslinjeSluttGrense) { badge.style.display = 'none'; return; }
+    const idag = new Date(); idag.setHours(0,0,0,0);
+    const slutt = new Date(tidslinjeSluttGrense + 'T00:00:00');
+    const diff = Math.ceil((slutt - idag) / (1000 * 60 * 60 * 24));
+    if (diff < 0) {
+      badge.textContent = Math.abs(diff) + ' d. over';
+      badge.style.color = '#e74c3c';
+    } else {
+      badge.textContent = diff + ' d. igjen';
+      badge.style.color = diff <= 14 ? '#e67e22' : 'var(--tekst-sek)';
+    }
+    badge.style.display = '';
+  }
+
   /* ──────────────────────────────
      DATA
   ────────────────────────────── */
@@ -2183,7 +2201,7 @@
     aktiviteter = a ? JSON.parse(a) : [];
     oppgaver    = o ? JSON.parse(o) : [];
     todos       = t ? JSON.parse(t) : [];
-    kategorier  = k ? JSON.parse(k) : [...STANDARD_KATEGORIER];
+    kategorier  = k ? JSON.parse(k) : [];
     genererKategoriCSS();
     // Last tidslinje-grenser for dette prosjektet
     const tl = JSON.parse(localStorage.getItem(_pk('tl')) || '{}');
@@ -2191,6 +2209,7 @@
     tidslinjeSluttGrense = tl.slutt || null;
     aktivitetFilterState = lastFilterState(_pk('fa'));
     oppgaveFilterState   = lastFilterState(_pk('fo'));
+    oppdaterDagerIgjen();
   }
 
   function uid() {
@@ -3630,6 +3649,7 @@
     tidslinjeStartGrense = document.getElementById('tidslinjeStartInput').value || null;
     tidslinjeSluttGrense = document.getElementById('tidslinjeSluttInput').value || null;
     localStorage.setItem(_pk('tl'), JSON.stringify({ start: tidslinjeStartGrense, slutt: tidslinjeSluttGrense }));
+    oppdaterDagerIgjen();
     if (kalVisning === 'tidslinje') {
       _tidslinjeReady = false;    // scroll til i dag igjen
       _tidslinjeZoomInit = false; // beregn korteste zoom på nytt for ny prosjektlengde
@@ -4579,6 +4599,20 @@
     }
     document.getElementById('aktivitetModal').classList.add('vis');
     setTimeout(() => document.getElementById('feltTittel').focus(), 100);
+  }
+
+  function visLeveranseTypeValg(btn) {
+    // Fjern evt. eksisterende popup
+    const gammel = document.getElementById('leveranseTypePopup');
+    if (gammel) { gammel.remove(); return; }
+    const popup = document.createElement('div');
+    popup.id = 'leveranseTypePopup';
+    popup.style.cssText = 'position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:var(--bg);border:1px solid var(--kant);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.13);z-index:999;display:flex;gap:4px;padding:6px;white-space:nowrap;';
+    popup.innerHTML = '<button class="todo-hurtig-knapp" style="font-size:12px;padding:6px 12px;" onclick="this.parentElement.remove();åpneAktivitetModal()">Aktivitet</button>'
+      + '<button class="todo-hurtig-knapp" style="font-size:12px;padding:6px 12px;" onclick="this.parentElement.remove();åpneMilepelModal()">Milepæl</button>';
+    btn.appendChild(popup);
+    const lukk = e => { if (!popup.contains(e.target) && e.target !== btn) { popup.remove(); document.removeEventListener('click', lukk); } };
+    setTimeout(() => document.addEventListener('click', lukk), 0);
   }
 
   function åpneMilepelModal(id = null, dato = null) {
