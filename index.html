@@ -5318,7 +5318,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, setDoc, getDoc, onSnapshot }
+  import { getFirestore, doc, setDoc, getDoc, getDocFromServer, onSnapshot }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -5349,9 +5349,28 @@
     await signOut(auth);
   };
 
+  // ── Synk-status-indikator ──
+  function visSynkStatus(tekst, farge) {
+    let el = document.getElementById('synkStatus');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'synkStatus';
+      el.style.cssText = 'position:fixed;bottom:8px;right:8px;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:"Syne",sans-serif;z-index:9999;pointer-events:none;transition:opacity 0.5s;';
+      document.body.appendChild(el);
+    }
+    el.textContent = tekst;
+    el.style.background = farge;
+    el.style.color = '#fff';
+    el.style.opacity = '1';
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+  }
+
   // ── Synkroniser data med Firestore ──
   async function lagreTilSky(userId) {
     try {
+      visSynkStatus('Synkroniserer…', '#f39c12');
+      console.log('[SYNK] Lagrer til Firestore for uid:', userId);
       await setDoc(doc(db, 'brukere', userId), {
         aktiviteter: JSON.parse(localStorage.getItem('lp_a') || '[]'),
         oppgaver:    JSON.parse(localStorage.getItem('lp_o') || '[]'),
@@ -5361,8 +5380,11 @@
         filterOpp:   JSON.parse(localStorage.getItem('lp_fo') || '{}'),
         oppdatert:   new Date().toISOString()
       });
+      visSynkStatus('✓ Synkronisert', '#27ae60');
+      console.log('[SYNK] ✓ Lagret til Firestore');
     } catch(e) {
-      console.warn('Sky-lagring feilet:', e);
+      visSynkStatus('✗ Synk feilet', '#e74c3c');
+      console.error('[SYNK] Sky-lagring feilet:', e);
     }
   }
 
@@ -5382,16 +5404,31 @@
       if (innstNavn)   innstNavn.textContent = navn;
       window._currentUid = bruker.uid;
 
-      // Hent data fra Firestore
-      const snap = await getDoc(doc(db, 'brukere', bruker.uid));
+      // Hent data fra Firestore (tving server-lesing, unngå cache)
+      console.log('[SYNK] Henter fra Firestore for uid:', bruker.uid);
+      let snap;
+      try {
+        snap = await getDocFromServer(doc(db, 'brukere', bruker.uid));
+        console.log('[SYNK] ✓ Hentet fra server, exists:', snap.exists());
+      } catch(e) {
+        console.warn('[SYNK] Server-henting feilet, prøver cache:', e.message);
+        snap = await getDoc(doc(db, 'brukere', bruker.uid));
+      }
       if (snap.exists()) {
         const data = snap.data();
+        console.log('[SYNK] Data mottatt, oppdatert:', data.oppdatert,
+          'akt:', (data.aktiviteter||[]).length,
+          'opp:', (data.oppgaver||[]).length,
+          'todo:', (data.todos||[]).length,
+          'kat:', (data.kategorier||[]).length);
         localStorage.setItem('lp_a', JSON.stringify(data.aktiviteter || []));
         localStorage.setItem('lp_o', JSON.stringify(data.oppgaver    || []));
         localStorage.setItem('lp_t', JSON.stringify(data.todos       || []));
-        if (data.kategorier?.length) localStorage.setItem('lp_k', JSON.stringify(data.kategorier));
+        localStorage.setItem('lp_k', JSON.stringify(data.kategorier  || []));
         if (data.filterAkt) localStorage.setItem('lp_fa', JSON.stringify(data.filterAkt));
         if (data.filterOpp) localStorage.setItem('lp_fo', JSON.stringify(data.filterOpp));
+      } else {
+        console.log('[SYNK] Ingen data i Firestore for denne brukeren');
       }
 
       // Last inn appen med sky-data
@@ -5412,9 +5449,10 @@
       // Lytt på endringer fra andre enheter – hopp over første snapshot (allerede lastet via getDoc)
       let firstSnapshot = true;
       window._unsub = onSnapshot(doc(db, 'brukere', bruker.uid), snap => {
-        if (firstSnapshot) { firstSnapshot = false; return; }
+        if (firstSnapshot) { firstSnapshot = false; console.log('[SYNK] onSnapshot: første snapshot skippet (allerede lastet)'); return; }
         if (!snap.exists()) return;
         const data = snap.data();
+        console.log('[SYNK] onSnapshot: endring mottatt fra sky, oppdatert:', data.oppdatert);
         const nyA = JSON.stringify(data.aktiviteter || []);
         const nyO = JSON.stringify(data.oppgaver    || []);
         const nyT = JSON.stringify(data.todos       || []);
@@ -5424,10 +5462,12 @@
         if (nyA !== localStorage.getItem('lp_a') || nyO !== localStorage.getItem('lp_o') ||
             nyT !== localStorage.getItem('lp_t') || nyK !== localStorage.getItem('lp_k') ||
             nyFA !== localStorage.getItem('lp_fa') || nyFO !== localStorage.getItem('lp_fo')) {
+          console.log('[SYNK] Forskjell oppdaget – oppdaterer lokal data');
+          visSynkStatus('↓ Mottatt fra sky', '#3498db');
           localStorage.setItem('lp_a', nyA);
           localStorage.setItem('lp_o', nyO);
           localStorage.setItem('lp_t', nyT);
-          if (data.kategorier?.length) localStorage.setItem('lp_k', nyK);
+          localStorage.setItem('lp_k', nyK);
           if (data.filterAkt) localStorage.setItem('lp_fa', nyFA);
           if (data.filterOpp) localStorage.setItem('lp_fo', nyFO);
           if (typeof hent === 'function') hent();
@@ -5437,6 +5477,8 @@
           if (typeof renderTodos === 'function') renderTodos();
           if (typeof renderTidslinje === 'function' && typeof kalVisning !== 'undefined' && kalVisning === 'tidslinje') renderTidslinje();
           if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
+        } else {
+          console.log('[SYNK] onSnapshot: ingen forskjell med lokal data');
         }
       });
 
