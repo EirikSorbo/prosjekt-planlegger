@@ -4752,8 +4752,14 @@
         taSnapshot();
         aktiviteter = data.aktiviteter;
         oppgaver    = data.oppgaver;
+        todos       = data.todos || todos;
+        if (data.kategorier?.length) kategorier = data.kategorier;
+        genererKategoriCSS();
         lagre();
+        renderHovedFilter();
         oppdaterAktivPanel();
+        renderTodos();
+        if (kalVisning === 'tidslinje') renderTidslinje();
         alert('✓ Data importert.');
       } catch {
         alert('Kunne ikke lese filen. Sjekk at det er en gyldig .json-fil.');
@@ -4783,7 +4789,17 @@
         const nyeOpp = data.oppgaver.filter(o => !eksisterendeOppId.has(o.id));
         const nyeTod = (data.todos || []).filter(t => !eksisterendeTodId.has(t.id));
 
-        if (nyeAkt.length === 0 && nyeOpp.length === 0 && nyeTod.length === 0) {
+        // Merge kategorier: legg til nye, oppdater eksisterende
+        const nyeKat = [];
+        if (data.kategorier?.length) {
+          data.kategorier.forEach(importK => {
+            const eksK = kategorier.find(k => k.id === importK.id);
+            if (eksK) { eksK.label = importK.label; eksK.farge = importK.farge; }
+            else nyeKat.push(importK);
+          });
+        }
+
+        if (nyeAkt.length === 0 && nyeOpp.length === 0 && nyeTod.length === 0 && nyeKat.length === 0) {
           alert('Ingen nye elementer å legge til — alt fantes fra før.');
           return;
         }
@@ -4792,10 +4808,15 @@
         aktiviteter = [...aktiviteter, ...nyeAkt];
         oppgaver    = [...oppgaver,    ...nyeOpp];
         todos       = [...todos,       ...nyeTod];
+        kategorier  = [...kategorier,  ...nyeKat];
+        genererKategoriCSS();
 
         lagre();
+        renderHovedFilter();
         oppdaterAktivPanel();
-        alert(`✓ Slått sammen: ${nyeAkt.length} nye leveranser og ${nyeOpp.length} nye oppgaver lagt til.`);
+        renderTodos();
+        if (kalVisning === 'tidslinje') renderTidslinje();
+        alert(`✓ Slått sammen: ${nyeAkt.length} leveranser, ${nyeOpp.length} oppgaver, ${nyeTod.length} todos, ${nyeKat.length} kategorier lagt til.`);
       } catch {
         alert('Kunne ikke lese filen. Sjekk at det er en gyldig .json-fil.');
       }
@@ -5376,7 +5397,10 @@
       // Last inn appen med sky-data
       if (typeof hent === 'function') hent();
       if (typeof ryddFullforte === 'function') ryddFullforte();
+      if (typeof renderHovedFilter === 'function') renderHovedFilter();
       if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
+      if (typeof renderTodos === 'function') renderTodos();
+      if (typeof renderTidslinje === 'function' && typeof kalVisning !== 'undefined' && kalVisning === 'tidslinje') renderTidslinje();
       if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
 
       // Vis varsel-banner nå som bruker er logget inn
@@ -5408,8 +5432,12 @@
           if (data.filterOpp) localStorage.setItem('lp_fo', nyFO);
           if (typeof hent === 'function') hent();
           if (typeof ryddFullforte === 'function') ryddFullforte();
+          if (typeof renderHovedFilter === 'function') renderHovedFilter();
           if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
-          if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();        }
+          if (typeof renderTodos === 'function') renderTodos();
+          if (typeof renderTidslinje === 'function' && typeof kalVisning !== 'undefined' && kalVisning === 'tidslinje') renderTidslinje();
+          if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
+        }
       });
 
     } else {
