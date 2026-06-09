@@ -1697,7 +1697,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.5</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.6</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -5726,9 +5726,11 @@
     kategorier = samlet.kategorier;
     genererKategoriCSS();
     åpneRapport();
-    document.querySelector('#rapportModal .modal-tittel').textContent = 'Rapport: Alle prosjekter';
+    const valgteNavn = prosjektIder.map(id => prosjekter.find(p => p.id === id)?.navn).filter(Boolean);
+    const rapportNavn = prosjektIder.length === prosjekter.length ? 'Alle prosjekter' : valgteNavn.join(', ');
+    document.querySelector('#rapportModal .modal-tittel').textContent = 'Rapport: ' + rapportNavn;
     const tittelEl = document.querySelector('.rapport-tittel-stor');
-    if (tittelEl) tittelEl.textContent = 'Statusrapport — alle prosjekter';
+    if (tittelEl) tittelEl.textContent = 'Statusrapport — ' + rapportNavn;
     aktiviteter = bak.aktiviteter;
     oppgaver = bak.oppgaver;
     todos = bak.todos;
