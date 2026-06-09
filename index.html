@@ -5350,12 +5350,12 @@
   };
 
   // ── Synk-status-indikator ──
-  function visSynkStatus(tekst, farge) {
+  function visSynkStatus(tekst, farge, ms) {
     let el = document.getElementById('synkStatus');
     if (!el) {
       el = document.createElement('div');
       el.id = 'synkStatus';
-      el.style.cssText = 'position:fixed;bottom:8px;right:8px;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:700;font-family:"Syne",sans-serif;z-index:9999;pointer-events:none;transition:opacity 0.5s;';
+      el.style.cssText = 'position:fixed;bottom:8px;right:8px;padding:6px 12px;border-radius:12px;font-size:11px;font-weight:700;font-family:"Syne",sans-serif;z-index:9999;pointer-events:none;transition:opacity 0.5s;max-width:80vw;word-break:break-word;';
       document.body.appendChild(el);
     }
     el.textContent = tekst;
@@ -5363,7 +5363,7 @@
     el.style.color = '#fff';
     el.style.opacity = '1';
     clearTimeout(el._timer);
-    el._timer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+    el._timer = setTimeout(() => { el.style.opacity = '0'; }, ms || 3000);
   }
 
   // ── Synkroniser data med Firestore ──
@@ -5383,8 +5383,8 @@
       visSynkStatus('✓ Synkronisert', '#27ae60');
       console.log('[SYNK] ✓ Lagret til Firestore');
     } catch(e) {
-      visSynkStatus('✗ Synk feilet', '#e74c3c');
-      console.error('[SYNK] Sky-lagring feilet:', e);
+      visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
+      console.error('[SYNK] Sky-lagring feilet:', e.code, e.message, e);
     }
   }
 
@@ -5409,10 +5409,16 @@
       let snap;
       try {
         snap = await getDocFromServer(doc(db, 'brukere', bruker.uid));
+        visSynkStatus('✓ Hentet fra sky', '#27ae60');
         console.log('[SYNK] ✓ Hentet fra server, exists:', snap.exists());
       } catch(e) {
-        console.warn('[SYNK] Server-henting feilet, prøver cache:', e.message);
-        snap = await getDoc(doc(db, 'brukere', bruker.uid));
+        visSynkStatus('✗ Henting: ' + (e.code || e.message), '#e74c3c', 15000);
+        console.warn('[SYNK] Server-henting feilet, prøver cache:', e.code, e.message);
+        try {
+          snap = await getDoc(doc(db, 'brukere', bruker.uid));
+        } catch(e2) {
+          visSynkStatus('✗ Helt feilet: ' + (e2.code || e2.message), '#e74c3c', 15000);
+        }
       }
       if (snap.exists()) {
         const data = snap.data();
