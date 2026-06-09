@@ -1697,7 +1697,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.8</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.9</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2031,6 +2031,29 @@
   function hentAktivtProsjekt() {
     return prosjekter.find(p => p.id === aktivtProsjektId) || prosjekter[0];
   }
+
+  // Bridge-funksjoner for module-scriptet (som ikke kan se let-variabler)
+  window._getAktivtProsjektId = () => aktivtProsjektId;
+  window._getProsjekter = () => prosjekter;
+  window._settProsjektFraSky = function(nyProsjektListe, nyttAktivtId) {
+    if (nyProsjektListe) {
+      prosjekter = nyProsjektListe;
+      localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
+    }
+    if (nyttAktivtId && nyttAktivtId !== aktivtProsjektId) {
+      aktivtProsjektId = nyttAktivtId;
+      localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
+    }
+  };
+  window._migrLocalKeys = function(fraId, tilId) {
+    ['a','o','t','k','tl','fa','fo'].forEach(suffix => {
+      const oldKey = 'lp_' + fraId + '_' + suffix;
+      const newKey = 'lp_' + tilId + '_' + suffix;
+      const v = localStorage.getItem(oldKey);
+      if (v && !localStorage.getItem(newKey)) localStorage.setItem(newKey, v);
+      localStorage.removeItem(oldKey);
+    });
+  };
 
   // ── Fargepalett fra hovedfarge ──
   function _hexToHsl(hex) {
@@ -5987,12 +6010,12 @@
 
   // ── Synkroniser data med Firestore ──
   function _skyDocRef(userId) {
-    const pid = window.aktivtProsjektId || 'default';
+    const pid = window._getAktivtProsjektId() || 'default';
     return doc(db, 'brukere', userId, 'prosjekter', pid);
   }
 
   async function lagreTilSky(userId) {
-    const pid = window.aktivtProsjektId;
+    const pid = window._getAktivtProsjektId();
     if (!pid) return;
     const pk = s => 'lp_' + pid + '_' + s;
     try {
@@ -6113,7 +6136,7 @@
   // ── Bytt sky-prosjekt (kalles fra byttProsjekt()) ──
   window._byttSkyProsjekt = async function() {
     const uid = window._currentUid;
-    const pid = window.aktivtProsjektId;
+    const pid = window._getAktivtProsjektId();
     if (!uid || !pid) return;
     await _lastProsjektFraSky(uid, pid);
     _oppdaterAppFraSky();
@@ -6151,7 +6174,7 @@
           // Gammel flat struktur i sky – migrer til subcollection
           // Bruk lokalt prosjekt-ID som kilde til sannhet
           console.log('[SYNK] Migrerer fra flat struktur til prosjekt-subcollection');
-          const pid = window.aktivtProsjektId;
+          const pid = window._getAktivtProsjektId();
           if (pid) {
             try {
               await setDoc(doc(db, 'brukere', bruker.uid, 'prosjekter', pid), {
@@ -6200,16 +6223,7 @@
               );
               if (skyMatch) {
                 console.log('[SYNK] Migrerer lokal', lokal.id, '→ sky', skyMatch.id, '(' + lokal.navn + ')');
-                // Flytt lokal data til sky-prosjektets ID
-                const oldPk = s => 'lp_' + lokal.id + '_' + s;
-                const newPk = s => 'lp_' + skyMatch.id + '_' + s;
-                ['a','o','t','k','tl','fa','fo'].forEach(suffix => {
-                  const v = localStorage.getItem(oldPk(suffix));
-                  if (v && !localStorage.getItem(newPk(suffix))) {
-                    localStorage.setItem(newPk(suffix), v);
-                  }
-                  localStorage.removeItem(oldPk(suffix));
-                });
+                if (window._migrLocalKeys) window._migrLocalKeys(lokal.id, skyMatch.id);
                 // Fjern det lokale prosjektet fra merged-lista
                 const idx = merged.findIndex(p => p.id === lokal.id);
                 if (idx !== -1) merged.splice(idx, 1);
@@ -6217,21 +6231,20 @@
             }
           }
 
-          // Oppdater lokal prosjektliste
-          localStorage.setItem('lp_prosjekter', JSON.stringify(merged));
-          window.prosjekter = merged;
-
-          // Sett aktivt prosjekt til sky-ens hvis lokalt ikke matcher
-          const lokalAktivt = window.aktivtProsjektId;
+          // Oppdater hovedscriptets variabler via bridge
+          const lokalAktivt = window._getAktivtProsjektId();
+          let nyttAktivt = lokalAktivt;
           if (!merged.find(p => p.id === lokalAktivt) && merged.length > 0) {
-            window.aktivtProsjektId = brukerData.aktivtProsjekt || merged[0].id;
-            localStorage.setItem('lp_aktivt_prosjekt', window.aktivtProsjektId);
+            nyttAktivt = brukerData.aktivtProsjekt || merged[0].id;
           }
+
+          window._settProsjektFraSky(merged, nyttAktivt);
+          console.log('[SYNK] Prosjektliste synket, aktivt:', nyttAktivt, 'prosjekter:', merged.length);
         }
       }
 
       // Last aktivt prosjekt fra sky
-      const pid = window.aktivtProsjektId;
+      const pid = window._getAktivtProsjektId();
       if (pid) {
         await _lastProsjektFraSky(bruker.uid, pid);
         visSynkStatus('✓ Hentet fra sky', '#27ae60');
@@ -6241,7 +6254,7 @@
       _oppdaterAppFraSky();
       if (typeof oppdaterProsjektTittel === 'function') oppdaterProsjektTittel();
       if (typeof settProsjektFarger === 'function') {
-        const p = window.prosjekter?.find(p => p.id === window.aktivtProsjektId);
+        const p = (window._getProsjekter() || []).find(p => p.id === window._getAktivtProsjektId());
         if (p) settProsjektFarger(p.farge);
       }
 
@@ -6262,12 +6275,11 @@
         const data = snap.data();
         if (data.prosjekter) {
           const skyProsjekter = data.prosjekter;
-          const lokalt = JSON.stringify(window.prosjekter || []);
+          const lokalt = JSON.stringify(window._getProsjekter() || []);
           const sky = JSON.stringify(skyProsjekter);
           if (sky !== lokalt) {
             console.log('[SYNK] Prosjektliste oppdatert fra sky');
-            localStorage.setItem('lp_prosjekter', sky);
-            window.prosjekter = skyProsjekter;
+            window._settProsjektFraSky(skyProsjekter, null);
             if (typeof oppdaterProsjektTittel === 'function') oppdaterProsjektTittel();
           }
         }
