@@ -1697,7 +1697,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.3</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.4</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -5625,7 +5625,9 @@
       const pData = erAktivt ? { aktiviteter, oppgaver, todos, kategorier } : _hentProsjektData(prosjektId);
 
       lagValg('Hele prosjektet', 'Alle kategorier', p ? p.farge : 'var(--grønn)', () => {
-        visPeriodeValg(prosjektId, null);
+        lukkModal('rapportVelgerModal');
+        if (erAktivt) { åpneRapport(); }
+        else { åpneRapportForProsjekt(prosjektId); }
       });
 
       if (pData.kategorier.length > 0) {
@@ -5636,59 +5638,12 @@
             return (akt?.type || o.kategoriId) === k.id;
           }).length;
           lagValg(k.label, `${stats} oppgave${stats === 1 ? '' : 'r'}`, k.farge, () => {
-            visPeriodeValg(prosjektId, k.id);
+            lukkModal('rapportVelgerModal');
+            if (erAktivt) { åpneRapport(k.id); }
+            else { åpneRapportForProsjekt(prosjektId, k.id); }
           });
         });
       }
-    };
-
-    // ── Steg 3: periode-valg ──
-    const visPeriodeValg = (prosjektId, katFilterId) => {
-      body.innerHTML = '';
-      document.querySelector('#rapportVelgerModal .modal-tittel').textContent = 'Velg periode';
-
-      // Tilbake-knapp
-      const tilbake = document.createElement('button');
-      tilbake.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 2px;border:none;background:none;cursor:pointer;font-family:"Nunito",sans-serif;font-size:12px;color:var(--tekst-sek);margin-bottom:-4px;';
-      tilbake.innerHTML = '‹ Tilbake';
-      tilbake.onclick = () => visKategoriValg(prosjektId);
-      body.appendChild(tilbake);
-
-      const erAktivt = prosjektId === aktivtProsjektId;
-      const åpne = (periode) => {
-        rapportPeriode = periode;
-        lukkModal('rapportVelgerModal');
-        if (erAktivt) { åpneRapport(katFilterId); }
-        else { åpneRapportForProsjekt(prosjektId, katFilterId); }
-      };
-
-      lagValg('1 uke', 'Denne uken + neste 2 uker', 'var(--grønn)', () => åpne('uke'));
-      lagValg('1 måned', 'Denne måneden', 'var(--grønn)', () => åpne('maaned'));
-      lagValg('3 måneder', 'Dette kvartalet', 'var(--grønn)', () => åpne('kvartal'));
-
-      // Egendefinert
-      lagSkille('Egendefinert periode');
-      const egenDiv = document.createElement('div');
-      egenDiv.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 0;';
-      const iDag = new Date();
-      const defaultStart = new Date(iDag.getFullYear(), iDag.getMonth(), 1).toISOString().slice(0,10);
-      const defaultSlutt = new Date(iDag.getFullYear(), iDag.getMonth() + 1, 0).toISOString().slice(0,10);
-      const inputStyle = 'font-size:13px;padding:8px 10px;border:1px solid var(--kant);border-radius:var(--rs);font-family:"Nunito",sans-serif;flex:1;';
-      egenDiv.innerHTML = `<input type="date" id="rapportVelgerStart" value="${defaultStart}" style="${inputStyle}">
-        <span style="color:var(--tekst-sek);">–</span>
-        <input type="date" id="rapportVelgerSlutt" value="${defaultSlutt}" style="${inputStyle}">`;
-      body.appendChild(egenDiv);
-
-      const egenKnapp = document.createElement('button');
-      egenKnapp.style.cssText = 'width:100%;padding:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);font-family:"Syne",sans-serif;font-weight:700;font-size:13px;cursor:pointer;';
-      egenKnapp.textContent = 'Generer rapport';
-      egenKnapp.onclick = () => {
-        rapportEgendefinertStart = document.getElementById('rapportVelgerStart').value;
-        rapportEgendefinertSlutt = document.getElementById('rapportVelgerSlutt').value;
-        if (!rapportEgendefinertStart || !rapportEgendefinertSlutt) return;
-        åpne('egendefinert');
-      };
-      body.appendChild(egenKnapp);
     };
 
     // Hvis bare ett prosjekt, gå rett til kategori-valg
