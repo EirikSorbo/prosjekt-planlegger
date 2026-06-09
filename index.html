@@ -1492,7 +1492,7 @@
 </div>
 
 <header>
-  <div class="logo">
+  <div class="logo" style="cursor:pointer;position:relative;" onclick="toggleProsjektMeny()">
     <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
       <defs>
         <clipPath id="hdrInt"><circle cx="18" cy="15" r="9"/></clipPath>
@@ -1507,7 +1507,9 @@
         <circle cx="18" cy="15" r="9" fill="none" stroke="#6ca060" stroke-width="0.8"/>
       </g>
     </svg>
-    MishMash WP4
+    <span id="prosjektTittel">MishMash WP4</span>
+    <svg width="10" height="10" viewBox="0 0 10 10" style="opacity:0.5;flex-shrink:0;"><path d="M2 3.5L5 6.5L8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div id="prosjektMeny" style="display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--hvit);border:1px solid var(--kant);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px;z-index:200;overflow:hidden;"></div>
   </div>
   <div class="header-handlinger">
     <span id="filterBadge" style="display:none;font-family:'Syne',sans-serif;font-weight:700;font-size:10px;color:white;padding:3px 8px;border-radius:10px;letter-spacing:0.3px;cursor:pointer;text-transform:uppercase;" onclick="åpneKategoriModal()"></span>
@@ -1671,6 +1673,17 @@
       <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiv</button>
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
+    <div style="padding:14px 22px 8px;border-top:1px solid var(--kant);">
+      <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Prosjekt</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="text" id="innstProsjektNavn" oninput="oppdaterProsjektNavn(this.value)" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);" />
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+        <label style="font-size:11px;color:var(--tekst-sek);font-weight:600;white-space:nowrap;">Prosjektfarge</label>
+        <input type="color" id="innstProsjektFarge" oninput="oppdaterProsjektFarge(this.value)" style="width:32px;height:32px;border:1px solid var(--kant);border-radius:var(--rs);cursor:pointer;padding:2px;" />
+      </div>
+      <button onclick="lukkModal('kategoriModal');visNyttProsjektDialog()" style="width:100%;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">+ Nytt prosjekt</button>
+    </div>
     <div id="innstillingerBruker" style="display:none;padding:12px 22px 14px;border-top:1px solid var(--kant);align-items:center;gap:10px;">
       <div style="width:32px;height:32px;border-radius:50%;background:var(--grønn-lys);border:1px solid var(--grønn-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1679,7 +1692,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.3.1</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.0</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1968,6 +1981,113 @@
 
 <script>
   /* ──────────────────────────────
+     PROSJEKTER
+  ────────────────────────────── */
+  let prosjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
+  let aktivtProsjektId = localStorage.getItem('lp_aktivt_prosjekt') || null;
+
+  // ── Migrer eksisterende data til første prosjekt ──
+  if (prosjekter.length === 0 && localStorage.getItem('lp_a')) {
+    const migrertId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    prosjekter = [{ id: migrertId, navn: 'MishMash WP4', farge: '#9490d4', opprettet: new Date().toISOString().slice(0,10) }];
+    aktivtProsjektId = migrertId;
+    // Flytt eksisterende nøkler til prosjekt-nøkler
+    ['a','o','t','k','tl','fa','fo'].forEach(suffix => {
+      const v = localStorage.getItem('lp_' + suffix);
+      if (v) { localStorage.setItem('lp_' + migrertId + '_' + suffix, v); localStorage.removeItem('lp_' + suffix); }
+    });
+    localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
+    localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
+  } else if (prosjekter.length === 0) {
+    // Helt ny bruker — opprett standard prosjekt
+    const nyId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    prosjekter = [{ id: nyId, navn: 'Mitt prosjekt', farge: '#9490d4', opprettet: new Date().toISOString().slice(0,10) }];
+    aktivtProsjektId = nyId;
+    localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
+    localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
+  } else if (!aktivtProsjektId) {
+    aktivtProsjektId = prosjekter[0].id;
+    localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
+  }
+
+  // Hjelpefunksjon: localStorage-nøkkel for aktivt prosjekt
+  function _pk(suffix) { return 'lp_' + aktivtProsjektId + '_' + suffix; }
+
+  function lagreProsjekter() {
+    localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
+    localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
+  }
+
+  function hentAktivtProsjekt() {
+    return prosjekter.find(p => p.id === aktivtProsjektId) || prosjekter[0];
+  }
+
+  // ── Fargepalett fra hovedfarge ──
+  function _hexToHsl(hex) {
+    let r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+    const mx = Math.max(r,g,b), mn = Math.min(r,g,b), d = mx - mn;
+    let h = 0, s = 0, l = (mx+mn)/2;
+    if (d > 0) {
+      s = l > 0.5 ? d/(2-mx-mn) : d/(mx+mn);
+      if (mx === r) h = ((g-b)/d + (g<b?6:0))/6;
+      else if (mx === g) h = ((b-r)/d+2)/6;
+      else h = ((r-g)/d+4)/6;
+    }
+    return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
+  }
+
+  function settProsjektFarger(hex) {
+    const [h, s, l] = _hexToHsl(hex);
+    document.documentElement.style.setProperty('--grønn',       `hsl(${h}, ${s}%, ${Math.min(l, 55)}%)`);
+    document.documentElement.style.setProperty('--grønn-lys',   `hsl(${h}, ${Math.min(s, 60)}%, 95%)`);
+    document.documentElement.style.setProperty('--grønn-mørk',  `hsl(${h}, ${Math.max(s-10, 20)}%, 22%)`);
+    document.documentElement.style.setProperty('--grønn-mid',   `hsl(${h}, ${Math.min(s, 50)}%, 82%)`);
+    document.documentElement.style.setProperty('--tekst',       `hsl(${h}, ${Math.max(s-10, 20)}%, 22%)`);
+    document.documentElement.style.setProperty('--tekst-sek',   `hsl(${h}, ${Math.max(s-20, 15)}%, 48%)`);
+    document.documentElement.style.setProperty('--kant',        `hsl(${h}, ${Math.min(s, 40)}%, 85%)`);
+    document.documentElement.style.setProperty('--bg',          `hsl(${h}, ${Math.min(s, 30)}%, 96%)`);
+  }
+
+  function byttProsjekt(prosjektId) {
+    // Lagre nåværende prosjekt før bytte
+    lagre();
+    aktivtProsjektId = prosjektId;
+    lagreProsjekter();
+    // Nullstill tidslinje-state
+    _tidslinjeReady = false;
+    _tidslinjeZoomInit = false;
+    tidslinjeMnd = null;
+    // Last data og render alt
+    hent();
+    const p = hentAktivtProsjekt();
+    settProsjektFarger(p.farge);
+    oppdaterProsjektTittel();
+    genererKategoriCSS();
+    ryddFullforte();
+    renderHovedFilter();
+    oppdaterAktivPanel();
+    renderTodos();
+    if (kalVisning === 'tidslinje') renderTidslinje();
+    oppdaterForfaltBadge();
+    // Firebase: bytt synk-lytter
+    if (window._currentUid && window._byttSkyProsjekt) window._byttSkyProsjekt();
+  }
+
+  function opprettProsjekt(navn, farge) {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    prosjekter.push({ id, navn: navn || 'Nytt prosjekt', farge: farge || '#72c088', opprettet: new Date().toISOString().slice(0,10) });
+    lagreProsjekter();
+    byttProsjekt(id);
+  }
+
+  function oppdaterProsjektTittel() {
+    const p = hentAktivtProsjekt();
+    const el = document.getElementById('prosjektTittel');
+    if (el) el.textContent = p.navn;
+    document.title = p.navn;
+  }
+
+  /* ──────────────────────────────
      DATA
   ────────────────────────────── */
   let aktiviteter = [];
@@ -2045,10 +2165,10 @@
      LAGRING
   ────────────────────────────── */
   function lagre() {
-    localStorage.setItem('lp_a', JSON.stringify(aktiviteter));
-    localStorage.setItem('lp_o', JSON.stringify(oppgaver));
-    localStorage.setItem('lp_t', JSON.stringify(todos));
-    localStorage.setItem('lp_k', JSON.stringify(kategorier));
+    localStorage.setItem(_pk('a'), JSON.stringify(aktiviteter));
+    localStorage.setItem(_pk('o'), JSON.stringify(oppgaver));
+    localStorage.setItem(_pk('t'), JSON.stringify(todos));
+    localStorage.setItem(_pk('k'), JSON.stringify(kategorier));
     oppdaterForfaltBadge();
     if (window._currentUid && window._lagreTilSky) {
       window._lagreTilSky(window._currentUid);
@@ -2056,17 +2176,21 @@
   }
 
   function hent() {
-    const a = localStorage.getItem('lp_a');
-    const o = localStorage.getItem('lp_o');
-    const t = localStorage.getItem('lp_t');
-    const k = localStorage.getItem('lp_k');
+    const a = localStorage.getItem(_pk('a'));
+    const o = localStorage.getItem(_pk('o'));
+    const t = localStorage.getItem(_pk('t'));
+    const k = localStorage.getItem(_pk('k'));
     aktiviteter = a ? JSON.parse(a) : [];
     oppgaver    = o ? JSON.parse(o) : [];
     todos       = t ? JSON.parse(t) : [];
     kategorier  = k ? JSON.parse(k) : [...STANDARD_KATEGORIER];
     genererKategoriCSS();
-    aktivitetFilterState = lastFilterState('lp_fa');
-    oppgaveFilterState   = lastFilterState('lp_fo');
+    // Last tidslinje-grenser for dette prosjektet
+    const tl = JSON.parse(localStorage.getItem(_pk('tl')) || '{}');
+    tidslinjeStartGrense = tl.start || null;
+    tidslinjeSluttGrense = tl.slutt || null;
+    aktivitetFilterState = lastFilterState(_pk('fa'));
+    oppgaveFilterState   = lastFilterState(_pk('fo'));
   }
 
   function uid() {
@@ -2112,10 +2236,9 @@
   let _tidslinjeZoomInit = false;   // true etter at tidslinjeMnd er satt til prosjektets korteste zoom
   let _currentPxPerDag = 8; // siste beregnede pxPerDag – brukes til scroll-bevaring ved zoom
 
-  // Tidslinje grensedatoer (scrollbart område)
-  const _tlRaw = JSON.parse(localStorage.getItem('lp_tl') || '{}');
-  let tidslinjeStartGrense = _tlRaw.start || null; // null = auto: i dag - 1 år
-  let tidslinjeSluttGrense = _tlRaw.slutt || null; // null = auto: i dag + 2 år
+  // Tidslinje grensedatoer (scrollbart område) — lastes i hent()
+  let tidslinjeStartGrense = null; // null = auto: i dag - 1 år
+  let tidslinjeSluttGrense = null; // null = auto: i dag + 2 år
   let _tidslinjeReady = false;       // true etter første synlige render (vet scroll-posisjon)
   let _tidslinjeScrollTarget = null; // sett ved zoom-endring: px-pos å gjenopprette
 
@@ -2858,7 +2981,7 @@
       pill.title = state === 1 ? 'Trykk for å vise kun denne' : state === 2 ? 'Trykk for å skjule denne' : 'Trykk for å vise alle';
       pill.onclick = () => {
         aktivitetFilterState[k.id] = (aktivitetFilterState[k.id] || 1) % 3 + 1;
-        lagreFilterState('lp_fa', aktivitetFilterState);
+        lagreFilterState(_pk('fa'), aktivitetFilterState);
         renderListe();
       };
       filterRad.appendChild(pill);
@@ -3496,13 +3619,17 @@
     const def = _tlDefault();
     document.getElementById('tidslinjeStartInput').value = tidslinjeStartGrense || def.start;
     document.getElementById('tidslinjeSluttInput').value = tidslinjeSluttGrense || def.slutt;
+    // Fyll prosjekt-felter
+    const p = hentAktivtProsjekt();
+    document.getElementById('innstProsjektNavn').value = p.navn;
+    document.getElementById('innstProsjektFarge').value = p.farge;
     document.getElementById('kategoriModal').classList.add('vis');
   }
 
   function oppdaterTidslinjeGrensedatoer() {
     tidslinjeStartGrense = document.getElementById('tidslinjeStartInput').value || null;
     tidslinjeSluttGrense = document.getElementById('tidslinjeSluttInput').value || null;
-    localStorage.setItem('lp_tl', JSON.stringify({ start: tidslinjeStartGrense, slutt: tidslinjeSluttGrense }));
+    localStorage.setItem(_pk('tl'), JSON.stringify({ start: tidslinjeStartGrense, slutt: tidslinjeSluttGrense }));
     if (kalVisning === 'tidslinje') {
       _tidslinjeReady = false;    // scroll til i dag igjen
       _tidslinjeZoomInit = false; // beregn korteste zoom på nytt for ny prosjektlengde
@@ -3622,8 +3749,8 @@
     kategorier = kategorier.filter(k => k.id !== id);
     delete aktivitetFilterState[id];
     delete oppgaveFilterState[id];
-    lagreFilterState('lp_fa', aktivitetFilterState);
-    lagreFilterState('lp_fo', oppgaveFilterState);
+    lagreFilterState(_pk('fa'), aktivitetFilterState);
+    lagreFilterState(_pk('fo'), oppgaveFilterState);
     genererKategoriCSS();
     lagre();
     renderKategoriModal();
@@ -3836,7 +3963,7 @@
         pill.title = state === 1 ? 'Trykk for å vise kun denne' : state === 2 ? 'Trykk for å skjule denne' : 'Trykk for å vise alle';
         pill.onclick = () => {
           oppgaveFilterState[k.id] = (oppgaveFilterState[k.id] || 1) % 3 + 1;
-          lagreFilterState('lp_fo', oppgaveFilterState);
+          lagreFilterState(_pk('fo'), oppgaveFilterState);
           renderOppgaver();
         };
         filterRad.appendChild(pill);
@@ -4706,16 +4833,34 @@
      IMPORT / EKSPORT
   ────────────────────────────── */
   function eksporterData() {
+    // Lagre nåværende prosjekt først
+    lagre();
+    // Eksporter alle prosjekter
+    const alleProsjekter = prosjekter.map(p => {
+      const pk = s => 'lp_' + p.id + '_' + s;
+      return {
+        id: p.id, navn: p.navn, farge: p.farge, opprettet: p.opprettet,
+        aktiviteter: JSON.parse(localStorage.getItem(pk('a')) || '[]'),
+        oppgaver:    JSON.parse(localStorage.getItem(pk('o')) || '[]'),
+        todos:       JSON.parse(localStorage.getItem(pk('t')) || '[]'),
+        kategorier:  JSON.parse(localStorage.getItem(pk('k')) || '[]'),
+        tidslinjeGrenser: JSON.parse(localStorage.getItem(pk('tl')) || '{}')
+      };
+    });
     const payload = {
-      versjon: '2.0',
+      versjon: '3.0',
       eksportert: new Date().toISOString(),
+      aktivtProsjekt: aktivtProsjektId,
+      prosjekter: alleProsjekter,
+      // Bakoverkompatibel: inkluder aktivt prosjekts data på toppnivå
       aktiviteter, oppgaver, todos, kategorier
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const el   = document.createElement('a');
     el.href     = url;
-    el.download = 'mishmash-wp4-' + new Date().toISOString().slice(0, 10) + '.json';
+    const aktivtNavn = prosjekter.find(p => p.id === aktivtProsjektId)?.navn || 'prosjekt';
+    el.download = aktivtNavn.replace(/\s+/g, '-').toLowerCase() + '-alle-' + new Date().toISOString().slice(0, 10) + '.json';
     document.body.appendChild(el);
     el.click();
     document.body.removeChild(el);
@@ -4757,31 +4902,61 @@
     leser.onload = e => {
       try {
         const data = JSON.parse(e.target.result);
-        if (!Array.isArray(data.aktiviteter) || !Array.isArray(data.oppgaver)) {
-          alert('Filen ser ikke ut til å være en gyldig MishMash WP4-eksport.'); return;
+        // Ny multi-prosjekt format (v3.0)
+        if (data.versjon === '3.0' && Array.isArray(data.prosjekter)) {
+          const bekreft = confirm(
+            'Importere ' + data.prosjekter.length + ' prosjekt(er)? Dette vil erstatte alle eksisterende data.\n\nFortsette?'
+          );
+          if (!bekreft) return;
+          taSnapshot();
+          // Importer alle prosjekter
+          data.prosjekter.forEach(p => {
+            const pk = s => 'lp_' + p.id + '_' + s;
+            localStorage.setItem(pk('a'), JSON.stringify(p.aktiviteter || []));
+            localStorage.setItem(pk('o'), JSON.stringify(p.oppgaver || []));
+            localStorage.setItem(pk('t'), JSON.stringify(p.todos || []));
+            localStorage.setItem(pk('k'), JSON.stringify(p.kategorier || []));
+            if (p.tidslinjeGrenser) localStorage.setItem(pk('tl'), JSON.stringify(p.tidslinjeGrenser));
+          });
+          prosjekter = data.prosjekter.map(p => ({ id: p.id, navn: p.navn, farge: p.farge, opprettet: p.opprettet }));
+          localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
+          // Bytt til aktivt prosjekt fra eksporten
+          const målId = data.aktivtProsjekt || prosjekter[0].id;
+          aktivtProsjektId = målId;
+          localStorage.setItem('lp_aktivt_prosjekt', målId);
+          hent();
+          const p = prosjekter.find(p => p.id === målId);
+          if (p) settProsjektFarger(p.farge);
+          oppdaterProsjektTittel();
+          genererKategoriCSS();
+          renderHovedFilter(); oppdaterAktivPanel(); renderTodos();
+          if (kalVisning === 'tidslinje') renderTidslinje();
+          alert('✓ ' + data.prosjekter.length + ' prosjekt(er) importert.');
+        } else if (Array.isArray(data.aktiviteter) && Array.isArray(data.oppgaver)) {
+          // Gammel format – importer til nåværende prosjekt
+          const bekreft = confirm(
+            'Dette vil erstatte alle eksisterende leveranser og oppgaver i nåværende prosjekt med dataene fra filen.\n\nFortsette?'
+          );
+          if (!bekreft) return;
+          taSnapshot();
+          aktiviteter = data.aktiviteter;
+          oppgaver    = data.oppgaver;
+          todos       = data.todos || todos;
+          if (data.kategorier?.length) kategorier = data.kategorier;
+          genererKategoriCSS();
+          lagre();
+          renderHovedFilter(); oppdaterAktivPanel(); renderTodos();
+          if (kalVisning === 'tidslinje') renderTidslinje();
+          alert('✓ Data importert til nåværende prosjekt.');
+        } else {
+          alert('Filen ser ikke ut til å være en gyldig eksport.');
         }
-        const bekreft = confirm(
-          'Dette vil erstatte alle eksisterende leveranser og oppgaver med dataene fra filen.\n\nFortsette?'
-        );
-        if (!bekreft) return;
-        taSnapshot();
-        aktiviteter = data.aktiviteter;
-        oppgaver    = data.oppgaver;
-        todos       = data.todos || todos;
-        if (data.kategorier?.length) kategorier = data.kategorier;
-        genererKategoriCSS();
-        lagre();
-        renderHovedFilter();
-        oppdaterAktivPanel();
-        renderTodos();
-        if (kalVisning === 'tidslinje') renderTidslinje();
-        alert('✓ Data importert.');
       } catch {
         alert('Kunne ikke lese filen. Sjekk at det er en gyldig .json-fil.');
       }
     };
     leser.readAsText(fil);
-    input.value = ''; // reset så samme fil kan importeres igjen
+    input.value = '';
   }
 
   function mergeData(input) {
@@ -5302,7 +5477,56 @@
     return false;
   }
 
+  // ── Prosjekt-meny (dropdown i header) ──
+  function toggleProsjektMeny() {
+    const meny = document.getElementById('prosjektMeny');
+    if (meny.style.display !== 'none') { meny.style.display = 'none'; return; }
+    meny.innerHTML = '';
+    prosjekter.forEach(p => {
+      const el = document.createElement('div');
+      el.style.cssText = `padding:10px 14px;font-size:13px;font-weight:${p.id===aktivtProsjektId?'700':'500'};font-family:'Nunito',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tekst);transition:background .1s;`;
+      el.onmouseenter = () => el.style.background = 'var(--bg)';
+      el.onmouseleave = () => el.style.background = '';
+      const dot = document.createElement('span');
+      dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${p.farge};flex-shrink:0;`;
+      el.appendChild(dot);
+      el.appendChild(document.createTextNode(p.navn));
+      if (p.id === aktivtProsjektId) {
+        const check = document.createElement('span');
+        check.style.cssText = 'margin-left:auto;font-size:14px;color:var(--grønn);';
+        check.textContent = '✓';
+        el.appendChild(check);
+      }
+      el.onclick = e => { e.stopPropagation(); meny.style.display = 'none'; if (p.id !== aktivtProsjektId) byttProsjekt(p.id); };
+      meny.appendChild(el);
+    });
+    meny.style.display = 'block';
+    // Lukk menyen ved klikk utenfor
+    const lukkHandler = e => { if (!meny.contains(e.target) && !e.target.closest('.logo')) { meny.style.display = 'none'; document.removeEventListener('click', lukkHandler); }};
+    setTimeout(() => document.addEventListener('click', lukkHandler), 0);
+  }
+
+  function visNyttProsjektDialog() {
+    const navn = prompt('Navn på nytt prosjekt:');
+    if (!navn || !navn.trim()) return;
+    opprettProsjekt(navn.trim());
+  }
+
+  function oppdaterProsjektNavn(navn) {
+    const p = hentAktivtProsjekt();
+    if (p) { p.navn = navn; lagreProsjekter(); oppdaterProsjektTittel(); }
+  }
+
+  function oppdaterProsjektFarge(farge) {
+    const p = hentAktivtProsjekt();
+    if (p) { p.farge = farge; lagreProsjekter(); settProsjektFarger(farge); }
+  }
+
   function init() {
+    // Sett prosjektfarge og tittel
+    const p = hentAktivtProsjekt();
+    settProsjektFarger(p.farge);
+    oppdaterProsjektTittel();
     hent();
     ryddFullforte();
     renderHovedFilter();
@@ -5382,21 +5606,35 @@
   }
 
   // ── Synkroniser data med Firestore ──
+  function _skyDocRef(userId) {
+    const pid = window.aktivtProsjektId || 'default';
+    return doc(db, 'brukere', userId, 'prosjekter', pid);
+  }
+
   async function lagreTilSky(userId) {
+    const pid = window.aktivtProsjektId;
+    if (!pid) return;
+    const pk = s => 'lp_' + pid + '_' + s;
     try {
       visSynkStatus('Synkroniserer…', '#f39c12');
-      console.log('[SYNK] Lagrer til Firestore for uid:', userId);
+      // Lagre prosjektliste på brukernivå
       await setDoc(doc(db, 'brukere', userId), {
-        aktiviteter: JSON.parse(localStorage.getItem('lp_a') || '[]'),
-        oppgaver:    JSON.parse(localStorage.getItem('lp_o') || '[]'),
-        todos:       JSON.parse(localStorage.getItem('lp_t') || '[]'),
-        kategorier:  JSON.parse(localStorage.getItem('lp_k') || 'null') || [],
-        filterAkt:   JSON.parse(localStorage.getItem('lp_fa') || '{}'),
-        filterOpp:   JSON.parse(localStorage.getItem('lp_fo') || '{}'),
+        prosjekter: JSON.parse(localStorage.getItem('lp_prosjekter') || '[]'),
+        aktivtProsjekt: pid,
+        oppdatert: new Date().toISOString()
+      });
+      // Lagre prosjektdata i subcollection
+      await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid), {
+        aktiviteter: JSON.parse(localStorage.getItem(pk('a')) || '[]'),
+        oppgaver:    JSON.parse(localStorage.getItem(pk('o')) || '[]'),
+        todos:       JSON.parse(localStorage.getItem(pk('t')) || '[]'),
+        kategorier:  JSON.parse(localStorage.getItem(pk('k')) || 'null') || [],
+        filterAkt:   JSON.parse(localStorage.getItem(pk('fa')) || '{}'),
+        filterOpp:   JSON.parse(localStorage.getItem(pk('fo')) || '{}'),
+        tidslinjeGrenser: JSON.parse(localStorage.getItem(pk('tl')) || '{}'),
         oppdatert:   new Date().toISOString()
       });
       visSynkStatus('✓ Synkronisert', '#27ae60');
-      console.log('[SYNK] ✓ Lagret til Firestore');
     } catch(e) {
       visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
       console.error('[SYNK] Sky-lagring feilet:', e.code, e.message, e);
@@ -5404,6 +5642,82 @@
   }
 
   window._lagreTilSky = lagreTilSky;
+
+  // ── Hjelpefunksjon: oppdater app etter sky-data ──
+  function _oppdaterAppFraSky() {
+    if (typeof hent === 'function') hent();
+    if (typeof ryddFullforte === 'function') ryddFullforte();
+    if (typeof renderHovedFilter === 'function') renderHovedFilter();
+    if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
+    if (typeof renderTodos === 'function') renderTodos();
+    if (typeof renderTidslinje === 'function' && typeof kalVisning !== 'undefined' && kalVisning === 'tidslinje') renderTidslinje();
+    if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
+  }
+
+  // ── Last prosjektdata fra sky ──
+  async function _lastProsjektFraSky(userId, prosjektId) {
+    const pk = s => 'lp_' + prosjektId + '_' + s;
+    let snap;
+    try {
+      snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', prosjektId));
+      console.log('[SYNK] ✓ Prosjekt hentet fra server:', prosjektId, 'exists:', snap.exists());
+    } catch(e) {
+      console.warn('[SYNK] Server-henting feilet for prosjekt', prosjektId, ':', e.code);
+      try { snap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', prosjektId)); } catch(e2) { return; }
+    }
+    if (snap && snap.exists()) {
+      const data = snap.data();
+      localStorage.setItem(pk('a'), JSON.stringify(data.aktiviteter || []));
+      localStorage.setItem(pk('o'), JSON.stringify(data.oppgaver    || []));
+      localStorage.setItem(pk('t'), JSON.stringify(data.todos       || []));
+      localStorage.setItem(pk('k'), JSON.stringify(data.kategorier  || []));
+      if (data.filterAkt) localStorage.setItem(pk('fa'), JSON.stringify(data.filterAkt));
+      if (data.filterOpp) localStorage.setItem(pk('fo'), JSON.stringify(data.filterOpp));
+      if (data.tidslinjeGrenser) localStorage.setItem(pk('tl'), JSON.stringify(data.tidslinjeGrenser));
+    }
+  }
+
+  // ── Start lytter for aktivt prosjekt ──
+  function _startProsjektLytter(userId, prosjektId) {
+    if (window._unsub) window._unsub();
+    const pk = s => 'lp_' + prosjektId + '_' + s;
+    let firstSnapshot = true;
+    window._unsub = onSnapshot(doc(db, 'brukere', userId, 'prosjekter', prosjektId), snap => {
+      if (firstSnapshot) { firstSnapshot = false; return; }
+      if (!snap.exists()) return;
+      const data = snap.data();
+      console.log('[SYNK] onSnapshot: endring mottatt for prosjekt', prosjektId);
+      const nyA = JSON.stringify(data.aktiviteter || []);
+      const nyO = JSON.stringify(data.oppgaver    || []);
+      const nyT = JSON.stringify(data.todos       || []);
+      const nyK = JSON.stringify(data.kategorier  || []);
+      const nyFA = JSON.stringify(data.filterAkt  || {});
+      const nyFO = JSON.stringify(data.filterOpp  || {});
+      if (nyA !== localStorage.getItem(pk('a')) || nyO !== localStorage.getItem(pk('o')) ||
+          nyT !== localStorage.getItem(pk('t')) || nyK !== localStorage.getItem(pk('k')) ||
+          nyFA !== localStorage.getItem(pk('fa')) || nyFO !== localStorage.getItem(pk('fo'))) {
+        visSynkStatus('↓ Mottatt fra sky', '#3498db');
+        localStorage.setItem(pk('a'), nyA);
+        localStorage.setItem(pk('o'), nyO);
+        localStorage.setItem(pk('t'), nyT);
+        localStorage.setItem(pk('k'), nyK);
+        if (data.filterAkt) localStorage.setItem(pk('fa'), nyFA);
+        if (data.filterOpp) localStorage.setItem(pk('fo'), nyFO);
+        if (data.tidslinjeGrenser) localStorage.setItem(pk('tl'), JSON.stringify(data.tidslinjeGrenser));
+        _oppdaterAppFraSky();
+      }
+    });
+  }
+
+  // ── Bytt sky-prosjekt (kalles fra byttProsjekt()) ──
+  window._byttSkyProsjekt = async function() {
+    const uid = window._currentUid;
+    const pid = window.aktivtProsjektId;
+    if (!uid || !pid) return;
+    await _lastProsjektFraSky(uid, pid);
+    _oppdaterAppFraSky();
+    _startProsjektLytter(uid, pid);
+  };
 
   // ── Auth-tilstand ──
   onAuthStateChanged(auth, async bruker => {
@@ -5419,47 +5733,71 @@
       if (innstNavn)   innstNavn.textContent = navn;
       window._currentUid = bruker.uid;
 
-      // Hent data fra Firestore (tving server-lesing, unngå cache)
-      console.log('[SYNK] Henter fra Firestore for uid:', bruker.uid);
-      let snap;
+      // Hent prosjektliste fra sky
+      console.log('[SYNK] Henter prosjektliste for uid:', bruker.uid);
+      let brukerSnap;
       try {
-        snap = await getDocFromServer(doc(db, 'brukere', bruker.uid));
-        visSynkStatus('✓ Hentet fra sky', '#27ae60');
-        console.log('[SYNK] ✓ Hentet fra server, exists:', snap.exists());
+        brukerSnap = await getDocFromServer(doc(db, 'brukere', bruker.uid));
       } catch(e) {
-        visSynkStatus('✗ Henting: ' + (e.code || e.message), '#e74c3c', 15000);
-        console.warn('[SYNK] Server-henting feilet, prøver cache:', e.code, e.message);
-        try {
-          snap = await getDoc(doc(db, 'brukere', bruker.uid));
-        } catch(e2) {
-          visSynkStatus('✗ Helt feilet: ' + (e2.code || e2.message), '#e74c3c', 15000);
+        console.warn('[SYNK] Server-henting feilet, prøver cache:', e.code);
+        try { brukerSnap = await getDoc(doc(db, 'brukere', bruker.uid)); } catch(e2) { /* ignore */ }
+      }
+
+      // Sjekk om vi trenger migrering fra gammel flat struktur
+      if (brukerSnap && brukerSnap.exists()) {
+        const brukerData = brukerSnap.data();
+        if (brukerData.aktiviteter && !brukerData.prosjekter) {
+          // Gammel flat struktur – migrer til subcollection
+          console.log('[SYNK] Migrerer fra flat struktur til prosjekt-subcollection');
+          const pid = window.aktivtProsjektId;
+          if (pid) {
+            try {
+              await setDoc(doc(db, 'brukere', bruker.uid, 'prosjekter', pid), {
+                aktiviteter: brukerData.aktiviteter || [],
+                oppgaver:    brukerData.oppgaver || [],
+                todos:       brukerData.todos || [],
+                kategorier:  brukerData.kategorier || [],
+                filterAkt:   brukerData.filterAkt || {},
+                filterOpp:   brukerData.filterOpp || {},
+                oppdatert:   brukerData.oppdatert || new Date().toISOString()
+              });
+              const prosjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
+              await setDoc(doc(db, 'brukere', bruker.uid), {
+                prosjekter: prosjekter,
+                aktivtProsjekt: pid,
+                oppdatert: new Date().toISOString()
+              });
+              console.log('[SYNK] ✓ Migrering fullført');
+              visSynkStatus('✓ Migrert til ny struktur', '#27ae60');
+            } catch(e) {
+              console.error('[SYNK] Migrering feilet:', e);
+            }
+          }
+        } else if (brukerData.prosjekter) {
+          // Ny struktur – oppdater lokal prosjektliste fra sky
+          const skyProsjekter = brukerData.prosjekter;
+          if (skyProsjekter.length > 0) {
+            localStorage.setItem('lp_prosjekter', JSON.stringify(skyProsjekter));
+            window.prosjekter = skyProsjekter;
+            // Hvis aktivt prosjekt finnes i sky-lista, bruk det
+            if (brukerData.aktivtProsjekt && skyProsjekter.find(p => p.id === brukerData.aktivtProsjekt)) {
+              window.aktivtProsjektId = brukerData.aktivtProsjekt;
+              localStorage.setItem('lp_aktivt_prosjekt', brukerData.aktivtProsjekt);
+            }
+          }
         }
       }
-      if (snap.exists()) {
-        const data = snap.data();
-        console.log('[SYNK] Data mottatt, oppdatert:', data.oppdatert,
-          'akt:', (data.aktiviteter||[]).length,
-          'opp:', (data.oppgaver||[]).length,
-          'todo:', (data.todos||[]).length,
-          'kat:', (data.kategorier||[]).length);
-        localStorage.setItem('lp_a', JSON.stringify(data.aktiviteter || []));
-        localStorage.setItem('lp_o', JSON.stringify(data.oppgaver    || []));
-        localStorage.setItem('lp_t', JSON.stringify(data.todos       || []));
-        localStorage.setItem('lp_k', JSON.stringify(data.kategorier  || []));
-        if (data.filterAkt) localStorage.setItem('lp_fa', JSON.stringify(data.filterAkt));
-        if (data.filterOpp) localStorage.setItem('lp_fo', JSON.stringify(data.filterOpp));
-      } else {
-        console.log('[SYNK] Ingen data i Firestore for denne brukeren');
+
+      // Last aktivt prosjekt fra sky
+      const pid = window.aktivtProsjektId;
+      if (pid) {
+        await _lastProsjektFraSky(bruker.uid, pid);
+        visSynkStatus('✓ Hentet fra sky', '#27ae60');
       }
 
       // Last inn appen med sky-data
-      if (typeof hent === 'function') hent();
-      if (typeof ryddFullforte === 'function') ryddFullforte();
-      if (typeof renderHovedFilter === 'function') renderHovedFilter();
-      if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
-      if (typeof renderTodos === 'function') renderTodos();
-      if (typeof renderTidslinje === 'function' && typeof kalVisning !== 'undefined' && kalVisning === 'tidslinje') renderTidslinje();
-      if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
+      _oppdaterAppFraSky();
+      if (typeof oppdaterProsjektTittel === 'function') oppdaterProsjektTittel();
 
       // Vis varsel-banner nå som bruker er logget inn
       if ('Notification' in window && Notification.permission === 'default') {
@@ -5467,41 +5805,8 @@
         if (!avvist) document.getElementById('varselBanner').style.display = 'flex';
       }
 
-      // Lytt på endringer fra andre enheter – hopp over første snapshot (allerede lastet via getDoc)
-      let firstSnapshot = true;
-      window._unsub = onSnapshot(doc(db, 'brukere', bruker.uid), snap => {
-        if (firstSnapshot) { firstSnapshot = false; console.log('[SYNK] onSnapshot: første snapshot skippet (allerede lastet)'); return; }
-        if (!snap.exists()) return;
-        const data = snap.data();
-        console.log('[SYNK] onSnapshot: endring mottatt fra sky, oppdatert:', data.oppdatert);
-        const nyA = JSON.stringify(data.aktiviteter || []);
-        const nyO = JSON.stringify(data.oppgaver    || []);
-        const nyT = JSON.stringify(data.todos       || []);
-        const nyK = JSON.stringify(data.kategorier  || []);
-        const nyFA = JSON.stringify(data.filterAkt  || {});
-        const nyFO = JSON.stringify(data.filterOpp  || {});
-        if (nyA !== localStorage.getItem('lp_a') || nyO !== localStorage.getItem('lp_o') ||
-            nyT !== localStorage.getItem('lp_t') || nyK !== localStorage.getItem('lp_k') ||
-            nyFA !== localStorage.getItem('lp_fa') || nyFO !== localStorage.getItem('lp_fo')) {
-          console.log('[SYNK] Forskjell oppdaget – oppdaterer lokal data');
-          visSynkStatus('↓ Mottatt fra sky', '#3498db');
-          localStorage.setItem('lp_a', nyA);
-          localStorage.setItem('lp_o', nyO);
-          localStorage.setItem('lp_t', nyT);
-          localStorage.setItem('lp_k', nyK);
-          if (data.filterAkt) localStorage.setItem('lp_fa', nyFA);
-          if (data.filterOpp) localStorage.setItem('lp_fo', nyFO);
-          if (typeof hent === 'function') hent();
-          if (typeof ryddFullforte === 'function') ryddFullforte();
-          if (typeof renderHovedFilter === 'function') renderHovedFilter();
-          if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
-          if (typeof renderTodos === 'function') renderTodos();
-          if (typeof renderTidslinje === 'function' && typeof kalVisning !== 'undefined' && kalVisning === 'tidslinje') renderTidslinje();
-          if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
-        } else {
-          console.log('[SYNK] onSnapshot: ingen forskjell med lokal data');
-        }
-      });
+      // Start lytter for aktivt prosjekt
+      if (pid) _startProsjektLytter(bruker.uid, pid);
 
     } else {
       // Ikke logget inn
