@@ -3248,7 +3248,6 @@
     if (o.kategoriId) document.getElementById('todoFeltKategori').value = o.kategoriId;
     if (o.aktivitetId) {
       document.getElementById('todoFeltLeveranse').value = o.aktivitetId;
-      // Kategori fra leveransen hvis oppgaven mangler kategoriId
       if (!o.kategoriId) {
         const lev = aktiviteter.find(a => a.id === o.aktivitetId);
         if (lev?.type) document.getElementById('todoFeltKategori').value = lev.type;
@@ -3256,33 +3255,91 @@
     }
   }
 
+  // ── Kaskaderende dropdown-hjelpere ──
+
+  // Fyller leveranse-select i todo-modal filtrert på valgt kategori.
+  // keepId: verdi som forsøkes gjenopprettet etter re-fylling.
+  function _oppdaterTodoLevSelect(keepId) {
+    const katId = document.getElementById('todoFeltKategori').value;
+    const levSel = document.getElementById('todoFeltLeveranse');
+    const restore = keepId !== undefined ? keepId : levSel.value;
+    levSel.innerHTML = '<option value="">— Ingen —</option>';
+    [...aktiviteter]
+      .filter(a => !katId || a.type === katId)
+      .sort((a, b) => a.dato.localeCompare(b.dato))
+      .forEach(a => {
+        const kat = getKat(a.type);
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel
+          + (!katId && kat ? ` [${kat.label}]` : '');
+        levSel.appendChild(opt);
+      });
+    levSel.value = restore;
+    if (levSel.value !== restore) levSel.value = ''; // filtrert bort
+  }
+
+  // Fyller oppgave-select i todo-modal filtrert på valgt leveranse og/eller kategori.
+  function _oppdaterTodoOppSelect(keepId) {
+    const levId = document.getElementById('todoFeltLeveranse').value;
+    const katId = document.getElementById('todoFeltKategori').value;
+    const sel = document.getElementById('todoFeltOppgave');
+    const restore = keepId !== undefined ? keepId : sel.value;
+    sel.innerHTML = '<option value="">— Ingen —</option>';
+    oppgaver
+      .filter(o => {
+        if (o.fullfort) return false;
+        if (levId) return o.aktivitetId === levId;
+        if (katId) {
+          if (o.kategoriId === katId) return true;
+          const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+          return akt?.type === katId;
+        }
+        return true; // ingen filter: vis alle
+      })
+      .forEach(o => {
+        const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+        const opt = document.createElement('option');
+        opt.value = o.id;
+        opt.textContent = o.beskrivelse + (akt && !levId ? ` (${akt.tittel})` : '');
+        sel.appendChild(opt);
+      });
+    sel.value = restore;
+    if (sel.value !== restore) sel.value = '';
+  }
+
+  // Fyller leveranse-select i oppgave-modal filtrert på valgt kategori.
+  function _oppdaterOppLevSelect(keepId) {
+    const katId = document.getElementById('oppFeltKategori').value;
+    const sel = document.getElementById('oppFeltAktivitet');
+    const restore = keepId !== undefined ? keepId : sel.value;
+    const iDagStr = new Date().toISOString().slice(0, 10);
+    sel.innerHTML = '<option value="">— Frittstående —</option>';
+    [...aktiviteter]
+      .filter(a => {
+        if (katId && a.type !== katId) return false;
+        return (a.datoTil || a.dato) >= iDagStr || a.id === restore;
+      })
+      .sort((a, b) => a.dato.localeCompare(b.dato))
+      .forEach(a => {
+        const d = new Date(a.dato + 'T00:00:00');
+        const kat = getKat(a.type);
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel
+          + `  (${d.getDate()}. ${MAANEDER[d.getMonth()]})`
+          + (!katId && kat ? ` [${kat.label}]` : '');
+        sel.appendChild(opt);
+      });
+    sel.value = restore;
+    if (sel.value !== restore) sel.value = '';
+  }
+
   function åpneTodoModal(id = null, preOppgaveId = null, preLeveranseId = null) {
     redigTodoId = id;
     const slettKnapp = document.getElementById('slettTodoKnapp');
 
-    // Fyll leveranse-select
-    const levSelect = document.getElementById('todoFeltLeveranse');
-    levSelect.innerHTML = '<option value="">— Ingen —</option>';
-    [...aktiviteter].sort((a,b) => a.dato.localeCompare(b.dato)).forEach(a => {
-      const kat = getKat(a.type);
-      const opt = document.createElement('option');
-      opt.value = a.id;
-      opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel + (kat ? ` [${kat.label}]` : '');
-      levSelect.appendChild(opt);
-    });
-
-    // Fyll oppgaveliste – kun ikke-fullførte
-    const select = document.getElementById('todoFeltOppgave');
-    select.innerHTML = '<option value="">— Ingen —</option>';
-    oppgaver.filter(o => !o.fullfort).forEach(o => {
-      const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
-      const opt = document.createElement('option');
-      opt.value = o.id;
-      opt.textContent = o.beskrivelse + (akt ? ` (${akt.tittel})` : '');
-      select.appendChild(opt);
-    });
-
-    // Fyll kategori-select
+    // Fyll kategori-select (alltid alle kategorier – ingen filter her)
     const todoKatSelect = document.getElementById('todoFeltKategori');
     todoKatSelect.innerHTML = '<option value="">— Ingen —</option>';
     kategorier.forEach(k => {
@@ -3292,32 +3349,43 @@
     });
 
     if (id) {
+      // Rediger eksisterende: sett kategori først, deretter re-fyll leveranse + oppgave med filter
       const t = todos.find(t => t.id === id);
       if (!t) return;
       document.getElementById('todoModalTittel').textContent = 'Rediger to do';
       document.getElementById('todoFeltTittel').value = t.tittel;
       document.getElementById('todoFeltBesk').value   = t.beskrivelse || '';
       document.getElementById('todoFeltFrist').value  = t.frist || '';
-      levSelect.value = t.aktivitetId || '';
-      select.value = t.oppgaveId || '';
       todoKatSelect.value = t.kategoriId || '';
+      _oppdaterTodoLevSelect(t.aktivitetId || '');  // filtrert på kategori
+      _oppdaterTodoOppSelect(t.oppgaveId   || '');  // filtrert på leveranse
       slettKnapp.style.display = 'inline-flex';
     } else {
+      // Ny to do: bestem initialt kategori + preset-verdier, deretter fyll filtrert
       document.getElementById('todoModalTittel').textContent = 'Ny to do';
       document.getElementById('todoFeltTittel').value = '';
       document.getElementById('todoFeltBesk').value   = '';
       document.getElementById('todoFeltFrist').value  = '';
-      levSelect.value = '';
-      todoKatSelect.value = '';
       slettKnapp.style.display = 'none';
 
       if (preOppgaveId) {
-        select.value = preOppgaveId;
-        synkTodoFraOppgave(preOppgaveId);
+        // Pre-fill fra oppgave: utled kategori og leveranse fra oppgaven
+        const preOpp = oppgaver.find(o => o.id === preOppgaveId);
+        const preLev = preOpp?.aktivitetId ? aktiviteter.find(a => a.id === preOpp.aktivitetId) : null;
+        todoKatSelect.value = preOpp?.kategoriId || preLev?.type || '';
+        _oppdaterTodoLevSelect(preOpp?.aktivitetId || '');
+        _oppdaterTodoOppSelect(preOppgaveId);
       } else if (preLeveranseId) {
-        levSelect.value = preLeveranseId;
-        const lev = aktiviteter.find(a => a.id === preLeveranseId);
-        if (lev?.type) todoKatSelect.value = lev.type;
+        // Pre-fill fra leveranse: sett kategori, vis kun oppgaver i denne leveransen
+        const preLev = aktiviteter.find(a => a.id === preLeveranseId);
+        todoKatSelect.value = preLev?.type || '';
+        _oppdaterTodoLevSelect(preLeveranseId);
+        _oppdaterTodoOppSelect('');
+      } else {
+        // Blank: vis alle (ingen filter)
+        todoKatSelect.value = '';
+        _oppdaterTodoLevSelect('');
+        _oppdaterTodoOppSelect('');
       }
     }
     document.getElementById('todoModal').classList.add('vis');
@@ -4458,32 +4526,15 @@
   function åpneOppgaveModal(id = null, preAktivitetId = null) {
     redigOppgaveId = id;
     const slettKnapp = document.getElementById('slettOppgaveKnapp');
-    const select     = document.getElementById('oppFeltAktivitet');
+    const katSelect  = document.getElementById('oppFeltKategori');
 
-    // Fyll kategori-select
-    const katSelect = document.getElementById('oppFeltKategori');
+    // Fyll kategori-select (alltid alle)
     katSelect.innerHTML = '<option value="">— Ingen —</option>';
     kategorier.forEach(k => {
       const opt = document.createElement('option');
       opt.value = k.id; opt.textContent = k.label;
       katSelect.appendChild(opt);
     });
-
-    // Fyll leveranseliste – kun fremtidige/pågående (behold gjeldende valg om det finnes)
-    const iDagStr = new Date().toISOString().slice(0, 10);
-    const currentAktId = id ? (oppgaver.find(o => o.id === id)?.aktivitetId || null) : null;
-    select.innerHTML = '<option value="">— Frittstående —</option>';
-    [...aktiviteter]
-      .filter(a => (a.datoTil || a.dato) >= iDagStr || a.id === currentAktId)
-      .sort((a, b) => a.dato.localeCompare(b.dato))
-      .forEach(a => {
-        const d   = new Date(a.dato + 'T00:00:00');
-        const prefix = a.leveranseType === 'milepæl' ? '◆ ' : '';
-        const opt = document.createElement('option');
-        opt.value       = a.id;
-        opt.textContent = `${prefix}${a.tittel}  (${d.getDate()}. ${MAANEDER[d.getMonth()]})`;
-        select.appendChild(opt);
-      });
 
     // Reset fristfelt
     const oppFristEl = document.getElementById('oppFeltFrist');
@@ -4493,15 +4544,17 @@
 
     if (id) {
       const o = oppgaver.find(o => o.id === id);
+      if (!o) return;
       document.getElementById('oppgaveModalTittel').textContent = 'Rediger oppgave';
       document.getElementById('oppFeltBesk').value  = o.beskrivelse;
       document.getElementById('oppFeltNotat').value = o.notat || '';
-      select.value = o.aktivitetId || '';
+      // Sett kategori FØR leveranse-fylling slik at filteret er riktig
       katSelect.value = o.kategoriId || '';
       if (o.aktivitetId && !o.kategoriId) {
         const aktKat = aktiviteter.find(a => a.id === o.aktivitetId);
         if (aktKat) katSelect.value = aktKat.type;
       }
+      _oppdaterOppLevSelect(o.aktivitetId || '');
       if (o.frist) {
         oppFristEl.value = o.frist;
         oppFristEl.style.display = '';
@@ -4511,12 +4564,13 @@
       document.getElementById('oppgaveModalTittel').textContent = 'Ny oppgave';
       document.getElementById('oppFeltBesk').value  = '';
       document.getElementById('oppFeltNotat').value = '';
-      select.value = preAktivitetId || '';
+      // Sett kategori FØR leveranse-fylling
       katSelect.value = '';
       if (preAktivitetId) {
         const preAkt = aktiviteter.find(a => a.id === preAktivitetId);
         if (preAkt) katSelect.value = preAkt.type;
       }
+      _oppdaterOppLevSelect(preAktivitetId || '');
       slettKnapp.style.display = 'none';
     }
     document.getElementById('oppgaveModal').classList.add('vis');
@@ -4605,13 +4659,25 @@
     synkTodoFraOppgave(this.value);
   });
 
-  // Auto-fyll kategori når leveranse velges direkte i todo-modal
+  // Kategori endret i todo-modal → re-filtrer leveranse og oppgave
+  document.getElementById('todoFeltKategori').addEventListener('change', function() {
+    _oppdaterTodoLevSelect();
+    _oppdaterTodoOppSelect();
+  });
+
+  // Leveranse endret i todo-modal → auto-sett kategori + re-filtrer oppgave
   document.getElementById('todoFeltLeveranse').addEventListener('change', function() {
     const lev = aktiviteter.find(a => a.id === this.value);
     if (lev?.type) document.getElementById('todoFeltKategori').value = lev.type;
+    _oppdaterTodoOppSelect();
   });
 
-  // Oppdater fristinfo og kategori når aktivitet endres
+  // Kategori endret i oppgave-modal → re-filtrer leveranse
+  document.getElementById('oppFeltKategori').addEventListener('change', function() {
+    _oppdaterOppLevSelect();
+  });
+
+  // Leveranse endret i oppgave-modal → auto-sett kategori + oppdater fristinfo
   document.getElementById('oppFeltAktivitet').addEventListener('change', function() {
     oppdaterFristInfo();
     const aktId = this.value;
