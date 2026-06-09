@@ -1697,7 +1697,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.4</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.5</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -5578,30 +5578,52 @@
     // ── Steg 1: prosjektvalg ──
     const visProsjektValg = () => {
       body.innerHTML = '';
-      document.querySelector('#rapportVelgerModal .modal-tittel').textContent = 'Velg rapport';
+      document.querySelector('#rapportVelgerModal .modal-tittel').textContent = 'Velg prosjekt(er)';
 
-      // Nåværende prosjekt (default, rett til kategori-valg)
-      const aktivtP = prosjekter.find(p => p.id === aktivtProsjektId);
-      if (aktivtP) {
-        lagValg(aktivtP.navn, 'Nåværende prosjekt', aktivtP.farge, () => visKategoriValg(aktivtProsjektId));
-      }
+      const valgte = new Set([aktivtProsjektId]);
 
-      // Flere prosjekter
-      if (prosjekter.length > 1) {
-        lagSkille('Andre prosjekter');
-        prosjekter.filter(p => p.id !== aktivtProsjektId).forEach(p => {
-          lagValg(p.navn, '', p.farge, () => visKategoriValg(p.id));
-        });
-      }
+      const lagCheckbox = (p) => {
+        const row = document.createElement('label');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--kant);border-radius:var(--rs);background:var(--hvit);cursor:pointer;transition:all .15s;font-family:"Nunito",sans-serif;';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = valgte.has(p.id);
+        cb.style.cssText = 'width:18px;height:18px;accent-color:' + p.farge + ';flex-shrink:0;cursor:pointer;';
+        cb.onchange = () => {
+          if (cb.checked) valgte.add(p.id); else valgte.delete(p.id);
+          row.style.borderColor = cb.checked ? p.farge : 'var(--kant)';
+          row.style.background = cb.checked ? p.farge + '12' : 'var(--hvit)';
+          genBtn.disabled = valgte.size === 0;
+          genBtn.style.opacity = valgte.size === 0 ? '0.5' : '1';
+        };
+        const dot = document.createElement('div');
+        dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${p.farge};flex-shrink:0;`;
+        const txt = document.createElement('div');
+        txt.style.cssText = 'flex:1;font-weight:700;font-size:14px;color:var(--tekst);';
+        txt.textContent = p.navn;
+        row.appendChild(cb);
+        row.appendChild(dot);
+        row.appendChild(txt);
+        if (cb.checked) { row.style.borderColor = p.farge; row.style.background = p.farge + '12'; }
+        body.appendChild(row);
+      };
 
-      // Alle prosjekter samlet
-      if (prosjekter.length > 1) {
-        lagSkille('Samlet');
-        lagValg('Alle prosjekter', 'Tverrprosjekt-rapport', '#555', () => {
+      prosjekter.forEach(p => lagCheckbox(p));
+
+      const genBtn = document.createElement('button');
+      genBtn.style.cssText = 'width:100%;padding:13px;margin-top:6px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);font-family:"Syne",sans-serif;font-weight:700;font-size:14px;cursor:pointer;';
+      genBtn.textContent = 'Generer rapport';
+      genBtn.onclick = () => {
+        const ider = [...valgte];
+        if (ider.length === 0) return;
+        if (ider.length === 1) {
+          visKategoriValg(ider[0]);
+        } else {
           lukkModal('rapportVelgerModal');
-          åpneRapportMulti(prosjekter.map(p => p.id));
-        });
-      }
+          åpneRapportMulti(ider);
+        }
+      };
+      body.appendChild(genBtn);
     };
 
     // ── Steg 2: kategori-valg innen valgt prosjekt ──
