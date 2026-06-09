@@ -1697,7 +1697,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.6</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.7</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -5136,15 +5136,46 @@
   let rapportEgendefinertStart = null;
   let rapportEgendefinertSlutt = null;
 
+  // Rapport-kontekst: lagrer data slik at periodebytte fungerer
+  let _rapportKontekst = null; // { aktiviteter, oppgaver, todos, kategorier, katFilter, tittel, undertittel }
+
+  function _reRenderRapport() {
+    if (!_rapportKontekst) {
+      åpneRapport(window._aktivRapportKatFilter || null, true);
+      return;
+    }
+    // Swap inn lagret data
+    const bak = { aktiviteter, oppgaver, todos, kategorier };
+    aktiviteter = _rapportKontekst.aktiviteter;
+    oppgaver = _rapportKontekst.oppgaver;
+    todos = _rapportKontekst.todos;
+    kategorier = _rapportKontekst.kategorier;
+    genererKategoriCSS();
+    åpneRapport(_rapportKontekst.katFilter, true);
+    // Gjenopprett titler
+    if (_rapportKontekst.tittel) {
+      document.querySelector('#rapportModal .modal-tittel').textContent = _rapportKontekst.tittel;
+    }
+    if (_rapportKontekst.undertittel) {
+      const el = document.querySelector('.rapport-tittel-stor');
+      if (el) el.innerHTML = _rapportKontekst.undertittel;
+    }
+    // Swap tilbake
+    aktiviteter = bak.aktiviteter;
+    oppgaver = bak.oppgaver;
+    todos = bak.todos;
+    kategorier = bak.kategorier;
+    genererKategoriCSS();
+  }
+
   function byttRapportPeriode(periode, btn) {
     rapportPeriode = periode;
     document.querySelectorAll('.rapportPeriodeKnapp').forEach(b => b.classList.remove('aktiv'));
     if (btn) btn.classList.add('aktiv');
-    // Skjul/vis egendefinert datoer
     const egenSpan = document.getElementById('rapportEgendefinertDatoer');
     if (egenSpan) egenSpan.style.display = periode === 'egendefinert' ? 'flex' : 'none';
     if (periode !== 'egendefinert') {
-      åpneRapport(window._aktivRapportKatFilter || null, true);
+      _reRenderRapport();
     }
   }
 
@@ -5154,11 +5185,9 @@
     rapportPeriode = 'egendefinert';
     const egenSpan = document.getElementById('rapportEgendefinertDatoer');
     egenSpan.style.display = 'flex';
-    const iDag = new Date().toISOString().slice(0,10);
     const startInput = document.getElementById('rapportEgenStart');
     const sluttInput = document.getElementById('rapportEgenSlutt');
     if (!startInput.value) {
-      // Default: denne måneden
       const d = new Date();
       startInput.value = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10);
       sluttInput.value = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0,10);
@@ -5173,7 +5202,7 @@
       rapportEgendefinertStart = s;
       rapportEgendefinertSlutt = e;
       rapportPeriode = 'egendefinert';
-      åpneRapport(window._aktivRapportKatFilter || null, true);
+      _reRenderRapport();
     }
   }
 
@@ -5648,7 +5677,7 @@
 
       lagValg('Hele prosjektet', 'Alle kategorier', p ? p.farge : 'var(--grønn)', () => {
         lukkModal('rapportVelgerModal');
-        if (erAktivt) { åpneRapport(); }
+        if (erAktivt) { _rapportKontekst = null; åpneRapport(); }
         else { åpneRapportForProsjekt(prosjektId); }
       });
 
@@ -5661,7 +5690,7 @@
           }).length;
           lagValg(k.label, `${stats} oppgave${stats === 1 ? '' : 'r'}`, k.farge, () => {
             lukkModal('rapportVelgerModal');
-            if (erAktivt) { åpneRapport(k.id); }
+            if (erAktivt) { _rapportKontekst = null; åpneRapport(k.id); }
             else { åpneRapportForProsjekt(prosjektId, k.id); }
           });
         });
@@ -5678,11 +5707,26 @@
     document.getElementById('rapportVelgerModal').classList.add('vis');
   }
 
-  // ── Rapport for et annet prosjekt (midlertidig bytt data) ──
+  // ── Rapport for et annet prosjekt ──
   function åpneRapportForProsjekt(prosjektId, katFilter = null) {
     const pData = _hentProsjektData(prosjektId);
     const p = prosjekter.find(p => p.id === prosjektId);
-    // Midlertidig bytt globale variabler
+    const katNavn = katFilter ? (pData.kategorier.find(k => k.id === katFilter)?.label || '') : '';
+    const tittel = katNavn ? `${p.navn}: ${katNavn}` : `Rapport: ${p.navn}`;
+    const undertittel = katNavn
+      ? `Statusrapport — <span style="color:${pData.kategorier.find(k=>k.id===katFilter)?.farge||''}">${katNavn}</span>`
+      : 'Statusrapport — ' + (p?.navn || '');
+
+    // Lagre kontekst for periodebytte
+    _rapportKontekst = {
+      aktiviteter: pData.aktiviteter,
+      oppgaver: pData.oppgaver,
+      todos: pData.todos,
+      kategorier: pData.kategorier,
+      katFilter, tittel, undertittel
+    };
+
+    // Midlertidig bytt globale variabler for rendering
     const bak = { aktiviteter, oppgaver, todos, kategorier };
     aktiviteter = pData.aktiviteter;
     oppgaver = pData.oppgaver;
@@ -5690,12 +5734,9 @@
     kategorier = pData.kategorier;
     genererKategoriCSS();
     åpneRapport(katFilter);
-    // Sett prosjektnavn i tittelen
-    const tittelEl = document.querySelector('#rapportModal .modal-tittel');
-    if (tittelEl && p) {
-      const katNavn = katFilter ? (kategorier.find(k => k.id === katFilter)?.label || '') : '';
-      tittelEl.textContent = katNavn ? `${p.navn}: ${katNavn}` : `Rapport: ${p.navn}`;
-    }
+    document.querySelector('#rapportModal .modal-tittel').textContent = tittel;
+    const el = document.querySelector('.rapport-tittel-stor');
+    if (el) el.innerHTML = undertittel;
     // Gjenopprett
     aktiviteter = bak.aktiviteter;
     oppgaver = bak.oppgaver;
@@ -5705,20 +5746,39 @@
   }
 
   // ── Tverrprosjekt-rapport ──
-  function åpneRapportMulti(prosjektIder) {
-    // Samle all data fra valgte prosjekter
+  function _samlProsjektData(prosjektIder) {
     const samlet = { aktiviteter: [], oppgaver: [], todos: [], kategorier: [] };
     prosjektIder.forEach(pid => {
       const erAktivt = pid === aktivtProsjektId;
-      const d = erAktivt ? { aktiviteter, oppgaver, todos, kategorier } : _hentProsjektData(pid);
+      const d = erAktivt
+        ? { aktiviteter: JSON.parse(JSON.stringify(aktiviteter)), oppgaver: JSON.parse(JSON.stringify(oppgaver)), todos: JSON.parse(JSON.stringify(todos)), kategorier: JSON.parse(JSON.stringify(kategorier)) }
+        : _hentProsjektData(pid);
       const p = prosjekter.find(p => p.id === pid);
-      const prefix = p ? p.navn + ': ' : '';
-      // Legg til med prosjekt-prefix på titler for lesbarhet
+      const prefix = prosjektIder.length > 1 && p ? p.navn + ': ' : '';
       d.aktiviteter.forEach(a => samlet.aktiviteter.push({ ...a, tittel: prefix + a.tittel }));
       d.oppgaver.forEach(o => samlet.oppgaver.push({ ...o, beskrivelse: prefix + o.beskrivelse }));
       d.todos.forEach(t => samlet.todos.push({ ...t, tittel: prefix + t.tittel }));
       d.kategorier.forEach(k => { if (!samlet.kategorier.find(sk => sk.id === k.id)) samlet.kategorier.push(k); });
     });
+    return samlet;
+  }
+
+  function åpneRapportMulti(prosjektIder) {
+    const samlet = _samlProsjektData(prosjektIder);
+    const valgteNavn = prosjektIder.map(id => prosjekter.find(p => p.id === id)?.navn).filter(Boolean);
+    const rapportNavn = prosjektIder.length === prosjekter.length ? 'Alle prosjekter' : valgteNavn.join(', ');
+    const tittel = 'Rapport: ' + rapportNavn;
+    const undertittel = 'Statusrapport — ' + rapportNavn;
+
+    // Lagre kontekst for periodebytte
+    _rapportKontekst = {
+      aktiviteter: samlet.aktiviteter,
+      oppgaver: samlet.oppgaver,
+      todos: samlet.todos,
+      kategorier: samlet.kategorier,
+      katFilter: null, tittel, undertittel
+    };
+
     const bak = { aktiviteter, oppgaver, todos, kategorier };
     aktiviteter = samlet.aktiviteter;
     oppgaver = samlet.oppgaver;
@@ -5726,11 +5786,9 @@
     kategorier = samlet.kategorier;
     genererKategoriCSS();
     åpneRapport();
-    const valgteNavn = prosjektIder.map(id => prosjekter.find(p => p.id === id)?.navn).filter(Boolean);
-    const rapportNavn = prosjektIder.length === prosjekter.length ? 'Alle prosjekter' : valgteNavn.join(', ');
-    document.querySelector('#rapportModal .modal-tittel').textContent = 'Rapport: ' + rapportNavn;
+    document.querySelector('#rapportModal .modal-tittel').textContent = tittel;
     const tittelEl = document.querySelector('.rapport-tittel-stor');
-    if (tittelEl) tittelEl.textContent = 'Statusrapport — ' + rapportNavn;
+    if (tittelEl) tittelEl.innerHTML = undertittel;
     aktiviteter = bak.aktiviteter;
     oppgaver = bak.oppgaver;
     todos = bak.todos;
