@@ -936,6 +936,17 @@
     .frist-eg-felt.vis { display: flex; }
 
     /* ── To do ── */
+    .todo-filter-knapp {
+      display:flex;align-items:center;gap:4px;
+      padding:6px 10px;border-radius:var(--rs);
+      border:1.5px solid var(--kant);background:var(--hvit);
+      font-family:'Syne',sans-serif;font-weight:700;font-size:11px;
+      color:var(--tekst-sek);cursor:pointer;transition:all .15s;
+      white-space:nowrap;
+    }
+    .todo-filter-knapp:hover { border-color:var(--grønn-mid); color:var(--grønn); }
+    .todo-filter-knapp.aktiv { border-color:var(--grønn);color:var(--grønn);background:var(--grønn-lys); }
+
     .todo-hurtigknapper {
       display: flex;
       gap: 8px;
@@ -1541,10 +1552,16 @@
 
   <!-- To do -->
   <div id="panel-todo" class="panel aktiv">
-    <div class="todo-hurtigknapper">
-      <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
-      <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
-      <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="todo-hurtigknapper" style="flex:1;">
+        <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
+        <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
+        <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
+      </div>
+      <button class="todo-filter-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span id="todoFilterLabel">Filter</span>
+      </button>
     </div>
     <div class="kat-oversikt-rad" id="katOversiktRad"></div>
     <div class="kort-container" id="todoListe"></div>
@@ -1666,6 +1683,10 @@
           <input type="date" id="tidslinjeSluttInput" oninput="oppdaterTidslinjeGrensedatoer()" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;" />
         </div>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;">
+        <input type="checkbox" id="visDagerIgjenToggle" onchange="toggleVisDagerIgjen(this.checked)" style="width:16px;height:16px;accent-color:var(--grønn);cursor:pointer;" />
+        <span style="font-size:12px;color:var(--tekst);font-weight:600;">Vis «dager igjen» i header</span>
+      </label>
     </div>
     <div style="padding:16px 22px 8px;">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Data</div>
@@ -1697,7 +1718,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.9</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.10</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2120,10 +2141,18 @@
     document.title = p.navn;
   }
 
+  let _visDagerIgjen = localStorage.getItem('lp_visDagerIgjen') !== 'false'; // default on
+
+  function toggleVisDagerIgjen(vis) {
+    _visDagerIgjen = vis;
+    localStorage.setItem('lp_visDagerIgjen', vis ? 'true' : 'false');
+    oppdaterDagerIgjen();
+  }
+
   function oppdaterDagerIgjen() {
     const badge = document.getElementById('dagerIgjenBadge');
     if (!badge) return;
-    if (!tidslinjeSluttGrense) { badge.style.display = 'none'; return; }
+    if (!_visDagerIgjen || !tidslinjeSluttGrense) { badge.style.display = 'none'; return; }
     const idag = new Date(); idag.setHours(0,0,0,0);
     const slutt = new Date(tidslinjeSluttGrense + 'T00:00:00');
     const diff = Math.ceil((slutt - idag) / (1000 * 60 * 60 * 24));
@@ -2135,6 +2164,9 @@
       badge.style.color = diff <= 14 ? '#e67e22' : 'var(--tekst-sek)';
     }
     badge.style.display = '';
+    // Sync checkbox i innstillinger
+    const cb = document.getElementById('visDagerIgjenToggle');
+    if (cb) cb.checked = _visDagerIgjen;
   }
 
   /* ──────────────────────────────
@@ -3308,6 +3340,215 @@
   ────────────────────────────── */
   let redigTodoId = null;
 
+  /* ── Todo-filter (multi-prosjekt + periode) ── */
+  let _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
+  // prosjekter: null = bare aktivt, array av id-er = valgte
+  // periode: null = alt, '1d','3d','7d','egendefinert'
+
+  function _todoFilterAktiv() {
+    return _todoFilter.prosjekter || _todoFilter.periode;
+  }
+
+  function visTodoFilterPopup(anchorBtn) {
+    // Fjern eksisterende popup
+    const existing = document.getElementById('todoFilterPopup');
+    if (existing) { existing.remove(); _oppdaterTodoFilterKnapp(); return; }
+
+    const popup = document.createElement('div');
+    popup.id = 'todoFilterPopup';
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--hvit);border:1.5px solid var(--kant);border-radius:var(--rs);padding:14px 16px;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
+
+    // Prosjekter
+    popup.innerHTML = '<div style="font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Prosjekter</div>';
+
+    const valgte = _todoFilter.prosjekter || [aktivtProsjektId];
+    prosjekter.forEach(p => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = valgte.includes(p.id);
+      cb.style.cssText = 'width:16px;height:16px;accent-color:' + (p.farge || 'var(--grønn)') + ';cursor:pointer;';
+      cb.dataset.pid = p.id;
+      const dot = document.createElement('span');
+      dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + (p.farge || 'var(--grønn)') + ';flex-shrink:0;';
+      const txt = document.createElement('span');
+      txt.textContent = p.navn;
+      label.appendChild(cb);
+      label.appendChild(dot);
+      label.appendChild(txt);
+      popup.appendChild(label);
+    });
+
+    // Periode
+    const perDiv = document.createElement('div');
+    perDiv.style.cssText = 'margin-top:12px;border-top:1px solid var(--kant);padding-top:10px;';
+    perDiv.innerHTML = '<div style="font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Periode</div>';
+
+    const perioder = [
+      { val: null, label: 'Alle' },
+      { val: '1d', label: '1 dag' },
+      { val: '3d', label: '3 dager' },
+      { val: '7d', label: '7 dager' },
+      { val: 'egendefinert', label: 'Egendefinert' }
+    ];
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+    perioder.forEach(({ val, label }) => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      const erAktiv = _todoFilter.periode === val;
+      btn.style.cssText = 'padding:5px 10px;border-radius:var(--rs);border:1.5px solid ' + (erAktiv ? 'var(--grønn)' : 'var(--kant)') + ';background:' + (erAktiv ? 'var(--grønn-lys)' : 'var(--hvit)') + ';color:' + (erAktiv ? 'var(--grønn)' : 'var(--tekst-sek)') + ';font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
+      btn.onclick = () => {
+        _todoFilter.periode = val;
+        // re-render popup to show active state + egendefinert inputs
+        const parent = popup.parentElement;
+        popup.remove();
+        visTodoFilterPopup(anchorBtn);
+      };
+      btnRow.appendChild(btn);
+    });
+    perDiv.appendChild(btnRow);
+
+    // Egendefinert datoer
+    if (_todoFilter.periode === 'egendefinert') {
+      const dateRow = document.createElement('div');
+      dateRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
+      const makeInput = (val, key) => {
+        const inp = document.createElement('input');
+        inp.type = 'date';
+        inp.value = val || '';
+        inp.style.cssText = 'flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:\'Nunito\',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;';
+        inp.oninput = () => { _todoFilter[key] = inp.value; };
+        return inp;
+      };
+      dateRow.appendChild(makeInput(_todoFilter.egStart, 'egStart'));
+      dateRow.appendChild(makeInput(_todoFilter.egSlutt, 'egSlutt'));
+      perDiv.appendChild(dateRow);
+    }
+
+    popup.appendChild(perDiv);
+
+    // Bruk-knapp
+    const applyBtn = document.createElement('button');
+    applyBtn.textContent = 'Bruk filter';
+    applyBtn.style.cssText = 'width:100%;margin-top:12px;padding:9px;border:none;border-radius:var(--rs);background:var(--grønn);color:white;font-family:\'Syne\',sans-serif;font-weight:700;font-size:12px;cursor:pointer;';
+    applyBtn.onclick = () => {
+      // Les avkryssede prosjekter
+      const checked = [...popup.querySelectorAll('input[type=checkbox]')]
+        .filter(cb => cb.checked).map(cb => cb.dataset.pid);
+      // Hvis bare aktivt prosjekt er valgt, sett til null (standard)
+      if (checked.length === 1 && checked[0] === aktivtProsjektId && !_todoFilter.periode) {
+        _todoFilter.prosjekter = null;
+      } else if (checked.length === 0) {
+        _todoFilter.prosjekter = null;
+      } else {
+        _todoFilter.prosjekter = checked;
+      }
+      popup.remove();
+      _oppdaterTodoFilterKnapp();
+      renderTodos();
+    };
+    popup.appendChild(applyBtn);
+
+    // Nullstill-lenke
+    if (_todoFilterAktiv()) {
+      const reset = document.createElement('button');
+      reset.textContent = 'Nullstill';
+      reset.style.cssText = 'width:100%;margin-top:6px;padding:7px;border:1px solid var(--kant);border-radius:var(--rs);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
+      reset.onclick = () => {
+        _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
+        popup.remove();
+        _oppdaterTodoFilterKnapp();
+        renderTodos();
+      };
+      popup.appendChild(reset);
+    }
+
+    // Lukk ved klikk utenfor
+    setTimeout(() => {
+      const lukkHandler = e => {
+        if (!popup.contains(e.target) && e.target !== anchorBtn && !anchorBtn.contains(e.target)) {
+          popup.remove();
+          _oppdaterTodoFilterKnapp();
+          document.removeEventListener('click', lukkHandler);
+        }
+      };
+      document.addEventListener('click', lukkHandler);
+    }, 10);
+
+    // Posisjonering: legg popup i nærmeste posisjonerte container
+    anchorBtn.style.position = 'relative';
+    anchorBtn.appendChild(popup);
+  }
+
+  function _oppdaterTodoFilterKnapp() {
+    const btn = document.getElementById('todoFilterKnapp');
+    const label = document.getElementById('todoFilterLabel');
+    if (!btn || !label) return;
+    const aktiv = _todoFilterAktiv();
+    btn.classList.toggle('aktiv', !!aktiv);
+    if (aktiv) {
+      const deler = [];
+      if (_todoFilter.prosjekter && _todoFilter.prosjekter.length > 1) {
+        deler.push(_todoFilter.prosjekter.length + ' prosjekter');
+      } else if (_todoFilter.prosjekter && _todoFilter.prosjekter.length === 1 && _todoFilter.prosjekter[0] !== aktivtProsjektId) {
+        const p = prosjekter.find(p => p.id === _todoFilter.prosjekter[0]);
+        deler.push(p ? p.navn : 'Filter');
+      }
+      if (_todoFilter.periode === '1d') deler.push('1 dag');
+      else if (_todoFilter.periode === '3d') deler.push('3 dager');
+      else if (_todoFilter.periode === '7d') deler.push('7 dager');
+      else if (_todoFilter.periode === 'egendefinert') deler.push('Egendefinert');
+      label.textContent = deler.length ? deler.join(' · ') : 'Filter';
+    } else {
+      label.textContent = 'Filter';
+    }
+  }
+
+  function _hentTodoFilterData() {
+    // Returner { todos, oppgaver, aktiviteter, kategorier } basert på filter
+    if (!_todoFilter.prosjekter || _todoFilter.prosjekter.length === 0 ||
+        (_todoFilter.prosjekter.length === 1 && _todoFilter.prosjekter[0] === aktivtProsjektId)) {
+      return { todos, oppgaver, aktiviteter, kategorier, multi: false };
+    }
+    // Multi-prosjekt: samle data fra alle valgte prosjekter
+    let samletTodos = [], samletOppgaver = [], samletAktiviteter = [], samletKategorier = [];
+    _todoFilter.prosjekter.forEach(pid => {
+      const erAktivt = pid === aktivtProsjektId;
+      const data = erAktivt ? { todos, oppgaver, aktiviteter, kategorier } : _hentProsjektData(pid);
+      const pNavn = prosjekter.find(p => p.id === pid)?.navn || '';
+      // Prefix titler med prosjektnavn for multi-prosjekt
+      data.todos.forEach(t => samletTodos.push({ ...t, _prosjektNavn: pNavn, _prosjektId: pid }));
+      data.oppgaver.forEach(o => samletOppgaver.push({ ...o, _prosjektNavn: pNavn, _prosjektId: pid }));
+      data.aktiviteter.forEach(a => samletAktiviteter.push({ ...a, _prosjektId: pid }));
+      data.kategorier.forEach(k => samletKategorier.push({ ...k, _prosjektId: pid }));
+    });
+    return { todos: samletTodos, oppgaver: samletOppgaver, aktiviteter: samletAktiviteter, kategorier: samletKategorier, multi: true };
+  }
+
+  function _todoPassererPeriode(frist) {
+    if (!_todoFilter.periode) return true;
+    if (!frist) return _todoFilter.periode === null; // uten frist vises bare hvis ingen periodefiler
+    const d = new Date(frist + 'T00:00:00');
+    const idag = new Date(); idag.setHours(0,0,0,0);
+    if (_todoFilter.periode === '1d') {
+      const grense = new Date(idag); grense.setDate(grense.getDate() + 1);
+      return d <= grense;
+    } else if (_todoFilter.periode === '3d') {
+      const grense = new Date(idag); grense.setDate(grense.getDate() + 3);
+      return d <= grense;
+    } else if (_todoFilter.periode === '7d') {
+      const grense = new Date(idag); grense.setDate(grense.getDate() + 7);
+      return d <= grense;
+    } else if (_todoFilter.periode === 'egendefinert') {
+      if (_todoFilter.egStart && frist < _todoFilter.egStart) return false;
+      if (_todoFilter.egSlutt && frist > _todoFilter.egSlutt) return false;
+      return true;
+    }
+    return true;
+  }
+
   function renderTodos() {
     renderKatOversiktKnapper();
     const container = document.getElementById('todoListe');
@@ -3317,28 +3558,37 @@
     const iDag  = new Date(); iDag.setHours(0,0,0,0);
     const om30  = new Date(iDag); om30.setDate(om30.getDate() + 30);
 
+    // Hent data (kan være multi-prosjekt via filter)
+    const fd = _hentTodoFilterData();
+    const fTodos = fd.todos;
+    const fOppgaver = fd.oppgaver;
+    const fAktiviteter = fd.aktiviteter;
+    const isMulti = fd.multi;
+    const harPeriodeFilter = !!_todoFilter.periode;
+
     // Hovedfilter-hjelpefunksjon for todos
     const todoPasserer = t => matcherGlobalFilter(null, t.kategoriId, null) ||
-      (t.oppgaveId && matcherGlobalFilter(null, oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId, oppgaver.find(o => o.id === t.oppgaveId)?.aktivitetId));
+      (t.oppgaveId && matcherGlobalFilter(null, fOppgaver.find(o => o.id === t.oppgaveId)?.kategoriId, fOppgaver.find(o => o.id === t.oppgaveId)?.aktivitetId));
     const oppPasserer = o => matcherGlobalFilter(null, o.kategoriId, o.aktivitetId);
 
-    // Todos uten frist (aktive)
-    const utenFrist = todos.filter(t => !t.fullfort && !t.frist && (!globalKatFilter || todoPasserer(t)));
+    // Todos uten frist (aktive) — vis kun hvis ingen periode-filter
+    const utenFrist = fTodos.filter(t => !t.fullfort && !t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && !harPeriodeFilter);
 
-    // Todos med frist (aktive), sortert
-    const medFrist = todos.filter(t => !t.fullfort && t.frist && (!globalKatFilter || todoPasserer(t)))
+    // Todos med frist (aktive), sortert + periodefilter
+    const medFrist = fTodos.filter(t => !t.fullfort && t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && _todoPassererPeriode(t.frist))
       .sort((a,b) => a.frist.localeCompare(b.frist));
 
-    // Oppgaver med frist innen 30 dager (ikke fullført)
-    const oppgaverSnart = oppgaver.filter(o => {
+    // Oppgaver med frist (ikke fullført) — bruk periodefiler eller 30-dagers default
+    const oppgaverSnart = fOppgaver.filter(o => {
       if (o.fullfort || !o.frist) return false;
-      if (globalKatFilter && !oppPasserer(o)) return false;
+      if (!isMulti && globalKatFilter && !oppPasserer(o)) return false;
+      if (harPeriodeFilter) return _todoPassererPeriode(o.frist);
       const d = new Date(o.frist + 'T00:00:00');
       return d <= om30;
     }).sort((a,b) => a.frist.localeCompare(b.frist));
 
-    // Fullførte todos
-    const fullforte = todos.filter(t => t.fullfort && (!globalKatFilter || todoPasserer(t)));
+    // Fullførte todos — skjul ved periodefilter
+    const fullforte = harPeriodeFilter ? [] : fTodos.filter(t => t.fullfort && (!globalKatFilter || isMulti || todoPasserer(t)));
 
     const tomListe = utenFrist.length === 0 && medFrist.length === 0 &&
                      oppgaverSnart.length === 0 && fullforte.length === 0;
@@ -3372,9 +3622,13 @@
       cb.onclick = e => { e.stopPropagation(); toggleTodo(t.id); };
 
       let metaHtml = '';
+      if (isMulti && t._prosjektNavn) {
+        const pFarge = prosjekter.find(p => p.id === t._prosjektId)?.farge || 'var(--grønn)';
+        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${t._prosjektNavn}</span>`;
+      }
       if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort);
       if (t.oppgaveId) {
-        const opp = oppgaver.find(o => o.id === t.oppgaveId);
+        const opp = fOppgaver.find(o => o.id === t.oppgaveId);
         if (opp) metaHtml += `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${opp.beskrivelse}</span>`;
       }
       if (t.kategoriId) {
@@ -3411,7 +3665,7 @@
       const wrapper = document.createElement('div');
       wrapper.className = 'sveip-innhold';
 
-      const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+      const akt = o.aktivitetId ? fAktiviteter.find(a => a.id === o.aktivitetId) : null;
       const oType = akt?.type || o.kategoriId;
       const stripeKlasse = oType ? 'stripe-' + oType : 'stripe-fri';
 
@@ -3426,7 +3680,12 @@
       cb.innerHTML = o.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
       cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); renderTodos(); };
 
-      let metaHtml = fristSpan(o.frist, o.fullfort);
+      let metaHtml = '';
+      if (isMulti && o._prosjektNavn) {
+        const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--grønn)';
+        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${o._prosjektNavn}</span>`;
+      }
+      metaHtml += fristSpan(o.frist, o.fullfort);
       if (akt) {
         metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
       } else if (o.kategoriId) {
@@ -3479,7 +3738,7 @@
     });
 
     // 3. Fullførte (todos + oppgaver)
-    const fullforteOpp = oppgaver.filter(o => o.fullfort);
+    const fullforteOpp = harPeriodeFilter ? [] : fOppgaver.filter(o => o.fullfort);
     if (fullforte.length > 0 || fullforteOpp.length > 0) {
       lagSeksjon('Fullført');
       fullforte.forEach(t => container.appendChild(lagTodoKort(t)));
@@ -3742,6 +4001,9 @@
     const def = _tlDefault();
     document.getElementById('tidslinjeStartInput').value = tidslinjeStartGrense || def.start;
     document.getElementById('tidslinjeSluttInput').value = tidslinjeSluttGrense || def.slutt;
+    // Dager igjen checkbox
+    const diCb = document.getElementById('visDagerIgjenToggle');
+    if (diCb) diCb.checked = _visDagerIgjen;
     // Fyll prosjekt-felter
     const p = hentAktivtProsjekt();
     document.getElementById('innstProsjektNavn').value = p.navn;
