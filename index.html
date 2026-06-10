@@ -1615,9 +1615,12 @@
   <div id="panel-liste" class="panel">
     <div class="seksjon-header">
       <div class="seksjon-tittel">Alle leveranser</div>
-      <div style="display:flex;gap:6px;">
+      <div style="display:flex;gap:6px;align-items:stretch;">
         <button class="legg-til-knapp" onclick="åpneAktivitetModal()">+ Aktivitet</button>
         <button class="legg-til-knapp" onclick="åpneMilepelModal()">+ Milepæl</button>
+        <button class="todo-filter-knapp" id="leveranseFilterKnapp" onclick="visProsjektFilterPopup(this,'leveranse')" title="Filter" style="position:relative;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        </button>
       </div>
     </div>
     <div class="filter-rad" id="aktivitetFilterRad"></div>
@@ -1628,7 +1631,12 @@
   <div id="panel-oppgaver" class="panel">
     <div class="seksjon-header">
       <div class="seksjon-tittel">Oppgaver</div>
-      <button class="legg-til-knapp" onclick="åpneOppgaveModal()">+ Legg til oppgave</button>
+      <div style="display:flex;gap:6px;align-items:stretch;">
+        <button class="legg-til-knapp" onclick="åpneOppgaveModal()">+ Legg til oppgave</button>
+        <button class="todo-filter-knapp" id="oppgaveFilterKnapp" onclick="visProsjektFilterPopup(this,'oppgave')" title="Filter" style="position:relative;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        </button>
+      </div>
     </div>
     <div class="filter-rad" id="filterRad"></div>
     <div class="kort-container" id="oppgaveListe"></div>
@@ -1715,7 +1723,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.14</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.15</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3119,9 +3127,16 @@
     const container = document.getElementById('aktivitetListe');
     const filterRad = document.getElementById('aktivitetFilterRad');
 
-    // Bygg filterknapper
+    // Hent data (kan være multi-prosjekt)
+    const fd = _hentTabFilterData('leveranse');
+    const fAktiviteter = fd.aktiviteter;
+    const fKategorier = fd.kategorier;
+    const isMulti = fd.multi;
+
+    // Bygg filterknapper (bruk unikke kategorier)
     filterRad.innerHTML = '';
-    kategorier.forEach(k => {
+    const visKat = isMulti ? [...new Map(fKategorier.map(k => [k.id, k])).values()] : kategorier;
+    visKat.forEach(k => {
       const pill = document.createElement('button');
       const state = aktivitetFilterState[k.id] || 1;
       let cls = 'filter-pill ';
@@ -3140,12 +3155,12 @@
     });
 
     const iDagStr = new Date().toISOString().slice(0, 10);
-    let filtrert = [...aktiviteter].filter(a => {
+    let filtrert = [...fAktiviteter].filter(a => {
       if (a.leveranseType === 'milepæl' && a.fullfort) return false; // fullfort milepæl → arkiv
       if (a.leveranseType !== 'milepæl' && (a.datoTil || a.dato) < iDagStr) return false; // fortid → arkiv
       return true;
     });
-    if (globalKatFilter) filtrert = filtrert.filter(a => a.type === globalKatFilter);
+    if (!isMulti && globalKatFilter) filtrert = filtrert.filter(a => a.type === globalKatFilter);
     const harKun = katIds().some(k => aktivitetFilterState[k] === 2);
     if (harKun) {
       filtrert = filtrert.filter(a => aktivitetFilterState[a.type] === 2);
@@ -3547,6 +3562,121 @@
       return true;
     }
     return true;
+  }
+
+  /* ── Prosjektfilter for leveranser og oppgaver ── */
+  let _leveranseFilter = { prosjekter: null };
+  let _oppgaveFilter   = { prosjekter: null };
+
+  function _getTabFilter(tab) {
+    return tab === 'leveranse' ? _leveranseFilter : _oppgaveFilter;
+  }
+
+  function _tabFilterAktiv(tab) {
+    return !!_getTabFilter(tab).prosjekter;
+  }
+
+  function _oppdaterTabFilterKnapp(tab) {
+    const id = tab === 'leveranse' ? 'leveranseFilterKnapp' : 'oppgaveFilterKnapp';
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('aktiv', _tabFilterAktiv(tab));
+  }
+
+  function _brukTabFilter(tab) {
+    const f = _getTabFilter(tab);
+    if (f.prosjekter && f.prosjekter.length === 1 && f.prosjekter[0] === aktivtProsjektId) {
+      f.prosjekter = null;
+    }
+    _oppdaterTabFilterKnapp(tab);
+    if (tab === 'leveranse') renderListe();
+    else renderOppgaver();
+  }
+
+  function _hentTabFilterData(tab) {
+    const f = _getTabFilter(tab);
+    if (!f.prosjekter || f.prosjekter.length === 0 ||
+        (f.prosjekter.length === 1 && f.prosjekter[0] === aktivtProsjektId)) {
+      return { aktiviteter, oppgaver, kategorier, multi: false };
+    }
+    let sA = [], sO = [], sK = [];
+    f.prosjekter.forEach(pid => {
+      const erAktivt = pid === aktivtProsjektId;
+      const data = erAktivt ? { aktiviteter, oppgaver, kategorier } : _hentProsjektData(pid);
+      const pNavn = prosjekter.find(p => p.id === pid)?.navn || '';
+      data.aktiviteter.forEach(a => sA.push({ ...a, _prosjektNavn: pNavn, _prosjektId: pid }));
+      data.oppgaver.forEach(o => sO.push({ ...o, _prosjektNavn: pNavn, _prosjektId: pid }));
+      data.kategorier.forEach(k => { if (!sK.find(x => x.id === k.id && x._prosjektId === pid)) sK.push({ ...k, _prosjektId: pid }); });
+    });
+    return { aktiviteter: sA, oppgaver: sO, kategorier: sK, multi: true };
+  }
+
+  function visProsjektFilterPopup(anchorBtn, tab) {
+    const popupId = tab + 'FilterPopup';
+    const existing = document.getElementById(popupId);
+    if (existing) { existing.remove(); _oppdaterTabFilterKnapp(tab); return; }
+
+    const f = _getTabFilter(tab);
+    if (!f.prosjekter) f.prosjekter = [aktivtProsjektId];
+
+    const popup = document.createElement('div');
+    popup.id = popupId;
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--hvit);border:1.5px solid var(--kant);border-radius:var(--rs);padding:14px 16px;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
+    popup.addEventListener('click', e => e.stopPropagation());
+
+    const pTittel = document.createElement('div');
+    pTittel.style.cssText = 'font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;';
+    pTittel.textContent = 'Prosjekter';
+    popup.appendChild(pTittel);
+
+    prosjekter.forEach(p => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = f.prosjekter.includes(p.id);
+      cb.style.cssText = 'width:16px;height:16px;accent-color:' + (p.farge || 'var(--grønn)') + ';cursor:pointer;flex-shrink:0;';
+      cb.addEventListener('change', () => {
+        if (cb.checked) { if (!f.prosjekter.includes(p.id)) f.prosjekter.push(p.id); }
+        else { f.prosjekter = f.prosjekter.filter(id => id !== p.id); }
+        _brukTabFilter(tab);
+      });
+      const dot = document.createElement('span');
+      dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + (p.farge || 'var(--grønn)') + ';flex-shrink:0;';
+      const txt = document.createElement('span');
+      txt.textContent = p.navn;
+      label.appendChild(cb);
+      label.appendChild(dot);
+      label.appendChild(txt);
+      popup.appendChild(label);
+    });
+
+    // Nullstill
+    const reset = document.createElement('button');
+    reset.textContent = 'Nullstill filter';
+    reset.style.cssText = 'width:100%;margin-top:12px;padding:8px;border:1px solid var(--kant);border-radius:var(--rs);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
+    reset.onclick = () => {
+      if (tab === 'leveranse') _leveranseFilter = { prosjekter: null };
+      else _oppgaveFilter = { prosjekter: null };
+      popup.remove();
+      _oppdaterTabFilterKnapp(tab);
+      if (tab === 'leveranse') renderListe(); else renderOppgaver();
+    };
+    popup.appendChild(reset);
+
+    // Lukk utenfor
+    setTimeout(() => {
+      const lukkHandler = e => {
+        if (!popup.contains(e.target) && e.target !== anchorBtn && !anchorBtn.contains(e.target)) {
+          popup.remove();
+          if (f.prosjekter && f.prosjekter.length === 0) f.prosjekter = null;
+          _oppdaterTabFilterKnapp(tab);
+          document.removeEventListener('click', lukkHandler);
+        }
+      };
+      document.addEventListener('click', lukkHandler);
+    }, 10);
+
+    anchorBtn.appendChild(popup);
   }
 
   function renderTodos() {
@@ -4256,11 +4386,13 @@
     }
     const tidStr = (!erMilepel && a.tid) ? ('kl.\u00a0' + a.tid + (a.tidTil ? '\u2013' + a.tidTil : '')) : '';
 
+    const prosjektChip = a._prosjektNavn ? `<span style="display:inline-block;margin-right:4px;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:${prosjekter.find(p=>p.id===a._prosjektId)?.farge||'var(--grønn)'}20;color:${prosjekter.find(p=>p.id===a._prosjektId)?.farge||'var(--grønn)'}">${a._prosjektNavn}</span>` : '';
+
     const info = document.createElement('div');
     info.className = 'aktivitet-info';
     info.innerHTML = `
       <div class="aktivitet-tittel">${a.tittel}</div>
-      <div class="aktivitet-meta">${datoStr}${tidStr ? '&nbsp;' + tidStr : ''}</div>`;
+      <div class="aktivitet-meta">${prosjektChip}${datoStr}${tidStr ? '&nbsp;' + tidStr : ''}</div>`;
 
     kort.appendChild(badge);
     kort.appendChild(info);
@@ -4325,12 +4457,19 @@
     const container = document.getElementById('oppgaveListe');
     const filterRad = document.getElementById('filterRad');
 
+    // Hent data (kan være multi-prosjekt)
+    const fd = _hentTabFilterData('oppgave');
+    const fAktiviteter = fd.aktiviteter;
+    const fOppgaver = fd.oppgaver;
+    const fKategorier = fd.kategorier;
+    const isMulti = fd.multi;
+
     filterRad.innerHTML = '';
 
     // Hvis vi viser en spesifikk aktivitet, vis eget header og tilbake-knapp
     if (aktivFilter && aktivFilter.startsWith('aktivitet:')) {
       const aktId = aktivFilter.slice(10);
-      const akt   = aktiviteter.find(a => a.id === aktId);
+      const akt   = fAktiviteter.find(a => a.id === aktId);
       const pill  = document.createElement('button');
       pill.className = 'filter-pill aktiv';
       pill.textContent = '← ' + (akt ? akt.tittel : 'Leveranse');
@@ -4338,7 +4477,8 @@
       filterRad.appendChild(pill);
     } else {
       // Dynamiske kategori-filtere
-      kategorier.forEach(k => {        const pill = document.createElement('button');
+      const visKat = isMulti ? [...new Map(fKategorier.map(k => [k.id, k])).values()] : kategorier;
+      visKat.forEach(k => {        const pill = document.createElement('button');
         const state = oppgaveFilterState[k.id] || 1;
         let cls = 'filter-pill ';
         if (state === 2) cls += 'aktiv-' + k.id;
@@ -4356,8 +4496,8 @@
       });
     }
 
-    let filtrert = [...oppgaver];
-    if (globalKatFilter) filtrert = filtrert.filter(o => matcherGlobalFilter(null, o.kategoriId, o.aktivitetId));
+    let filtrert = [...fOppgaver];
+    if (!isMulti && globalKatFilter) filtrert = filtrert.filter(o => matcherGlobalFilter(null, o.kategoriId, o.aktivitetId));
 
     if (aktivFilter && aktivFilter.startsWith('aktivitet:')) {
       const aktId = aktivFilter.slice(10);
@@ -4367,13 +4507,13 @@
       const harKunOpp = katIds().some(k => oppgaveFilterState[k] === 2);
       if (harKunOpp) {
         filtrert = filtrert.filter(o => {
-          const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+          const akt = fAktiviteter.find(a => a.id === o.aktivitetId);
           const type = akt?.type || o.kategoriId;
           return type && oppgaveFilterState[type] === 2;
         });
       } else {
         filtrert = filtrert.filter(o => {
-          const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+          const akt = fAktiviteter.find(a => a.id === o.aktivitetId);
           const type = akt?.type || o.kategoriId;
           return !type || oppgaveFilterState[type] !== 3;
         });
@@ -4415,7 +4555,7 @@
       container.appendChild(ml);
 
       g.items.forEach(o => {
-      const aktR = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
+      const aktR = o.aktivitetId ? fAktiviteter.find(a => a.id === o.aktivitetId) : null;
       const typeR = aktR?.type || o.kategoriId;
       const stripeKlasse = typeR ? 'stripe-' + typeR : 'stripe-fri';
 
@@ -4441,9 +4581,13 @@
       info.className = 'oppgave-info';
 
       let metaHtml = '';
+      if (isMulti && o._prosjektNavn) {
+        const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--grønn)';
+        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${o._prosjektNavn}</span>`;
+      }
       if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
       if (o.aktivitetId) {
-        const aktM = aktiviteter.find(a => a.id === o.aktivitetId);
+        const aktM = fAktiviteter.find(a => a.id === o.aktivitetId);
         if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${aktM.type || "fri"}">${aktM.tittel}</span>`;
       } else if (o.kategoriId) {
         const katM = getKat(o.kategoriId);
