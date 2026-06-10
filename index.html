@@ -937,12 +937,11 @@
 
     /* ── To do ── */
     .todo-filter-knapp {
-      display:flex;align-items:center;gap:4px;
-      padding:6px 10px;border-radius:var(--rs);
+      display:flex;align-items:center;justify-content:center;
+      padding:9px 10px;border-radius:var(--rs);
       border:1.5px solid var(--kant);background:var(--hvit);
-      font-family:'Syne',sans-serif;font-weight:700;font-size:11px;
       color:var(--tekst-sek);cursor:pointer;transition:all .15s;
-      white-space:nowrap;
+      flex-shrink:0;
     }
     .todo-filter-knapp:hover { border-color:var(--grønn-mid); color:var(--grønn); }
     .todo-filter-knapp.aktiv { border-color:var(--grønn);color:var(--grønn);background:var(--grønn-lys); }
@@ -1558,9 +1557,8 @@
         <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
         <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
       </div>
-      <button class="todo-filter-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)">
+      <button class="todo-filter-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)" title="Filter">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        <span id="todoFilterLabel">Filter</span>
       </button>
     </div>
     <div class="kat-oversikt-rad" id="katOversiktRad"></div>
@@ -1718,7 +1716,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.12</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.13</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3505,26 +3503,8 @@
 
   function _oppdaterTodoFilterKnapp() {
     const btn = document.getElementById('todoFilterKnapp');
-    const label = document.getElementById('todoFilterLabel');
-    if (!btn || !label) return;
-    const aktiv = _todoFilterAktiv();
-    btn.classList.toggle('aktiv', !!aktiv);
-    if (aktiv) {
-      const deler = [];
-      if (_todoFilter.prosjekter && _todoFilter.prosjekter.length > 1) {
-        deler.push(_todoFilter.prosjekter.length + ' prosjekter');
-      } else if (_todoFilter.prosjekter && _todoFilter.prosjekter.length === 1 && _todoFilter.prosjekter[0] !== aktivtProsjektId) {
-        const p = prosjekter.find(p => p.id === _todoFilter.prosjekter[0]);
-        deler.push(p ? p.navn : 'Filter');
-      }
-      if (_todoFilter.periode === '1d') deler.push('1 dag');
-      else if (_todoFilter.periode === '3d') deler.push('3 dager');
-      else if (_todoFilter.periode === '7d') deler.push('7 dager');
-      else if (_todoFilter.periode === 'egendefinert') deler.push('Egendefinert');
-      label.textContent = deler.length ? deler.join(' · ') : 'Filter';
-    } else {
-      label.textContent = 'Filter';
-    }
+    if (!btn) return;
+    btn.classList.toggle('aktiv', !!_todoFilterAktiv());
   }
 
   function _hentTodoFilterData() {
