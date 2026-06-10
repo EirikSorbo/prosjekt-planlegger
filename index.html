@@ -1718,7 +1718,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.11</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.12</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3344,50 +3344,56 @@
   let _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
   // prosjekter: null = bare aktivt, array av id-er = valgte
   // periode: null = alt, '1d','3d','7d','egendefinert'
-  let _todoFilterDraft = null; // midlertidig valg mens popup er åpen
 
   function _todoFilterAktiv() {
     return _todoFilter.prosjekter || _todoFilter.periode;
   }
 
-  function visTodoFilterPopup(anchorBtn) {
-    // Fjern eksisterende popup (toggle ved klikk på knappen)
-    const existing = document.getElementById('todoFilterPopup');
-    if (existing) { existing.remove(); _todoFilterDraft = null; _oppdaterTodoFilterKnapp(); return; }
-
-    // Initialiser draft fra gjeldende filter
-    if (!_todoFilterDraft) {
-      _todoFilterDraft = {
-        prosjekter: _todoFilter.prosjekter ? [..._todoFilter.prosjekter] : [aktivtProsjektId],
-        periode: _todoFilter.periode,
-        egStart: _todoFilter.egStart,
-        egSlutt: _todoFilter.egSlutt
-      };
+  function _brukTodoFilter() {
+    // Avledet: sett prosjekter til null hvis bare aktivt prosjekt uten periodefilter
+    const pids = _todoFilter.prosjekter;
+    if (pids && pids.length === 1 && pids[0] === aktivtProsjektId && !_todoFilter.periode) {
+      _todoFilter.prosjekter = null;
     }
+    _oppdaterTodoFilterKnapp();
+    renderTodos();
+  }
+
+  function visTodoFilterPopup(anchorBtn) {
+    // Toggle: lukk hvis allerede åpen
+    const existing = document.getElementById('todoFilterPopup');
+    if (existing) { existing.remove(); _oppdaterTodoFilterKnapp(); return; }
+
+    // Sørg for at prosjekter-array er initialisert
+    if (!_todoFilter.prosjekter) _todoFilter.prosjekter = [aktivtProsjektId];
 
     const popup = document.createElement('div');
     popup.id = 'todoFilterPopup';
-    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--hvit);border:1.5px solid var(--kant);border-radius:var(--rs);padding:14px 16px;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
-    // Stopp klikk inni popup fra å boble opp til filterknappen (som ville toggle-lukket popup-en)
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--hvit);border:1.5px solid var(--kant);border-radius:var(--rs);padding:14px 16px;min-width:230px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
     popup.addEventListener('click', e => e.stopPropagation());
 
-    // Prosjekter
-    popup.innerHTML = '<div style="font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Prosjekter</div>';
+    // ── Prosjekter ──
+    const pTittel = document.createElement('div');
+    pTittel.style.cssText = 'font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;';
+    pTittel.textContent = 'Prosjekter';
+    popup.appendChild(pTittel);
 
-    const valgte = _todoFilterDraft.prosjekter;
     prosjekter.forEach(p => {
       const label = document.createElement('label');
       label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
-      cb.checked = valgte.includes(p.id);
-      // Oppdater draft ved klikk
-      cb.addEventListener('change', () => {
-        if (cb.checked) { if (!_todoFilterDraft.prosjekter.includes(p.id)) _todoFilterDraft.prosjekter.push(p.id); }
-        else { _todoFilterDraft.prosjekter = _todoFilterDraft.prosjekter.filter(id => id !== p.id); }
-      });
-      cb.style.cssText = 'width:16px;height:16px;accent-color:' + (p.farge || 'var(--grønn)') + ';cursor:pointer;';
+      cb.checked = _todoFilter.prosjekter.includes(p.id);
+      cb.style.cssText = 'width:16px;height:16px;accent-color:' + (p.farge || 'var(--grønn)') + ';cursor:pointer;flex-shrink:0;';
       cb.dataset.pid = p.id;
+      cb.addEventListener('change', () => {
+        if (cb.checked) {
+          if (!_todoFilter.prosjekter.includes(p.id)) _todoFilter.prosjekter.push(p.id);
+        } else {
+          _todoFilter.prosjekter = _todoFilter.prosjekter.filter(id => id !== p.id);
+        }
+        _brukTodoFilter();
+      });
       const dot = document.createElement('span');
       dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + (p.farge || 'var(--grønn)') + ';flex-shrink:0;';
       const txt = document.createElement('span');
@@ -3398,10 +3404,13 @@
       popup.appendChild(label);
     });
 
-    // Periode
+    // ── Periode ──
     const perDiv = document.createElement('div');
     perDiv.style.cssText = 'margin-top:12px;border-top:1px solid var(--kant);padding-top:10px;';
-    perDiv.innerHTML = '<div style="font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Periode</div>';
+    const perTittel = document.createElement('div');
+    perTittel.style.cssText = 'font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;';
+    perTittel.textContent = 'Periode';
+    perDiv.appendChild(perTittel);
 
     const perioder = [
       { val: null, label: 'Alle' },
@@ -3410,83 +3419,79 @@
       { val: '7d', label: '7 dager' },
       { val: 'egendefinert', label: 'Egendefinert' }
     ];
+
     const btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+    const periodBtns = [];
+
+    const oppdaterPeriodeBtns = () => {
+      periodBtns.forEach(({ btn, val }) => {
+        const aktiv = _todoFilter.periode === val;
+        btn.style.borderColor = aktiv ? 'var(--grønn)' : 'var(--kant)';
+        btn.style.background  = aktiv ? 'var(--grønn-lys)' : 'var(--hvit)';
+        btn.style.color       = aktiv ? 'var(--grønn)' : 'var(--tekst-sek)';
+      });
+    };
+
+    // Datorad for egendefinert (skjult/vist avhengig av valg)
+    const dateRow = document.createElement('div');
+    dateRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
+    dateRow.style.display = _todoFilter.periode === 'egendefinert' ? 'flex' : 'none';
+
+    let renderDebounce = null;
+    const makeInput = (val, key) => {
+      const inp = document.createElement('input');
+      inp.type = 'date';
+      inp.value = val || '';
+      inp.style.cssText = 'flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:\'Nunito\',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;';
+      inp.oninput = () => {
+        _todoFilter[key] = inp.value;
+        clearTimeout(renderDebounce);
+        renderDebounce = setTimeout(() => { _brukTodoFilter(); }, 300);
+      };
+      return inp;
+    };
+    dateRow.appendChild(makeInput(_todoFilter.egStart, 'egStart'));
+    dateRow.appendChild(makeInput(_todoFilter.egSlutt, 'egSlutt'));
+
     perioder.forEach(({ val, label }) => {
       const btn = document.createElement('button');
       btn.textContent = label;
-      const erAktiv = _todoFilterDraft.periode === val;
-      btn.style.cssText = 'padding:5px 10px;border-radius:var(--rs);border:1.5px solid ' + (erAktiv ? 'var(--grønn)' : 'var(--kant)') + ';background:' + (erAktiv ? 'var(--grønn-lys)' : 'var(--hvit)') + ';color:' + (erAktiv ? 'var(--grønn)' : 'var(--tekst-sek)') + ';font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
+      btn.style.cssText = 'padding:5px 10px;border-radius:var(--rs);border:1.5px solid var(--kant);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all .1s;';
+      periodBtns.push({ btn, val });
       btn.onclick = () => {
-        _todoFilterDraft.periode = val;
-        // re-render popup to show active state + egendefinert inputs
-        popup.remove();
-        visTodoFilterPopup(anchorBtn);
+        _todoFilter.periode = val;
+        dateRow.style.display = val === 'egendefinert' ? 'flex' : 'none';
+        oppdaterPeriodeBtns();
+        _brukTodoFilter();
       };
       btnRow.appendChild(btn);
     });
+    oppdaterPeriodeBtns();
+
     perDiv.appendChild(btnRow);
-
-    // Egendefinert datoer
-    if (_todoFilterDraft.periode === 'egendefinert') {
-      const dateRow = document.createElement('div');
-      dateRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
-      const makeInput = (val, key) => {
-        const inp = document.createElement('input');
-        inp.type = 'date';
-        inp.value = val || '';
-        inp.style.cssText = 'flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:\'Nunito\',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;';
-        inp.oninput = () => { _todoFilterDraft[key] = inp.value; };
-        return inp;
-      };
-      dateRow.appendChild(makeInput(_todoFilterDraft.egStart, 'egStart'));
-      dateRow.appendChild(makeInput(_todoFilterDraft.egSlutt, 'egSlutt'));
-      perDiv.appendChild(dateRow);
-    }
-
+    perDiv.appendChild(dateRow);
     popup.appendChild(perDiv);
 
-    // Bruk-knapp
-    const applyBtn = document.createElement('button');
-    applyBtn.textContent = 'Bruk filter';
-    applyBtn.style.cssText = 'width:100%;margin-top:12px;padding:9px;border:none;border-radius:var(--rs);background:var(--grønn);color:white;font-family:\'Syne\',sans-serif;font-weight:700;font-size:12px;cursor:pointer;';
-    applyBtn.onclick = () => {
-      // Commit draft → filter
-      const pids = _todoFilterDraft.prosjekter;
-      const ingenFilter = pids.length === 0 || (pids.length === 1 && pids[0] === aktivtProsjektId && !_todoFilterDraft.periode);
-      _todoFilter.prosjekter = ingenFilter ? null : pids;
-      _todoFilter.periode   = _todoFilterDraft.periode;
-      _todoFilter.egStart   = _todoFilterDraft.egStart;
-      _todoFilter.egSlutt   = _todoFilterDraft.egSlutt;
-      _todoFilterDraft = null;
+    // ── Nullstill ──
+    const reset = document.createElement('button');
+    reset.textContent = 'Nullstill filter';
+    reset.style.cssText = 'width:100%;margin-top:12px;padding:8px;border:1px solid var(--kant);border-radius:var(--rs);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
+    reset.onclick = () => {
+      _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
       popup.remove();
       _oppdaterTodoFilterKnapp();
       renderTodos();
     };
-    popup.appendChild(applyBtn);
-
-    // Nullstill
-    const harAktivtFilter = _todoFilter.prosjekter || _todoFilter.periode;
-    if (harAktivtFilter) {
-      const reset = document.createElement('button');
-      reset.textContent = 'Nullstill';
-      reset.style.cssText = 'width:100%;margin-top:6px;padding:7px;border:1px solid var(--kant);border-radius:var(--rs);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
-      reset.onclick = () => {
-        _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
-        _todoFilterDraft = null;
-        popup.remove();
-        _oppdaterTodoFilterKnapp();
-        renderTodos();
-      };
-      popup.appendChild(reset);
-    }
+    popup.appendChild(reset);
 
     // Lukk ved klikk utenfor
     setTimeout(() => {
       const lukkHandler = e => {
         if (!popup.contains(e.target) && e.target !== anchorBtn && !anchorBtn.contains(e.target)) {
           popup.remove();
-          _todoFilterDraft = null;
+          // Rydd opp: hvis prosjekter-array er tomt etter lukking, nullstill
+          if (_todoFilter.prosjekter && _todoFilter.prosjekter.length === 0) _todoFilter.prosjekter = null;
           _oppdaterTodoFilterKnapp();
           document.removeEventListener('click', lukkHandler);
         }
@@ -3494,7 +3499,6 @@
       document.addEventListener('click', lukkHandler);
     }, 10);
 
-    // Posisjonering: legg popup i nærmeste posisjonerte container
     anchorBtn.style.position = 'relative';
     anchorBtn.appendChild(popup);
   }
