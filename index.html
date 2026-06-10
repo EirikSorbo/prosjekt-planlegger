@@ -938,16 +938,17 @@
     /* ── To do ── */
     .todo-filter-knapp {
       display:flex;align-items:center;justify-content:center;
-      padding:9px 10px;border-radius:var(--rs);
+      padding:0 10px;border-radius:var(--rs);
       border:1.5px solid var(--kant);background:var(--hvit);
       color:var(--tekst-sek);cursor:pointer;transition:all .15s;
-      flex-shrink:0;
+      flex-shrink:0;box-sizing:border-box;
     }
     .todo-filter-knapp:hover { border-color:var(--grønn-mid); color:var(--grønn); }
     .todo-filter-knapp.aktiv { border-color:var(--grønn);color:var(--grønn);background:var(--grønn-lys); }
 
     .todo-hurtigknapper {
       display: flex;
+      align-items: stretch;
       gap: 8px;
       padding: 14px 0 10px;
       flex-wrap: wrap;
@@ -1551,12 +1552,10 @@
 
   <!-- To do -->
   <div id="panel-todo" class="panel aktiv">
-    <div style="display:flex;align-items:center;gap:6px;">
-      <div class="todo-hurtigknapper" style="flex:1;">
-        <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
-        <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
-        <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
-      </div>
+    <div class="todo-hurtigknapper">
+      <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
+      <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
+      <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
       <button class="todo-filter-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)" title="Filter">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
       </button>
@@ -1716,7 +1715,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.13</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.14</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
