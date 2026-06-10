@@ -1718,7 +1718,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.10</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.11</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3344,30 +3344,48 @@
   let _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
   // prosjekter: null = bare aktivt, array av id-er = valgte
   // periode: null = alt, '1d','3d','7d','egendefinert'
+  let _todoFilterDraft = null; // midlertidig valg mens popup er åpen
 
   function _todoFilterAktiv() {
     return _todoFilter.prosjekter || _todoFilter.periode;
   }
 
   function visTodoFilterPopup(anchorBtn) {
-    // Fjern eksisterende popup
+    // Fjern eksisterende popup (toggle ved klikk på knappen)
     const existing = document.getElementById('todoFilterPopup');
-    if (existing) { existing.remove(); _oppdaterTodoFilterKnapp(); return; }
+    if (existing) { existing.remove(); _todoFilterDraft = null; _oppdaterTodoFilterKnapp(); return; }
+
+    // Initialiser draft fra gjeldende filter
+    if (!_todoFilterDraft) {
+      _todoFilterDraft = {
+        prosjekter: _todoFilter.prosjekter ? [..._todoFilter.prosjekter] : [aktivtProsjektId],
+        periode: _todoFilter.periode,
+        egStart: _todoFilter.egStart,
+        egSlutt: _todoFilter.egSlutt
+      };
+    }
 
     const popup = document.createElement('div');
     popup.id = 'todoFilterPopup';
     popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--hvit);border:1.5px solid var(--kant);border-radius:var(--rs);padding:14px 16px;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
+    // Stopp klikk inni popup fra å boble opp til filterknappen (som ville toggle-lukket popup-en)
+    popup.addEventListener('click', e => e.stopPropagation());
 
     // Prosjekter
     popup.innerHTML = '<div style="font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Prosjekter</div>';
 
-    const valgte = _todoFilter.prosjekter || [aktivtProsjektId];
+    const valgte = _todoFilterDraft.prosjekter;
     prosjekter.forEach(p => {
       const label = document.createElement('label');
       label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = valgte.includes(p.id);
+      // Oppdater draft ved klikk
+      cb.addEventListener('change', () => {
+        if (cb.checked) { if (!_todoFilterDraft.prosjekter.includes(p.id)) _todoFilterDraft.prosjekter.push(p.id); }
+        else { _todoFilterDraft.prosjekter = _todoFilterDraft.prosjekter.filter(id => id !== p.id); }
+      });
       cb.style.cssText = 'width:16px;height:16px;accent-color:' + (p.farge || 'var(--grønn)') + ';cursor:pointer;';
       cb.dataset.pid = p.id;
       const dot = document.createElement('span');
@@ -3397,12 +3415,11 @@
     perioder.forEach(({ val, label }) => {
       const btn = document.createElement('button');
       btn.textContent = label;
-      const erAktiv = _todoFilter.periode === val;
+      const erAktiv = _todoFilterDraft.periode === val;
       btn.style.cssText = 'padding:5px 10px;border-radius:var(--rs);border:1.5px solid ' + (erAktiv ? 'var(--grønn)' : 'var(--kant)') + ';background:' + (erAktiv ? 'var(--grønn-lys)' : 'var(--hvit)') + ';color:' + (erAktiv ? 'var(--grønn)' : 'var(--tekst-sek)') + ';font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
       btn.onclick = () => {
-        _todoFilter.periode = val;
+        _todoFilterDraft.periode = val;
         // re-render popup to show active state + egendefinert inputs
-        const parent = popup.parentElement;
         popup.remove();
         visTodoFilterPopup(anchorBtn);
       };
@@ -3411,7 +3428,7 @@
     perDiv.appendChild(btnRow);
 
     // Egendefinert datoer
-    if (_todoFilter.periode === 'egendefinert') {
+    if (_todoFilterDraft.periode === 'egendefinert') {
       const dateRow = document.createElement('div');
       dateRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
       const makeInput = (val, key) => {
@@ -3419,11 +3436,11 @@
         inp.type = 'date';
         inp.value = val || '';
         inp.style.cssText = 'flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:\'Nunito\',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;';
-        inp.oninput = () => { _todoFilter[key] = inp.value; };
+        inp.oninput = () => { _todoFilterDraft[key] = inp.value; };
         return inp;
       };
-      dateRow.appendChild(makeInput(_todoFilter.egStart, 'egStart'));
-      dateRow.appendChild(makeInput(_todoFilter.egSlutt, 'egSlutt'));
+      dateRow.appendChild(makeInput(_todoFilterDraft.egStart, 'egStart'));
+      dateRow.appendChild(makeInput(_todoFilterDraft.egSlutt, 'egSlutt'));
       perDiv.appendChild(dateRow);
     }
 
@@ -3434,30 +3451,29 @@
     applyBtn.textContent = 'Bruk filter';
     applyBtn.style.cssText = 'width:100%;margin-top:12px;padding:9px;border:none;border-radius:var(--rs);background:var(--grønn);color:white;font-family:\'Syne\',sans-serif;font-weight:700;font-size:12px;cursor:pointer;';
     applyBtn.onclick = () => {
-      // Les avkryssede prosjekter
-      const checked = [...popup.querySelectorAll('input[type=checkbox]')]
-        .filter(cb => cb.checked).map(cb => cb.dataset.pid);
-      // Hvis bare aktivt prosjekt er valgt, sett til null (standard)
-      if (checked.length === 1 && checked[0] === aktivtProsjektId && !_todoFilter.periode) {
-        _todoFilter.prosjekter = null;
-      } else if (checked.length === 0) {
-        _todoFilter.prosjekter = null;
-      } else {
-        _todoFilter.prosjekter = checked;
-      }
+      // Commit draft → filter
+      const pids = _todoFilterDraft.prosjekter;
+      const ingenFilter = pids.length === 0 || (pids.length === 1 && pids[0] === aktivtProsjektId && !_todoFilterDraft.periode);
+      _todoFilter.prosjekter = ingenFilter ? null : pids;
+      _todoFilter.periode   = _todoFilterDraft.periode;
+      _todoFilter.egStart   = _todoFilterDraft.egStart;
+      _todoFilter.egSlutt   = _todoFilterDraft.egSlutt;
+      _todoFilterDraft = null;
       popup.remove();
       _oppdaterTodoFilterKnapp();
       renderTodos();
     };
     popup.appendChild(applyBtn);
 
-    // Nullstill-lenke
-    if (_todoFilterAktiv()) {
+    // Nullstill
+    const harAktivtFilter = _todoFilter.prosjekter || _todoFilter.periode;
+    if (harAktivtFilter) {
       const reset = document.createElement('button');
       reset.textContent = 'Nullstill';
       reset.style.cssText = 'width:100%;margin-top:6px;padding:7px;border:1px solid var(--kant);border-radius:var(--rs);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
       reset.onclick = () => {
         _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
+        _todoFilterDraft = null;
         popup.remove();
         _oppdaterTodoFilterKnapp();
         renderTodos();
@@ -3470,6 +3486,7 @@
       const lukkHandler = e => {
         if (!popup.contains(e.target) && e.target !== anchorBtn && !anchorBtn.contains(e.target)) {
           popup.remove();
+          _todoFilterDraft = null;
           _oppdaterTodoFilterKnapp();
           document.removeEventListener('click', lukkHandler);
         }
