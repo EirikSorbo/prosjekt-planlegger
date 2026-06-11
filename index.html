@@ -17,13 +17,12 @@
       // SVG for figure only (used for canvas rendering)
       const figureSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="84 81 813 939"><g transform="translate(0,1086) scale(1,-1)" fill="#313131" stroke="none"><path d="${FIGURE_PATH}"/></g></svg>`;
 
-      // Favicon: white rounded square + figure
+      // Favicon: white rounded square + figure, as data URI
       const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="white"/><svg x="10" y="5" width="80" height="90" viewBox="84 81 813 939"><g transform="translate(0,1086) scale(1,-1)" fill="#313131" stroke="none"><path d="${FIGURE_PATH}"/></g></svg></svg>`;
-      const faviconBlob = new Blob([faviconSvg], {type: 'image/svg+xml'});
       const faviconLink = document.getElementById('faviconLink');
-      if (faviconLink) faviconLink.href = URL.createObjectURL(faviconBlob);
+      if (faviconLink) faviconLink.href = 'data:image/svg+xml,' + encodeURIComponent(faviconSvg);
 
-      // Apple touch icon: render figure SVG onto 512×512 canvas
+      // Apple touch icon: render figure SVG onto 512×512 canvas via data URI
       const img = new Image();
       img.onload = function() {
         const s = 512;
@@ -50,8 +49,7 @@
         const link = document.getElementById('touchIconLink');
         if (link) link.href = c.toDataURL('image/png');
       };
-      const figureBlob = new Blob([figureSvg], {type: 'image/svg+xml'});
-      img.src = URL.createObjectURL(figureBlob);
+      img.src = 'data:image/svg+xml,' + encodeURIComponent(figureSvg);
     })();
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1711,7 +1709,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.17</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.18</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
