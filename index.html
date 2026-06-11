@@ -1751,7 +1751,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.30</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.31</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3525,47 +3525,42 @@
       .sort((a,b) => a.frist.localeCompare(b.frist));
     const periodeOpp    = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist >= iDagStr && o.frist <= grenseStr)
       .sort((a,b) => a.frist.localeCompare(b.frist));
+    const utenFristTodos = fd.todos.filter(t => !t.fullfort && !t.frist);
+    const utenFristOpp   = fd.oppgaver.filter(o => !o.fullfort && !o.frist);
 
-    const totalForfalt  = forfaltTodos.length + forfaltOpp.length;
-    const totalPeriode  = periodeTodos.length + periodeOpp.length;
+    const totalForfalt    = forfaltTodos.length + forfaltOpp.length;
+    const totalPeriode    = periodeTodos.length + periodeOpp.length;
+    const totalUtenFrist  = utenFristTodos.length + utenFristOpp.length;
 
     const periodeLbl = _dagsPeriode === 'idag' ? 'I dag' : _dagsPeriode === '3d' ? 'Neste 3 dager' : 'Neste uke';
-    const tomTekst   = _dagsPeriode === 'idag' ? 'Ingen gjøremål for i dag' : _dagsPeriode === '3d' ? 'Ingen gjøremål de neste 3 dagene' : 'Ingen gjøremål denne uken';
 
     const innhold = document.createElement('div');
     innhold.className = 'dags-innhold';
 
-    if (totalForfalt === 0 && totalPeriode === 0) {
+    if (totalForfalt === 0 && totalPeriode === 0 && totalUtenFrist === 0) {
       innhold.innerHTML = `<div style="padding:48px 0;text-align:center;">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><polyline points="20 6 9 17 4 12"/></svg>
         <div style="font-size:15px;color:var(--tekst);font-weight:700;">Alt er i rute!</div>
-        <div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">${tomTekst}</div>
+        <div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">Ingen aktive gjøremål</div>
       </div>`;
     } else {
-      // Forfalt
-      if (totalForfalt > 0) {
+      const lagSeksjon = (items, tittel, farge, harBorder) => {
+        if (items.length === 0) return;
         const sec = document.createElement('div');
-        sec.style.marginBottom = '10px';
+        if (harBorder) { sec.style.borderTop = '1px solid var(--kant)'; sec.style.paddingTop = '10px'; }
+        sec.style.marginBottom = '4px';
         const tit = document.createElement('div');
         tit.className = 'dags-seksjon-tittel';
-        tit.style.color = '#d94f4f';
-        tit.textContent = `Forfalt (${totalForfalt})`;
+        tit.style.color = farge;
+        tit.textContent = `${tittel} (${items.length})`;
         sec.appendChild(tit);
-        [...forfaltTodos, ...forfaltOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, isMulti)));
+        items.forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, isMulti)));
         innhold.appendChild(sec);
-      }
-      // Periode-innhold
-      if (totalPeriode > 0) {
-        const sec = document.createElement('div');
-        if (totalForfalt > 0) { sec.style.borderTop = '1px solid var(--kant)'; sec.style.paddingTop = '10px'; }
-        const tit = document.createElement('div');
-        tit.className = 'dags-seksjon-tittel';
-        tit.style.color = 'var(--tekst-sek)';
-        tit.textContent = `${periodeLbl} (${totalPeriode})`;
-        sec.appendChild(tit);
-        [...periodeTodos, ...periodeOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, isMulti)));
-        innhold.appendChild(sec);
-      }
+      };
+
+      lagSeksjon([...forfaltTodos, ...forfaltOpp],   'Forfalt',        '#d94f4f',           false);
+      lagSeksjon([...periodeTodos, ...periodeOpp],   periodeLbl,       'var(--tekst-sek)',  totalForfalt > 0);
+      lagSeksjon([...utenFristTodos, ...utenFristOpp], 'Uten frist',   'var(--tekst-sek)',  totalForfalt + totalPeriode > 0);
     }
 
     popup.appendChild(innhold);
