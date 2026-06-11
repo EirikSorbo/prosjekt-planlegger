@@ -1576,6 +1576,9 @@
       <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
       <button class="todo-filter-knapp" id="dagsoversiktKnapp" onclick="visDagsoversiktPopup(this)" title="Dagens gjøremål" style="position:relative;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><line x1="12" y1="2" x2="12" y2="5.5"/><line x1="12" y1="18.5" x2="12" y2="22"/><line x1="2" y1="12" x2="5.5" y2="12"/><line x1="18.5" y1="12" x2="22" y2="12"/><line x1="5.64" y1="5.64" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="18.36" y2="18.36"/><line x1="18.36" y1="5.64" x2="16.24" y2="7.76"/><line x1="7.76" y1="16.24" x2="5.64" y2="18.36"/></svg>
+      </button>
+      <button class="todo-filter-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)" title="Filter" style="position:relative;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         <span id="dagsoversiktFilterDot" style="display:none;position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--grønn);"></span>
       </button>
     </div>
@@ -1742,7 +1745,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.24</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.25</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3417,34 +3420,8 @@
     tittelDiv.innerHTML = `<div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--tekst);">I dag</div>
       <div style="font-size:11px;color:var(--tekst-sek);margin-top:1px;">${datoTekst}</div>`;
 
-    const filterToggle = document.createElement('button');
-    filterToggle.className = 'dags-filter-toggle' + (_todoFilterAktiv() ? ' aktiv' : '');
-    filterToggle.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter`;
-    filterToggle.onclick = () => {
-      const fs = document.getElementById('dagsFilterSeksjon');
-      if (!fs) return;
-      const show = fs.style.display === 'none' || fs.style.display === '';
-      fs.style.display = show ? 'block' : 'none';
-      filterToggle.classList.toggle('aktiv', show || !!_todoFilterAktiv());
-      if (show) _renderFilterSeksjonInnhold(fs);
-    };
-
     header.appendChild(tittelDiv);
-    header.appendChild(filterToggle);
     popup.appendChild(header);
-
-    // ── Filter-seksjon (skjult som standard) ──
-    const filterSeksjon = document.createElement('div');
-    filterSeksjon.id = 'dagsFilterSeksjon';
-    filterSeksjon.className = 'dags-filter-seksjon';
-    filterSeksjon.style.display = 'none';
-    // Åpne filter-seksjonen automatisk hvis filter allerede er aktivt
-    if (_todoFilterAktiv()) {
-      filterSeksjon.style.display = 'block';
-      filterToggle.classList.add('aktiv');
-      setTimeout(() => _renderFilterSeksjonInnhold(filterSeksjon), 0);
-    }
-    popup.appendChild(filterSeksjon);
 
     // ── Innhold ──
     _renderDagsoversiktInnhold(popup);
@@ -3526,7 +3503,7 @@
   }
 
   function _lagDagsRad(item, iDag, iDagStr, isMulti) {
-    const erTodo = 'tekst' in item;
+    const erTodo = 'tittel' in item;
     const pFarge = (isMulti && item._prosjektId)
       ? (prosjekter.find(p => p.id === item._prosjektId)?.farge || 'var(--grønn)')
       : 'var(--grønn)';
@@ -3547,7 +3524,7 @@
     // Tekst
     const tekst = document.createElement('div');
     tekst.style.cssText = 'flex:1;font-size:13px;color:var(--tekst);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-    tekst.textContent = erTodo ? (item.tekst || '(uten tekst)') : (item.navn || '(uten navn)');
+    tekst.textContent = erTodo ? (item.tittel || '(uten tittel)') : (item.beskrivelse || '(uten navn)');
 
     row.appendChild(ikon);
     row.appendChild(tekst);
@@ -3685,16 +3662,38 @@
     container.appendChild(reset);
   }
 
+  function visTodoFilterPopup(anchorBtn) {
+    const existing = document.getElementById('todoFilterPopup');
+    if (existing) { existing.remove(); _oppdaterTodoFilterKnapp(); return; }
+
+    const popup = document.createElement('div');
+    popup.id = 'todoFilterPopup';
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--hvit);border:1.5px solid var(--kant);border-radius:var(--rs);padding:14px 16px;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
+    popup.addEventListener('click', e => e.stopPropagation());
+
+    _renderFilterSeksjonInnhold(popup);
+
+    setTimeout(() => {
+      const lukkHandler = e => {
+        if (!popup.contains(e.target) && e.target !== anchorBtn && !anchorBtn.contains(e.target)) {
+          popup.remove();
+          if (_todoFilter.prosjekter && _todoFilter.prosjekter.length === 0) _todoFilter.prosjekter = null;
+          _oppdaterTodoFilterKnapp();
+          document.removeEventListener('click', lukkHandler);
+        }
+      };
+      document.addEventListener('click', lukkHandler);
+    }, 10);
+
+    anchorBtn.style.position = 'relative';
+    anchorBtn.appendChild(popup);
+  }
+
   function _oppdaterTodoFilterKnapp() {
+    const btn = document.getElementById('todoFilterKnapp');
+    if (btn) btn.classList.toggle('aktiv', !!_todoFilterAktiv());
     const dot = document.getElementById('dagsoversiktFilterDot');
     if (dot) dot.style.display = _todoFilterAktiv() ? 'block' : 'none';
-    // Oppdater filter-toggle knapp inne i popup hvis åpen
-    const filterToggle = document.querySelector('#dagsoversiktPopup .dags-filter-toggle');
-    if (filterToggle) {
-      const fs = document.getElementById('dagsFilterSeksjon');
-      const filterVist = fs && fs.style.display !== 'none';
-      filterToggle.classList.toggle('aktiv', filterVist || !!_todoFilterAktiv());
-    }
   }
 
   function _hentTodoFilterData() {
