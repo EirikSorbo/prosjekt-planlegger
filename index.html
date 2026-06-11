@@ -1751,7 +1751,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.27</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.28</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3402,7 +3402,20 @@
     if (_dpo) _renderDagsoversiktInnhold(_dpo);
   }
 
-  // ── Dagsoversikt-popup (today overview + filter) ──
+  // ── Dagsoversikt-popup ──
+  let _dagsPeriode = 'idag'; // 'idag' | '3d' | '7d'
+
+  // Hent todos+oppgaver fra ALLE prosjekter uavhengig av filter
+  function _hentAlleProjekterDagsData() {
+    let alleTodos = [], alleOppgaver = [];
+    prosjekter.forEach(p => {
+      const erAktivt = p.id === aktivtProsjektId;
+      const data = erAktivt ? { todos, oppgaver } : _hentProsjektData(p.id);
+      data.todos.forEach(t    => alleTodos.push({ ...t, _prosjektId: p.id, _prosjektNavn: p.navn, _prosjektFarge: p.farge }));
+      data.oppgaver.forEach(o => alleOppgaver.push({ ...o, _prosjektId: p.id, _prosjektNavn: p.navn, _prosjektFarge: p.farge }));
+    });
+    return { todos: alleTodos, oppgaver: alleOppgaver };
+  }
 
   function visDagsoversiktPopup(anchorBtn) {
     if (document.getElementById('dagsoversiktPopup')) {
@@ -3421,15 +3434,15 @@
 
     // ── Header ──
     const iDag = new Date(); iDag.setHours(0,0,0,0);
-    const dagNavn   = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
-    const maanedNavn= ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
-    const datoTekst = `${dagNavn[iDag.getDay()]} ${iDag.getDate()}. ${maanedNavn[iDag.getMonth()]}`;
+    const dagNavn    = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+    const maanedNavn = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+    const datoTekst  = `${dagNavn[iDag.getDay()]} ${iDag.getDate()}. ${maanedNavn[iDag.getMonth()]}`;
 
     const header = document.createElement('div');
     header.className = 'dags-popup-header';
 
     const tittelDiv = document.createElement('div');
-    tittelDiv.innerHTML = `<div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--tekst);">I dag</div>
+    tittelDiv.innerHTML = `<div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--tekst);">Gjøremål</div>
       <div style="font-size:12px;color:var(--tekst-sek);margin-top:2px;">${datoTekst}</div>`;
 
     const lukkBtn = document.createElement('button');
@@ -3440,6 +3453,37 @@
     header.appendChild(tittelDiv);
     header.appendChild(lukkBtn);
     popup.appendChild(header);
+
+    // ── Periodeknapper ──
+    const periodeRad = document.createElement('div');
+    periodeRad.id = 'dagsPeriodeRad';
+    periodeRad.style.cssText = 'display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid var(--kant);background:var(--bg);';
+
+    const perioder = [
+      { val: 'idag', label: 'I dag' },
+      { val: '3d',   label: '3 dager' },
+      { val: '7d',   label: '1 uke' },
+    ];
+    perioder.forEach(({ val, label }) => {
+      const btn = document.createElement('button');
+      btn.dataset.periode = val;
+      btn.textContent = label;
+      const aktiv = _dagsPeriode === val;
+      btn.style.cssText = `padding:6px 14px;border-radius:20px;border:1.5px solid ${aktiv ? 'var(--grønn)' : 'var(--kant)'};background:${aktiv ? 'var(--grønn-lys)' : 'var(--hvit)'};color:${aktiv ? 'var(--grønn)' : 'var(--tekst-sek)'};font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .12s;`;
+      btn.onclick = () => {
+        _dagsPeriode = val;
+        // Oppdater knapp-stiler
+        periodeRad.querySelectorAll('button').forEach(b => {
+          const a = b.dataset.periode === val;
+          b.style.borderColor = a ? 'var(--grønn)' : 'var(--kant)';
+          b.style.background  = a ? 'var(--grønn-lys)' : 'var(--hvit)';
+          b.style.color       = a ? 'var(--grønn)' : 'var(--tekst-sek)';
+        });
+        _renderDagsoversiktInnhold(popup);
+      };
+      periodeRad.appendChild(btn);
+    });
+    popup.appendChild(periodeRad);
 
     // ── Innhold ──
     _renderDagsoversiktInnhold(popup);
@@ -3460,29 +3504,42 @@
     if (existing) existing.remove();
 
     const iDag    = new Date(); iDag.setHours(0,0,0,0);
-    // Bruk lokal dato (ikke UTC) for å unngå tidssone-feil i Norge (UTC+2)
     const _pad    = n => String(n).padStart(2,'0');
     const iDagStr = `${iDag.getFullYear()}-${_pad(iDag.getMonth()+1)}-${_pad(iDag.getDate())}`;
-    const fd      = _hentTodoFilterData();
 
-    const forfaltTodos = fd.todos.filter(t => !t.fullfort && t.frist && t.frist < iDagStr)
-      .sort((a,b) => a.frist.localeCompare(b.frist));
-    const dagsTodos    = fd.todos.filter(t => !t.fullfort && t.frist && t.frist === iDagStr);
-    const forfaltOpp   = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist < iDagStr)
-      .sort((a,b) => a.frist.localeCompare(b.frist));
-    const dagsOpp      = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist === iDagStr);
+    // Beregn grensedato basert på periode
+    const grense = new Date(iDag);
+    if (_dagsPeriode === '3d') grense.setDate(grense.getDate() + 3);
+    else if (_dagsPeriode === '7d') grense.setDate(grense.getDate() + 7);
+    const grenseStr = `${grense.getFullYear()}-${_pad(grense.getMonth()+1)}-${_pad(grense.getDate())}`;
 
-    const totalForfalt = forfaltTodos.length + forfaltOpp.length;
-    const totalIdag    = dagsTodos.length + dagsOpp.length;
+    // Alltid alle prosjekter
+    const fd = _hentAlleProjekterDagsData();
+    const isMulti = prosjekter.length > 1;
+
+    const forfaltTodos  = fd.todos.filter(t => !t.fullfort && t.frist && t.frist < iDagStr)
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+    const periodeTodos  = fd.todos.filter(t => !t.fullfort && t.frist && t.frist >= iDagStr && t.frist <= grenseStr)
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+    const forfaltOpp    = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist < iDagStr)
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+    const periodeOpp    = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist >= iDagStr && o.frist <= grenseStr)
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+
+    const totalForfalt  = forfaltTodos.length + forfaltOpp.length;
+    const totalPeriode  = periodeTodos.length + periodeOpp.length;
+
+    const periodeLbl = _dagsPeriode === 'idag' ? 'I dag' : _dagsPeriode === '3d' ? 'Neste 3 dager' : 'Neste uke';
+    const tomTekst   = _dagsPeriode === 'idag' ? 'Ingen gjøremål for i dag' : _dagsPeriode === '3d' ? 'Ingen gjøremål de neste 3 dagene' : 'Ingen gjøremål denne uken';
 
     const innhold = document.createElement('div');
     innhold.className = 'dags-innhold';
 
-    if (totalForfalt === 0 && totalIdag === 0) {
+    if (totalForfalt === 0 && totalPeriode === 0) {
       innhold.innerHTML = `<div style="padding:48px 0;text-align:center;">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><polyline points="20 6 9 17 4 12"/></svg>
         <div style="font-size:15px;color:var(--tekst);font-weight:700;">Alt er i rute!</div>
-        <div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">Ingen gjøremål for i dag</div>
+        <div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">${tomTekst}</div>
       </div>`;
     } else {
       // Forfalt
@@ -3494,19 +3551,19 @@
         tit.style.color = '#d94f4f';
         tit.textContent = `Forfalt (${totalForfalt})`;
         sec.appendChild(tit);
-        [...forfaltTodos, ...forfaltOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, fd.multi)));
+        [...forfaltTodos, ...forfaltOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, isMulti)));
         innhold.appendChild(sec);
       }
-      // I dag
-      if (totalIdag > 0) {
+      // Periode-innhold
+      if (totalPeriode > 0) {
         const sec = document.createElement('div');
         if (totalForfalt > 0) { sec.style.borderTop = '1px solid var(--kant)'; sec.style.paddingTop = '10px'; }
         const tit = document.createElement('div');
         tit.className = 'dags-seksjon-tittel';
         tit.style.color = 'var(--tekst-sek)';
-        tit.textContent = `I dag (${totalIdag})`;
+        tit.textContent = `${periodeLbl} (${totalPeriode})`;
         sec.appendChild(tit);
-        [...dagsTodos, ...dagsOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, fd.multi)));
+        [...periodeTodos, ...periodeOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, isMulti)));
         innhold.appendChild(sec);
       }
     }
@@ -3516,9 +3573,9 @@
 
   function _lagDagsRad(item, iDag, iDagStr, isMulti) {
     const erTodo = 'tittel' in item;
-    const pFarge = (isMulti && item._prosjektId)
+    const pFarge = item._prosjektFarge || (item._prosjektId
       ? (prosjekter.find(p => p.id === item._prosjektId)?.farge || 'var(--grønn)')
-      : 'var(--grønn)';
+      : 'var(--grønn)');
 
     const row = document.createElement('div');
     row.className = 'dags-rad';
