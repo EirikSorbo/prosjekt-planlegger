@@ -8,60 +8,51 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MishMash WP4">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='white'/%3E%3Ccircle cx='38' cy='50' r='27' fill='%239490d4'/%3E%3Ccircle cx='62' cy='50' r='27' fill='%23b4e8a8'/%3E%3CclipPath id='cp'%3E%3Ccircle cx='62' cy='50' r='27'/%3E%3C/clipPath%3E%3Ccircle cx='38' cy='50' r='27' fill='%232e2b45' clip-path='url(%23cp)'/%3E%3Ccircle cx='38' cy='50' r='27' fill='none' stroke='%236860b0' stroke-width='1'/%3E%3Ccircle cx='62' cy='50' r='27' fill='none' stroke='%236ca060' stroke-width='1'/%3E%3C/svg%3E" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="">
+  <link rel="icon" type="image/svg+xml" id="faviconLink">
+  <link rel="apple-touch-icon" href="" id="touchIconLink">
   <script>
-    window.addEventListener('load', function() {
-      const s = 512;
-      const c = document.createElement('canvas');
-      c.width = c.height = s;
-      const ctx = c.getContext('2d');
+    (function() {
+      const FIGURE_PATH = "M466 999 c-4 0 -14 -2 -21 -3 -8 -1 -17 -3 -20 -4 -3 -1 -8 -2 -11 -3 -3 -1 -7 -2 -9 -3 -2 -1 -4 -2 -6 -2 -1 0 -4 -1 -7 -3 -3 -1 -7 -3 -9 -4 -2 -1 -7 -3 -11 -5 -7 -4 -9 -5 -18 -10 -2 -2 -5 -4 -6 -5 -2 -1 -5 -4 -7 -6 -5 -4 -20 -19 -23 -25 -4 -5 -10 -16 -13 -23 -2 -6 -6 -18 -9 -29 -1 -4 -3 -12 -5 -17 -1 -5 -2 -12 -3 -17 -1 -5 -2 -11 -2 -13 -2 -5 -2 -9 -5 -37 -2 -17 -2 -65 0 -83 2 -26 3 -33 5 -39 1 -4 2 -9 3 -12 1 -4 3 -10 6 -15 2 -5 4 -12 5 -17 1 -5 3 -11 4 -15 1 -4 3 -9 3 -12 2 -6 5 -16 7 -21 10 -28 11 -30 24 -56 4 -8 8 -15 8 -16 1 0 2 -2 3 -4 1 -3 3 -6 4 -8 1 -2 2 -5 2 -8 0 -6 -2 -19 -3 -22 -1 -1 -2 -6 -3 -11 -2 -5 -4 -13 -6 -16 -2 -6 -3 -8 -7 -11 -3 -1 -8 -3 -12 -4 -3 -1 -7 -3 -9 -4 -1 0 -4 -1 -7 -2 -2 -1 -7 -2 -9 -3 -2 -1 -7 -3 -10 -4 -3 -1 -9 -3 -14 -6 -5 -2 -11 -4 -14 -5 -3 -1 -6 -3 -7 -3 -2 -1 -5 -2 -7 -3 -3 -1 -7 -3 -8 -4 -1 -1 -3 -2 -4 -2 0 0 -4 -1 -7 -3 -3 -2 -7 -4 -9 -5 -2 0 -6 -3 -9 -4 -3 -2 -8 -5 -11 -6 -3 -2 -6 -4 -7 -4 -1 -1 -2 -2 -3 -2 -2 -1 -13 -8 -27 -17 -1 -2 -8 -7 -14 -13 -11 -9 -22 -20 -28 -29 -5 -7 -10 -17 -13 -25 -2 -5 -4 -14 -5 -19 -1 -6 -3 -14 -3 -17 -1 -4 -2 -11 -2 -15 -1 -5 -2 -14 -3 -21 -3 -19 -5 -73 -3 -103 l1 -24 2 -4 c2 -2 4 -5 6 -5 3 -1 781 -1 784 0 2 0 4 3 6 5 l3 4 0 23 c1 15 1 34 0 57 -1 19 -2 38 -3 43 0 5 -1 14 -2 21 -1 6 -2 15 -3 19 0 3 -2 11 -3 17 -1 6 -3 14 -5 19 -3 8 -8 18 -13 25 -5 7 -15 19 -22 25 -15 13 -18 15 -28 22 -6 4 -9 6 -14 9 -2 1 -5 3 -6 3 0 0 -1 1 -2 2 -1 1 -4 2 -6 4 -3 1 -8 4 -11 5 -4 2 -8 5 -10 5 -2 1 -6 3 -9 5 -3 2 -7 3 -7 3 -1 0 -3 1 -4 2 -1 1 -4 2 -6 3 -3 1 -7 3 -10 4 -3 2 -6 3 -7 3 -1 0 -3 1 -6 2 -6 3 -14 7 -21 9 -3 1 -7 2 -9 3 -1 1 -5 3 -9 3 -3 1 -7 3 -8 3 -2 1 -5 3 -9 3 -3 1 -9 3 -12 4 -5 3 -5 3 -8 10 -2 3 -5 11 -6 16 -4 11 -9 31 -9 35 0 2 1 5 4 9 5 9 10 17 13 23 1 3 3 6 3 7 1 1 2 3 3 6 1 2 2 4 3 5 0 1 1 2 1 2 0 1 1 4 3 7 1 2 3 7 4 10 1 3 3 8 4 11 5 12 8 21 9 26 1 3 2 7 3 8 0 1 2 6 2 11 1 4 3 9 3 12 1 2 2 6 3 8 1 2 2 6 4 9 2 2 3 4 3 5 0 0 1 1 2 3 1 1 2 4 2 5 1 1 2 6 4 10 5 13 8 29 10 50 1 17 2 21 4 23 1 2 4 4 18 11 10 5 27 17 36 24 10 8 17 15 21 21 2 4 5 9 7 13 1 3 2 8 2 11 0 3 -1 8 -2 11 -3 9 -11 17 -21 21 -7 4 -20 7 -34 9 -10 1 -37 1 -77 -1 -20 0 -58 -1 -83 -2 -26 -1 -50 -1 -52 -2 -3 0 -12 -2 -19 -3 -7 -1 -17 -3 -20 -4 -4 -1 -11 -3 -15 -4 -5 -1 -9 -3 -11 -3 -1 -1 -4 -2 -7 -3 -2 0 -6 -1 -8 -2 -2 -2 -6 -3 -7 -3 -4 -1 -11 -5 -30 -14 -16 -8 -23 -12 -26 -14 -1 -1 -2 -2 -4 -2 -1 -1 -3 -2 -5 -4 -2 -1 -5 -3 -7 -4 -3 -2 -19 -13 -24 -16 -10 -8 -11 -8 -12 -7 -1 1 -2 2 -2 3 0 1 2 5 4 8 6 7 22 23 33 31 14 11 18 14 31 22 4 2 9 5 10 6 3 2 18 10 21 10 1 1 3 2 4 2 1 1 3 2 6 3 2 1 5 2 7 3 1 1 5 3 8 3 3 1 8 3 12 4 3 2 6 3 7 3 1 0 4 1 7 2 2 1 9 3 14 4 5 1 13 3 16 3 4 1 12 2 18 3 6 1 14 1 18 2 11 1 34 2 94 3 29 0 53 0 53 1 2 1 1 5 -1 9 -1 2 -2 5 -2 5 0 2 -9 19 -12 25 -1 2 -5 7 -8 11 -7 7 -20 20 -21 20 -1 0 -3 1 -5 3 -4 3 -5 5 -15 10 -6 4 -20 11 -24 12 -3 1 -5 2 -6 3 -2 0 -5 2 -8 2 -3 1 -7 3 -9 3 -2 1 -7 3 -11 4 -4 0 -9 2 -11 3 -4 1 -18 3 -42 7 -13 1 -41 1 -52 -1z m125 -257 c27 -4 32 -5 40 -8 5 -2 9 -3 10 -5 2 -4 7 -23 9 -39 1 -9 3 -23 3 -32 0 -13 0 -16 -2 -27 -2 -6 -4 -14 -5 -16 0 -2 -2 -8 -3 -13 -2 -5 -3 -10 -4 -11 -1 -1 -2 -5 -3 -8 -2 -7 -5 -14 -9 -23 -1 -2 -2 -5 -2 -6 0 -1 -9 -19 -17 -32 -4 -9 -11 -20 -18 -29 -5 -6 -13 -16 -17 -21 -2 -2 -7 -5 -10 -6 -8 -4 -23 -9 -33 -10 -4 -1 -16 -1 -27 -2 -14 0 -27 0 -37 1 -9 1 -18 1 -20 2 -13 3 -24 6 -25 7 -1 1 -3 3 -6 3 -2 1 -6 5 -10 9 -11 12 -21 26 -28 39 -12 20 -20 38 -24 49 -5 11 -9 24 -11 28 0 2 -2 7 -3 9 0 2 -2 7 -3 11 0 3 -2 9 -4 13 -1 5 -2 11 -3 16 0 4 0 12 1 17 1 10 6 35 9 43 1 4 2 8 3 10 1 5 6 14 9 17 2 2 3 3 4 3 2 0 29 4 33 5 2 0 10 1 17 2 28 2 58 5 63 5 2 1 29 1 58 0 43 0 56 0 65 -1z m-199 -297 c2 -2 8 -6 12 -8 5 -2 13 -5 19 -7 5 -1 16 -4 23 -5 8 -1 21 -3 30 -3 12 -1 20 -1 32 0 17 1 44 5 49 8 2 0 5 2 8 2 5 1 18 8 21 10 1 1 2 2 2 2 1 0 3 1 5 3 1 1 4 2 4 2 1 0 3 -2 4 -4 1 -2 2 -5 3 -8 1 -2 2 -4 2 -5 0 -2 6 -16 10 -22 2 -4 2 -6 2 -15 0 -7 -1 -12 -2 -16 -1 -3 -2 -8 -3 -10 -1 -2 -3 -7 -5 -10 -1 -4 -6 -10 -10 -14 -5 -7 -12 -12 -23 -19 -2 -1 -5 -2 -7 -3 -3 -1 -5 -2 -7 -2 -1 -1 -5 -3 -10 -4 -4 -1 -10 -3 -12 -3 -3 -1 -15 -2 -26 -3 -15 -1 -24 -1 -41 0 -18 1 -22 1 -31 4 -6 2 -11 3 -12 3 -2 0 -4 1 -5 2 -1 0 -5 2 -8 3 -3 1 -6 3 -7 3 -1 1 -3 3 -5 4 -3 1 -9 6 -14 11 -12 12 -16 18 -21 34 -2 8 -3 12 -3 21 0 10 0 11 3 17 2 4 3 7 3 8 0 1 1 3 2 4 1 2 2 7 4 12 1 6 3 9 4 10 1 1 3 2 4 2 0 0 3 -2 6 -4z";
 
-      // Rounded white background
-      const r = 115;
-      ctx.beginPath();
-      ctx.moveTo(r, 0); ctx.lineTo(s-r, 0);
-      ctx.quadraticCurveTo(s, 0, s, r);
-      ctx.lineTo(s, s-r);
-      ctx.quadraticCurveTo(s, s, s-r, s);
-      ctx.lineTo(r, s);
-      ctx.quadraticCurveTo(0, s, 0, s-r);
-      ctx.lineTo(0, r);
-      ctx.quadraticCurveTo(0, 0, r, 0);
-      ctx.closePath();
-      ctx.fillStyle = 'white';
-      ctx.fill();
+      // SVG for figure only (used for canvas rendering)
+      const figureSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="84 81 813 939"><g transform="translate(0,1086) scale(1,-1)" fill="#313131" stroke="none"><path d="${FIGURE_PATH}"/></g></svg>`;
 
-      // Circle centers: pair centered at s/2=256, separation = radius * 1.15
-      const cr = 138; // circle radius
-      const sep = Math.round(cr * 1.15); // ~159
-      const lx = s/2 - sep/2, rx = s/2 + sep/2, cy = s/2;
+      // Favicon: white rounded square + figure
+      const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="white"/><svg x="10" y="5" width="80" height="90" viewBox="84 81 813 939"><g transform="translate(0,1086) scale(1,-1)" fill="#313131" stroke="none"><path d="${FIGURE_PATH}"/></g></svg></svg>`;
+      const faviconBlob = new Blob([faviconSvg], {type: 'image/svg+xml'});
+      const faviconLink = document.getElementById('faviconLink');
+      if (faviconLink) faviconLink.href = URL.createObjectURL(faviconBlob);
 
-      // Purple circle
-      ctx.beginPath(); ctx.arc(lx, cy, cr, 0, Math.PI*2);
-      ctx.fillStyle = '#9490d4'; ctx.fill();
-
-      // Green circle
-      ctx.beginPath(); ctx.arc(rx, cy, cr, 0, Math.PI*2);
-      ctx.fillStyle = '#b4e8a8'; ctx.fill();
-
-      // Dark intersection (clip to right circle, draw left)
-      ctx.save();
-      ctx.beginPath(); ctx.arc(rx, cy, cr, 0, Math.PI*2); ctx.clip();
-      ctx.beginPath(); ctx.arc(lx, cy, cr, 0, Math.PI*2);
-      ctx.fillStyle = '#2e2b45'; ctx.fill();
-      ctx.restore();
-
-      // Circle borders
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(lx, cy, cr, 0, Math.PI*2);
-      ctx.strokeStyle = '#6860b0'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(rx, cy, cr, 0, Math.PI*2);
-      ctx.strokeStyle = '#6ca060'; ctx.stroke();
-
-      const link = document.querySelector('link[rel="apple-touch-icon"]');
-      if (link) link.href = c.toDataURL('image/png');
-    });
+      // Apple touch icon: render figure SVG onto 512×512 canvas
+      const img = new Image();
+      img.onload = function() {
+        const s = 512;
+        const c = document.createElement('canvas');
+        c.width = c.height = s;
+        const ctx = c.getContext('2d');
+        // Rounded white background
+        const rad = 115;
+        ctx.beginPath();
+        ctx.moveTo(rad,0); ctx.lineTo(s-rad,0);
+        ctx.quadraticCurveTo(s,0,s,rad);
+        ctx.lineTo(s,s-rad);
+        ctx.quadraticCurveTo(s,s,s-rad,s);
+        ctx.lineTo(rad,s);
+        ctx.quadraticCurveTo(0,s,0,s-rad);
+        ctx.lineTo(0,rad);
+        ctx.quadraticCurveTo(0,0,rad,0);
+        ctx.closePath();
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        // Draw figure centered with padding
+        const pad = s * 0.08;
+        ctx.drawImage(img, pad, pad * 0.5, s - pad*2, s - pad*1.5);
+        const link = document.getElementById('touchIconLink');
+        if (link) link.href = c.toDataURL('image/png');
+      };
+      const figureBlob = new Blob([figureSvg], {type: 'image/svg+xml'});
+      img.src = URL.createObjectURL(figureBlob);
+    })();
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -1482,15 +1473,12 @@
 <!-- Login overlay -->
 <div id="loginOverlay" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
   <svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <clipPath id="licp"><circle cx="46" cy="36" r="18"/></clipPath>
-    </defs>
     <rect width="72" height="72" rx="18" fill="white" stroke="#e0e0e0" stroke-width="1"/>
-    <circle cx="26" cy="36" r="18" fill="#9490d4"/>
-    <circle cx="46" cy="36" r="18" fill="#b4e8a8"/>
-    <circle cx="26" cy="36" r="18" fill="#2e2b45" clip-path="url(#licp)"/>
-    <circle cx="26" cy="36" r="18" fill="none" stroke="#6860b0" stroke-width="1"/>
-    <circle cx="46" cy="36" r="18" fill="none" stroke="#6ca060" stroke-width="1"/>
+    <svg x="7" y="4" width="58" height="64" viewBox="84 81 813 939">
+      <g transform="translate(0,1086) scale(1,-1)" fill="#313131" stroke="none">
+        <path d="M466 999 c-4 0 -14 -2 -21 -3 -8 -1 -17 -3 -20 -4 -3 -1 -8 -2 -11 -3 -3 -1 -7 -2 -9 -3 -2 -1 -4 -2 -6 -2 -1 0 -4 -1 -7 -3 -3 -1 -7 -3 -9 -4 -2 -1 -7 -3 -11 -5 -7 -4 -9 -5 -18 -10 -2 -2 -5 -4 -6 -5 -2 -1 -5 -4 -7 -6 -5 -4 -20 -19 -23 -25 -4 -5 -10 -16 -13 -23 -2 -6 -6 -18 -9 -29 -1 -4 -3 -12 -5 -17 -1 -5 -2 -12 -3 -17 -1 -5 -2 -11 -2 -13 -2 -5 -2 -9 -5 -37 -2 -17 -2 -65 0 -83 2 -26 3 -33 5 -39 1 -4 2 -9 3 -12 1 -4 3 -10 6 -15 2 -5 4 -12 5 -17 1 -5 3 -11 4 -15 1 -4 3 -9 3 -12 2 -6 5 -16 7 -21 10 -28 11 -30 24 -56 4 -8 8 -15 8 -16 1 0 2 -2 3 -4 1 -3 3 -6 4 -8 1 -2 2 -5 2 -8 0 -6 -2 -19 -3 -22 -1 -1 -2 -6 -3 -11 -2 -5 -4 -13 -6 -16 -2 -6 -3 -8 -7 -11 -3 -1 -8 -3 -12 -4 -3 -1 -7 -3 -9 -4 -1 0 -4 -1 -7 -2 -2 -1 -7 -2 -9 -3 -2 -1 -7 -3 -10 -4 -3 -1 -9 -3 -14 -6 -5 -2 -11 -4 -14 -5 -3 -1 -6 -3 -7 -3 -2 -1 -5 -2 -7 -3 -3 -1 -7 -3 -8 -4 -1 -1 -3 -2 -4 -2 0 0 -4 -1 -7 -3 -3 -2 -7 -4 -9 -5 -2 0 -6 -3 -9 -4 -3 -2 -8 -5 -11 -6 -3 -2 -6 -4 -7 -4 -1 -1 -2 -2 -3 -2 -2 -1 -13 -8 -27 -17 -1 -2 -8 -7 -14 -13 -11 -9 -22 -20 -28 -29 -5 -7 -10 -17 -13 -25 -2 -5 -4 -14 -5 -19 -1 -6 -3 -14 -3 -17 -1 -4 -2 -11 -2 -15 -1 -5 -2 -14 -3 -21 -3 -19 -5 -73 -3 -103 l1 -24 2 -4 c2 -2 4 -5 6 -5 3 -1 781 -1 784 0 2 0 4 3 6 5 l3 4 0 23 c1 15 1 34 0 57 -1 19 -2 38 -3 43 0 5 -1 14 -2 21 -1 6 -2 15 -3 19 0 3 -2 11 -3 17 -1 6 -3 14 -5 19 -3 8 -8 18 -13 25 -5 7 -15 19 -22 25 -15 13 -18 15 -28 22 -6 4 -9 6 -14 9 -2 1 -5 3 -6 3 0 0 -1 1 -2 2 -1 1 -4 2 -6 4 -3 1 -8 4 -11 5 -4 2 -8 5 -10 5 -2 1 -6 3 -9 5 -3 2 -7 3 -7 3 -1 0 -3 1 -4 2 -1 1 -4 2 -6 3 -3 1 -7 3 -10 4 -3 2 -6 3 -7 3 -1 0 -3 1 -6 2 -6 3 -14 7 -21 9 -3 1 -7 2 -9 3 -1 1 -5 3 -9 3 -3 1 -7 3 -8 3 -2 1 -5 3 -9 3 -3 1 -9 3 -12 4 -5 3 -5 3 -8 10 -2 3 -5 11 -6 16 -4 11 -9 31 -9 35 0 2 1 5 4 9 5 9 10 17 13 23 1 3 3 6 3 7 1 1 2 3 3 6 1 2 2 4 3 5 0 1 1 2 1 2 0 1 1 4 3 7 1 2 3 7 4 10 1 3 3 8 4 11 5 12 8 21 9 26 1 3 2 7 3 8 0 1 2 6 2 11 1 4 3 9 3 12 1 2 2 6 3 8 1 2 2 6 4 9 2 2 3 4 3 5 0 0 1 1 2 3 1 1 2 4 2 5 1 1 2 6 4 10 5 13 8 29 10 50 1 17 2 21 4 23 1 2 4 4 18 11 10 5 27 17 36 24 10 8 17 15 21 21 2 4 5 9 7 13 1 3 2 8 2 11 0 3 -1 8 -2 11 -3 9 -11 17 -21 21 -7 4 -20 7 -34 9 -10 1 -37 1 -77 -1 -20 0 -58 -1 -83 -2 -26 -1 -50 -1 -52 -2 -3 0 -12 -2 -19 -3 -7 -1 -17 -3 -20 -4 -4 -1 -11 -3 -15 -4 -5 -1 -9 -3 -11 -3 -1 -1 -4 -2 -7 -3 -2 0 -6 -1 -8 -2 -2 -2 -6 -3 -7 -3 -4 -1 -11 -5 -30 -14 -16 -8 -23 -12 -26 -14 -1 -1 -2 -2 -4 -2 -1 -1 -3 -2 -5 -4 -2 -1 -5 -3 -7 -4 -3 -2 -19 -13 -24 -16 -10 -8 -11 -8 -12 -7 -1 1 -2 2 -2 3 0 1 2 5 4 8 6 7 22 23 33 31 14 11 18 14 31 22 4 2 9 5 10 6 3 2 18 10 21 10 1 1 3 2 4 2 1 1 3 2 6 3 2 1 5 2 7 3 1 1 5 3 8 3 3 1 8 3 12 4 3 2 6 3 7 3 1 0 4 1 7 2 2 1 9 3 14 4 5 1 13 3 16 3 4 1 12 2 18 3 6 1 14 1 18 2 11 1 34 2 94 3 29 0 53 0 53 1 2 1 1 5 -1 9 -1 2 -2 5 -2 5 0 2 -9 19 -12 25 -1 2 -5 7 -8 11 -7 7 -20 20 -21 20 -1 0 -3 1 -5 3 -4 3 -5 5 -15 10 -6 4 -20 11 -24 12 -3 1 -5 2 -6 3 -2 0 -5 2 -8 2 -3 1 -7 3 -9 3 -2 1 -7 3 -11 4 -4 0 -9 2 -11 3 -4 1 -18 3 -42 7 -13 1 -41 1 -52 -1z m125 -257 c27 -4 32 -5 40 -8 5 -2 9 -3 10 -5 2 -4 7 -23 9 -39 1 -9 3 -23 3 -32 0 -13 0 -16 -2 -27 -2 -6 -4 -14 -5 -16 0 -2 -2 -8 -3 -13 -2 -5 -3 -10 -4 -11 -1 -1 -2 -5 -3 -8 -2 -7 -5 -14 -9 -23 -1 -2 -2 -5 -2 -6 0 -1 -9 -19 -17 -32 -4 -9 -11 -20 -18 -29 -5 -6 -13 -16 -17 -21 -2 -2 -7 -5 -10 -6 -8 -4 -23 -9 -33 -10 -4 -1 -16 -1 -27 -2 -14 0 -27 0 -37 1 -9 1 -18 1 -20 2 -13 3 -24 6 -25 7 -1 1 -3 3 -6 3 -2 1 -6 5 -10 9 -11 12 -21 26 -28 39 -12 20 -20 38 -24 49 -5 11 -9 24 -11 28 0 2 -2 7 -3 9 0 2 -2 7 -3 11 0 3 -2 9 -4 13 -1 5 -2 11 -3 16 0 4 0 12 1 17 1 10 6 35 9 43 1 4 2 8 3 10 1 5 6 14 9 17 2 2 3 3 4 3 2 0 29 4 33 5 2 0 10 1 17 2 28 2 58 5 63 5 2 1 29 1 58 0 43 0 56 0 65 -1z m-199 -297 c2 -2 8 -6 12 -8 5 -2 13 -5 19 -7 5 -1 16 -4 23 -5 8 -1 21 -3 30 -3 12 -1 20 -1 32 0 17 1 44 5 49 8 2 0 5 2 8 2 5 1 18 8 21 10 1 1 2 2 2 2 1 0 3 1 5 3 1 1 4 2 4 2 1 0 3 -2 4 -4 1 -2 2 -5 3 -8 1 -2 2 -4 2 -5 0 -2 6 -16 10 -22 2 -4 2 -6 2 -15 0 -7 -1 -12 -2 -16 -1 -3 -2 -8 -3 -10 -1 -2 -3 -7 -5 -10 -1 -4 -6 -10 -10 -14 -5 -7 -12 -12 -23 -19 -2 -1 -5 -2 -7 -3 -3 -1 -5 -2 -7 -2 -1 -1 -5 -3 -10 -4 -4 -1 -10 -3 -12 -3 -3 -1 -15 -2 -26 -3 -15 -1 -24 -1 -41 0 -18 1 -22 1 -31 4 -6 2 -11 3 -12 3 -2 0 -4 1 -5 2 -1 0 -5 2 -8 3 -3 1 -6 3 -7 3 -1 1 -3 3 -5 4 -3 1 -9 6 -14 11 -12 12 -16 18 -21 34 -2 8 -3 12 -3 21 0 10 0 11 3 17 2 4 3 7 3 8 0 1 1 3 2 4 1 2 2 7 4 12 1 6 3 9 4 10 1 1 3 2 4 2 0 0 3 -2 6 -4z"/>
+      </g>
+    </svg>
   </svg>
   <div style="text-align:center;">
     <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--tekst);font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;">MishMash WP4</div>
@@ -1723,7 +1711,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.16</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.17</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
