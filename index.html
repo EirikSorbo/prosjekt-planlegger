@@ -136,23 +136,6 @@
       font-feature-settings: "lnum" 1;
     }
 
-    .logo-ikon {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .dato-idag {
-      font-size: 13px;
-      color: var(--tekst-sek);
-      font-weight: 600;
-    }
-
     /* ── Tabs ── */
     .faner {
       display: flex;
@@ -864,13 +847,6 @@
     .tilknyttet-chip.chip-annet { border-color: #d9729a; color: #d9729a; }
 
     /* ── Frist-velger i oppgavemodal ── */
-    .frist-valg {
-      border: 1px solid var(--kant);
-      border-radius: var(--rs);
-      overflow: hidden;
-      background: var(--bg);
-    }
-
     .frist-rad {
       display: flex;
       align-items: center;
@@ -951,19 +927,6 @@
     .dags-popup-header {
       padding:18px 20px 14px;border-bottom:1px solid var(--kant);
       display:flex;align-items:center;justify-content:space-between;
-    }
-    .dags-filter-toggle {
-      display:flex;align-items:center;gap:5px;
-      padding:5px 10px;border-radius:var(--rs);
-      border:1.5px solid var(--kant);background:var(--hvit);
-      color:var(--tekst-sek);cursor:pointer;font-family:'Syne',sans-serif;
-      font-weight:700;font-size:11px;transition:all .15s;
-    }
-    .dags-filter-toggle:hover { border-color:var(--grønn-mid);color:var(--grønn); }
-    .dags-filter-toggle.aktiv { border-color:var(--grønn);color:var(--grønn);background:var(--grønn-lys); }
-    .dags-filter-seksjon {
-      padding:14px 16px;border-bottom:1px solid var(--kant);
-      background:var(--bg);
     }
     .dags-innhold {
       padding:16px 20px;max-height:60vh;overflow-y:auto;
@@ -1751,7 +1714,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.31</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.32</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2053,7 +2016,7 @@
   // ── Migrer eksisterende data til første prosjekt ──
   if (prosjekter.length === 0 && localStorage.getItem('lp_a')) {
     const migrertId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prosjekter = [{ id: migrertId, navn: 'Prosjekter', farge: '#9490d4', opprettet: new Date().toISOString().slice(0,10) }];
+    prosjekter = [{ id: migrertId, navn: 'Prosjekter', farge: '#9490d4', opprettet: _lokalDatoStr() }];
     aktivtProsjektId = migrertId;
     // Flytt eksisterende nøkler til prosjekt-nøkler
     ['a','o','t','k','tl','fa','fo'].forEach(suffix => {
@@ -2065,7 +2028,7 @@
   } else if (prosjekter.length === 0) {
     // Helt ny bruker — opprett standard prosjekt
     const nyId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prosjekter = [{ id: nyId, navn: 'Mitt prosjekt', farge: '#9490d4', opprettet: new Date().toISOString().slice(0,10) }];
+    prosjekter = [{ id: nyId, navn: 'Mitt prosjekt', farge: '#9490d4', opprettet: _lokalDatoStr() }];
     aktivtProsjektId = nyId;
     localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
     localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
@@ -2162,7 +2125,7 @@
 
   function opprettProsjekt(navn, farge) {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prosjekter.push({ id, navn: navn || 'Nytt prosjekt', farge: farge || '#72c088', opprettet: new Date().toISOString().slice(0,10) });
+    prosjekter.push({ id, navn: navn || 'Nytt prosjekt', farge: farge || '#72c088', opprettet: _lokalDatoStr() });
     lagreProsjekter();
     byttProsjekt(id);
   }
@@ -2273,6 +2236,12 @@
     'juli','august','september','oktober','november','desember'
   ];
 
+  // Lokal YYYY-MM-DD uten tidssone-feil (unngå toISOString som gir UTC)
+  function _lokalDatoStr(d) {
+    if (!d) d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
   const UKEDAGER = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
   const UKEDAGER_K = ['søn','man','tir','ons','tor','fre','lør'];
 
@@ -2362,8 +2331,8 @@
   function _tlDefault() {
     const n = new Date(); n.setHours(0,0,0,0);
     return {
-      start: new Date(n.getFullYear() - 1, n.getMonth(), 1).toISOString().slice(0,10),
-      slutt: new Date(n.getFullYear() + 2, n.getMonth(), 1).toISOString().slice(0,10)
+      start: _lokalDatoStr(new Date(n.getFullYear() - 1, n.getMonth(), 1)),
+      slutt: _lokalDatoStr(new Date(n.getFullYear() + 2, n.getMonth(), 1))
     };
   }
 
@@ -2595,7 +2564,7 @@
       const dagCursor = new Date(start);
       while (dagCursor < slutt) {
         const d = dagCursor.getDate();
-        const erIDag = dagCursor.toISOString().slice(0,10) === iDag.toISOString().slice(0,10);
+        const erIDag = _lokalDatoStr(dagCursor) === _lokalDatoStr(iDag);
         const erSøndag = dagCursor.getDay() === 0;
         const dCelle = document.createElement('div');
         dCelle.style.cssText = `width:${pxPerDag}px;flex-shrink:0;text-align:center;font-size:10px;font-weight:${erIDag?'800':'600'};color:${erIDag?'#c0392b':'var(--tekst-sek)'};padding:4px 0;border-right:1px solid ${erSøndag ? 'var(--kant)' : 'transparent'};`;
@@ -2829,8 +2798,8 @@
     for (let i = 0; i < 7; i++) {
       const d  = new Date(uke);
       d.setDate(uke.getDate() + i);
-      const ds = d.toISOString().slice(0,10);
-      const erIDag = ds === iDag.toISOString().slice(0,10);
+      const ds = _lokalDatoStr(d);
+      const erIDag = ds === _lokalDatoStr(iDag);
       const erValgt = ds === valgtDato;
 
       const dagAkt = aktiviteter.filter(a => a.dato <= ds && (a.datoTil >= ds || a.dato === ds));
@@ -3182,7 +3151,7 @@
       filterRad.appendChild(pill);
     });
 
-    const iDagStr = new Date().toISOString().slice(0, 10);
+    const iDagStr = _lokalDatoStr();
     let filtrert = [...fAktiviteter].filter(a => {
       if (a.leveranseType === 'milepæl' && a.fullfort) return false; // fullfort milepæl → arkiv
       if (a.leveranseType !== 'milepæl' && (a.datoTil || a.dato) < iDagStr) return false; // fortid → arkiv
@@ -3259,7 +3228,7 @@
     body.innerHTML = '';
 
     const iDag = new Date(); iDag.setHours(0,0,0,0);
-    const iDagStr = iDag.toISOString().slice(0,10);
+    const iDagStr = _lokalDatoStr(iDag);
 
     const katAkt = aktiviteter.filter(a => a.type === katId)
       .sort((a,b) => a.dato.localeCompare(b.dato));
@@ -3504,14 +3473,13 @@
     if (existing) existing.remove();
 
     const iDag    = new Date(); iDag.setHours(0,0,0,0);
-    const _pad    = n => String(n).padStart(2,'0');
-    const iDagStr = `${iDag.getFullYear()}-${_pad(iDag.getMonth()+1)}-${_pad(iDag.getDate())}`;
+    const iDagStr = _lokalDatoStr(iDag);
 
     // Beregn grensedato basert på periode (arbeidsdager)
     const grense = _dagsPeriode === 'idag' ? new Date(iDag)
                  : _dagsPeriode === '3d'   ? leggTilArbeidsdager(iDag, 3)
                  :                           leggTilArbeidsdager(iDag, 7);
-    const grenseStr = `${grense.getFullYear()}-${_pad(grense.getMonth()+1)}-${_pad(grense.getDate())}`;
+    const grenseStr = _lokalDatoStr(grense);
 
     // Alltid alle prosjekter
     const fd = _hentAlleProjekterDagsData();
@@ -3568,7 +3536,7 @@
 
   // Toggle fullført for et item i et vilkårlig prosjekt (uten å bytte aktivt prosjekt)
   function _toggleDagsItem(erTodo, itemId, prosjektId) {
-    const idag = new Date().toISOString().slice(0, 10);
+    const idag = _lokalDatoStr();
     if (prosjektId === aktivtProsjektId) {
       // Aktivt prosjekt — bruk eksisterende funksjoner
       if (erTodo) toggleTodo(itemId);
@@ -3584,7 +3552,7 @@
       item.fullfortDato = item.fullfort ? idag : null;
       localStorage.setItem(nøkkel, JSON.stringify(liste));
       // Synk til Firebase hvis tilgjengelig
-      if (window._syncProsjektTilSky) window._syncProsjektTilSky(prosjektId);
+      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid);
     }
     // Re-render dagsoversikten
     const popup = document.getElementById('dagsoversiktPopup');
@@ -3706,7 +3674,7 @@
       periodBtns.forEach(({ btn, val }) => {
         const aktiv = _todoFilter.periode === val;
         btn.style.borderColor = aktiv ? 'var(--grønn)' : 'var(--kant)';
-        btn.style.background  = aktiv ? 'var(--grønn-lys)' : 'var(--hvil)';
+        btn.style.background  = aktiv ? 'var(--grønn-lys)' : 'var(--hvit)';
         btn.style.color       = aktiv ? 'var(--grønn)' : 'var(--tekst-sek)';
       });
     };
@@ -3756,9 +3724,6 @@
       _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
       _oppdaterTodoFilterKnapp();
       renderTodos();
-      // Re-render filter section og innhold
-      const fs = document.getElementById('dagsFilterSeksjon');
-      if (fs && fs.style.display !== 'none') _renderFilterSeksjonInnhold(fs);
       const popup = document.getElementById('dagsoversiktPopup');
       if (popup) _renderDagsoversiktInnhold(popup);
     };
@@ -4170,7 +4135,7 @@
     const t = todos.find(t => t.id === id);
     if (t) {
       t.fullfort = !t.fullfort;
-      t.fullfortDato = t.fullfort ? new Date().toISOString().slice(0,10) : null;
+      t.fullfortDato = t.fullfort ? _lokalDatoStr() : null;
       lagre(); renderTodos();
     }
   }
@@ -4178,7 +4143,7 @@
   function settTodoFrist(dager) {
     const d = new Date();
     d.setDate(d.getDate() + dager);
-    document.getElementById('todoFeltFrist').value = d.toISOString().slice(0, 10);
+    document.getElementById('todoFeltFrist').value = _lokalDatoStr(d);
   }
 
   function synkTodoFraOppgave(oppgaveId) {
@@ -4253,7 +4218,7 @@
     const katId = document.getElementById('oppFeltKategori').value;
     const sel = document.getElementById('oppFeltAktivitet');
     const restore = keepId !== undefined ? keepId : sel.value;
-    const iDagStr = new Date().toISOString().slice(0, 10);
+    const iDagStr = _lokalDatoStr();
     sel.innerHTML = '<option value="">— Frittstående —</option>';
     [...aktiviteter]
       .filter(a => {
@@ -5071,7 +5036,7 @@
     const o = oppgaver.find(o => o.id === id);
     if (o) {
       o.fullfort = !o.fullfort;
-      o.fullfortDato = o.fullfort ? new Date().toISOString().slice(0,10) : null;
+      o.fullfortDato = o.fullfort ? _lokalDatoStr() : null;
       lagre(); renderOppgaver(); renderTodos();
     }
   }
@@ -5301,14 +5266,14 @@
     const a = aktiviteter.find(a => a.id === id);
     if (!a) return;
     a.fullfort = !a.fullfort;
-    a.fullfortDato = a.fullfort ? new Date().toISOString().slice(0, 10) : null;
+    a.fullfortDato = a.fullfort ? _lokalDatoStr() : null;
     lagre();
     lukkModal('aktivitetInfoModal');
     oppdaterAktivPanel();
   }
 
   function åpneArkiv() {
-    const iDagStr = new Date().toISOString().slice(0, 10);
+    const iDagStr = _lokalDatoStr();
     const body = document.getElementById('arkivBody');
     body.innerHTML = '';
 
@@ -5429,7 +5394,7 @@
       settLeveranseModalType('aktivitet');
       document.getElementById('feltTittel').value  = '';
       document.getElementById('feltType').value    = kategorier[0]?.id || '';
-      const defaultDato = dato || new Date().toISOString().slice(0, 10);
+      const defaultDato = dato || _lokalDatoStr();
       document.getElementById('feltDato').value    = defaultDato;
       document.getElementById('feltDatoTil').value = defaultDato;
       document.getElementById('feltTid').value     = '';
@@ -5471,7 +5436,7 @@
     settLeveranseModalType('milepæl');
     document.getElementById('feltTittel').value  = '';
     document.getElementById('feltType').value    = kategorier[0]?.id || '';
-    const defaultDato = dato || new Date().toISOString().slice(0, 10);
+    const defaultDato = dato || _lokalDatoStr();
     document.getElementById('feltDato').value    = defaultDato;
     document.getElementById('feltDatoTil').value = '';
     document.getElementById('feltTid').value     = '';
@@ -5526,7 +5491,7 @@
     const d = new Date();
     d.setDate(d.getDate() + dager);
     const el = document.getElementById('oppFeltFrist');
-    el.value = d.toISOString().slice(0, 10);
+    el.value = _lokalDatoStr(d);
     el.style.display = '';
   }
 
@@ -5734,7 +5699,7 @@
     const el   = document.createElement('a');
     el.href     = url;
     const aktivtNavn = prosjekter.find(p => p.id === aktivtProsjektId)?.navn || 'prosjekt';
-    el.download = aktivtNavn.replace(/\s+/g, '-').toLowerCase() + '-alle-' + new Date().toISOString().slice(0, 10) + '.json';
+    el.download = aktivtNavn.replace(/\s+/g, '-').toLowerCase() + '-alle-' + _lokalDatoStr() + '.json';
     document.body.appendChild(el);
     el.click();
     document.body.removeChild(el);
@@ -5948,8 +5913,8 @@
     const sluttInput = document.getElementById('rapportEgenSlutt');
     if (!startInput.value) {
       const d = new Date();
-      startInput.value = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10);
-      sluttInput.value = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0,10);
+      startInput.value = _lokalDatoStr(new Date(d.getFullYear(), d.getMonth(), 1));
+      sluttInput.value = _lokalDatoStr(new Date(d.getFullYear(), d.getMonth() + 1, 0));
     }
     oppdaterEgendefinertPeriode();
   }
@@ -6013,7 +5978,7 @@
       nesteSlutt = new Date(iDag.getFullYear(), iDag.getMonth() + 6, 0);
     }
 
-    const fmt = d => d.toISOString().slice(0, 10);
+    const fmt = d => _lokalDatoStr(d);
     const iPeriode = (datoStr, start, slutt) => datoStr >= fmt(start) && datoStr <= fmt(slutt);
 
     const aktI = a => !katFilter || a.type === katFilter;
@@ -6309,7 +6274,7 @@
     const a = document.createElement('a');
     a.href = url;
     const navnDel = data.kat ? '-' + data.kat.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
-    a.download = `statusrapport${navnDel}-${data.iDag.toISOString().slice(0,10)}.md`;
+    a.download = `statusrapport${navnDel}-${_lokalDatoStr(data.iDag)}.md`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
@@ -6558,7 +6523,7 @@
   function ryddFullforte() {
     const iDag = new Date();
     const grense = new Date(iDag); grense.setDate(iDag.getDate() - 3);
-    const g3 = grense.toISOString().slice(0,10);
+    const g3 = _lokalDatoStr(grense);
     const forOpp = oppgaver.length;
     const forTod = todos.length;
     oppgaver = oppgaver.filter(o => !(o.fullfort && (!o.fullfortDato || o.fullfortDato < g3)));
@@ -6745,11 +6710,6 @@
   }
 
   // ── Synkroniser data med Firestore ──
-  function _skyDocRef(userId) {
-    const pid = window._getAktivtProsjektId() || 'default';
-    return doc(db, 'brukere', userId, 'prosjekter', pid);
-  }
-
   async function lagreTilSky(userId) {
     const pid = window._getAktivtProsjektId();
     if (!pid) return;
