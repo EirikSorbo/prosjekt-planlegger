@@ -935,6 +935,44 @@
     .todo-filter-knapp:hover { border-color:var(--grønn-mid); color:var(--grønn); }
     .todo-filter-knapp.aktiv { border-color:var(--grønn);color:var(--grønn);background:var(--grønn-lys); }
 
+    .dags-popup {
+      position:absolute;top:100%;right:0;z-index:1000;
+      background:var(--hvit);border:1.5px solid var(--kant);
+      border-radius:var(--r);min-width:300px;max-width:340px;
+      box-shadow:0 8px 32px rgba(0,0,0,.14);margin-top:4px;
+      overflow:hidden;
+    }
+    .dags-popup-header {
+      padding:14px 16px 12px;border-bottom:1px solid var(--kant);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .dags-filter-toggle {
+      display:flex;align-items:center;gap:5px;
+      padding:5px 10px;border-radius:var(--rs);
+      border:1.5px solid var(--kant);background:var(--hvit);
+      color:var(--tekst-sek);cursor:pointer;font-family:'Syne',sans-serif;
+      font-weight:700;font-size:11px;transition:all .15s;
+    }
+    .dags-filter-toggle:hover { border-color:var(--grønn-mid);color:var(--grønn); }
+    .dags-filter-toggle.aktiv { border-color:var(--grønn);color:var(--grønn);background:var(--grønn-lys); }
+    .dags-filter-seksjon {
+      padding:14px 16px;border-bottom:1px solid var(--kant);
+      background:var(--bg);
+    }
+    .dags-innhold {
+      padding:12px 16px;max-height:360px;overflow-y:auto;
+    }
+    .dags-seksjon-tittel {
+      font-size:10px;font-weight:700;font-family:'Syne',sans-serif;
+      text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;
+    }
+    .dags-rad {
+      display:flex;align-items:center;gap:8px;
+      padding:6px 8px;border-radius:var(--rs);
+      cursor:pointer;margin-bottom:2px;transition:background .12s;
+    }
+    .dags-rad:hover { background:var(--grønn-lys); }
+
     .todo-hurtigknapper {
       display: flex;
       align-items: stretch;
@@ -1536,8 +1574,9 @@
       <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
       <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
       <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
-      <button class="todo-filter-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)" title="Filter">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      <button class="todo-filter-knapp" id="dagsoversiktKnapp" onclick="visDagsoversiktPopup(this)" title="Dagens gjøremål" style="position:relative;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><line x1="12" y1="2" x2="12" y2="5.5"/><line x1="12" y1="18.5" x2="12" y2="22"/><line x1="2" y1="12" x2="5.5" y2="12"/><line x1="18.5" y1="12" x2="22" y2="12"/><line x1="5.64" y1="5.64" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="18.36" y2="18.36"/><line x1="18.36" y1="5.64" x2="16.24" y2="7.76"/><line x1="7.76" y1="16.24" x2="5.64" y2="18.36"/></svg>
+        <span id="dagsoversiktFilterDot" style="display:none;position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--grønn);"></span>
       </button>
     </div>
     <div class="kat-oversikt-rad" id="katOversiktRad"></div>
@@ -1703,7 +1742,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.22</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.23</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3349,141 +3388,72 @@
     }
     _oppdaterTodoFilterKnapp();
     renderTodos();
+    // Oppdater dagsoversikt-innhold hvis popup er åpen
+    const _dpo = document.getElementById('dagsoversiktPopup');
+    if (_dpo) _renderDagsoversiktInnhold(_dpo);
   }
 
-  function visTodoFilterPopup(anchorBtn) {
-    // Toggle: lukk hvis allerede åpen
-    const existing = document.getElementById('todoFilterPopup');
-    if (existing) { existing.remove(); _oppdaterTodoFilterKnapp(); return; }
+  // ── Dagsoversikt-popup (today overview + filter) ──
 
-    // Sørg for at prosjekter-array er initialisert
-    if (!_todoFilter.prosjekter) _todoFilter.prosjekter = [aktivtProsjektId];
+  function visDagsoversiktPopup(anchorBtn) {
+    const existing = document.getElementById('dagsoversiktPopup');
+    if (existing) { existing.remove(); return; }
 
     const popup = document.createElement('div');
-    popup.id = 'todoFilterPopup';
-    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--hvit);border:1.5px solid var(--kant);border-radius:var(--rs);padding:14px 16px;min-width:230px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
+    popup.id = 'dagsoversiktPopup';
+    popup.className = 'dags-popup';
     popup.addEventListener('click', e => e.stopPropagation());
 
-    // ── Prosjekter ──
-    const pTittel = document.createElement('div');
-    pTittel.style.cssText = 'font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;';
-    pTittel.textContent = 'Prosjekter';
-    popup.appendChild(pTittel);
+    // ── Header ──
+    const iDag = new Date(); iDag.setHours(0,0,0,0);
+    const dagNavn   = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+    const maanedNavn= ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+    const datoTekst = `${dagNavn[iDag.getDay()]} ${iDag.getDate()}. ${maanedNavn[iDag.getMonth()]}`;
 
-    prosjekter.forEach(p => {
-      const label = document.createElement('label');
-      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = _todoFilter.prosjekter.includes(p.id);
-      cb.style.cssText = 'width:16px;height:16px;accent-color:' + (p.farge || 'var(--grønn)') + ';cursor:pointer;flex-shrink:0;';
-      cb.dataset.pid = p.id;
-      cb.addEventListener('change', () => {
-        if (!_todoFilter.prosjekter) _todoFilter.prosjekter = [aktivtProsjektId];
-        if (cb.checked) {
-          if (!_todoFilter.prosjekter.includes(p.id)) _todoFilter.prosjekter.push(p.id);
-        } else {
-          _todoFilter.prosjekter = _todoFilter.prosjekter.filter(id => id !== p.id);
-        }
-        _brukTodoFilter();
-      });
-      const dot = document.createElement('span');
-      dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + (p.farge || 'var(--grønn)') + ';flex-shrink:0;';
-      const txt = document.createElement('span');
-      txt.textContent = p.navn;
-      label.appendChild(cb);
-      label.appendChild(dot);
-      label.appendChild(txt);
-      popup.appendChild(label);
-    });
+    const header = document.createElement('div');
+    header.className = 'dags-popup-header';
 
-    // ── Periode ──
-    const perDiv = document.createElement('div');
-    perDiv.style.cssText = 'margin-top:12px;border-top:1px solid var(--kant);padding-top:10px;';
-    const perTittel = document.createElement('div');
-    perTittel.style.cssText = 'font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;';
-    perTittel.textContent = 'Periode';
-    perDiv.appendChild(perTittel);
+    const tittelDiv = document.createElement('div');
+    tittelDiv.innerHTML = `<div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--tekst);">I dag</div>
+      <div style="font-size:11px;color:var(--tekst-sek);margin-top:1px;">${datoTekst}</div>`;
 
-    const perioder = [
-      { val: null, label: 'Alle' },
-      { val: '1d', label: '1 dag' },
-      { val: '3d', label: '3 dager' },
-      { val: '7d', label: '7 dager' },
-      { val: 'egendefinert', label: 'Egendefinert' }
-    ];
-
-    const btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
-    const periodBtns = [];
-
-    const oppdaterPeriodeBtns = () => {
-      periodBtns.forEach(({ btn, val }) => {
-        const aktiv = _todoFilter.periode === val;
-        btn.style.borderColor = aktiv ? 'var(--grønn)' : 'var(--kant)';
-        btn.style.background  = aktiv ? 'var(--grønn-lys)' : 'var(--hvit)';
-        btn.style.color       = aktiv ? 'var(--grønn)' : 'var(--tekst-sek)';
-      });
+    const filterToggle = document.createElement('button');
+    filterToggle.className = 'dags-filter-toggle' + (_todoFilterAktiv() ? ' aktiv' : '');
+    filterToggle.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter`;
+    filterToggle.onclick = () => {
+      const fs = document.getElementById('dagsFilterSeksjon');
+      if (!fs) return;
+      const show = fs.style.display === 'none' || fs.style.display === '';
+      fs.style.display = show ? 'block' : 'none';
+      filterToggle.classList.toggle('aktiv', show || !!_todoFilterAktiv());
+      if (show) _renderFilterSeksjonInnhold(fs);
     };
 
-    // Datorad for egendefinert (skjult/vist avhengig av valg)
-    const dateRow = document.createElement('div');
-    dateRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
-    dateRow.style.display = _todoFilter.periode === 'egendefinert' ? 'flex' : 'none';
+    header.appendChild(tittelDiv);
+    header.appendChild(filterToggle);
+    popup.appendChild(header);
 
-    let renderDebounce = null;
-    const makeInput = (val, key) => {
-      const inp = document.createElement('input');
-      inp.type = 'date';
-      inp.value = val || '';
-      inp.style.cssText = 'flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:\'Nunito\',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;';
-      inp.oninput = () => {
-        _todoFilter[key] = inp.value;
-        clearTimeout(renderDebounce);
-        renderDebounce = setTimeout(() => { _brukTodoFilter(); }, 300);
-      };
-      return inp;
-    };
-    dateRow.appendChild(makeInput(_todoFilter.egStart, 'egStart'));
-    dateRow.appendChild(makeInput(_todoFilter.egSlutt, 'egSlutt'));
+    // ── Filter-seksjon (skjult som standard) ──
+    const filterSeksjon = document.createElement('div');
+    filterSeksjon.id = 'dagsFilterSeksjon';
+    filterSeksjon.className = 'dags-filter-seksjon';
+    filterSeksjon.style.display = 'none';
+    // Åpne filter-seksjonen automatisk hvis filter allerede er aktivt
+    if (_todoFilterAktiv()) {
+      filterSeksjon.style.display = 'block';
+      filterToggle.classList.add('aktiv');
+      setTimeout(() => _renderFilterSeksjonInnhold(filterSeksjon), 0);
+    }
+    popup.appendChild(filterSeksjon);
 
-    perioder.forEach(({ val, label }) => {
-      const btn = document.createElement('button');
-      btn.textContent = label;
-      btn.style.cssText = 'padding:5px 10px;border-radius:var(--rs);border:1.5px solid var(--kant);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all .1s;';
-      periodBtns.push({ btn, val });
-      btn.onclick = () => {
-        _todoFilter.periode = val;
-        dateRow.style.display = val === 'egendefinert' ? 'flex' : 'none';
-        oppdaterPeriodeBtns();
-        _brukTodoFilter();
-      };
-      btnRow.appendChild(btn);
-    });
-    oppdaterPeriodeBtns();
-
-    perDiv.appendChild(btnRow);
-    perDiv.appendChild(dateRow);
-    popup.appendChild(perDiv);
-
-    // ── Nullstill ──
-    const reset = document.createElement('button');
-    reset.textContent = 'Nullstill filter';
-    reset.style.cssText = 'width:100%;margin-top:12px;padding:8px;border:1px solid var(--kant);border-radius:var(--rs);background:var(--hvit);color:var(--tekst-sek);font-family:\'Syne\',sans-serif;font-weight:700;font-size:11px;cursor:pointer;';
-    reset.onclick = () => {
-      _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
-      popup.remove();
-      _oppdaterTodoFilterKnapp();
-      renderTodos();
-    };
-    popup.appendChild(reset);
+    // ── Innhold ──
+    _renderDagsoversiktInnhold(popup);
 
     // Lukk ved klikk utenfor
     setTimeout(() => {
       const lukkHandler = e => {
         if (!popup.contains(e.target) && e.target !== anchorBtn && !anchorBtn.contains(e.target)) {
           popup.remove();
-          // Rydd opp: hvis prosjekter-array er tomt etter lukking, nullstill
           if (_todoFilter.prosjekter && _todoFilter.prosjekter.length === 0) _todoFilter.prosjekter = null;
           _oppdaterTodoFilterKnapp();
           document.removeEventListener('click', lukkHandler);
@@ -3496,10 +3466,233 @@
     anchorBtn.appendChild(popup);
   }
 
+  function _renderDagsoversiktInnhold(popup) {
+    const existing = popup.querySelector('.dags-innhold');
+    if (existing) existing.remove();
+
+    const iDag    = new Date(); iDag.setHours(0,0,0,0);
+    const iDagStr = iDag.toISOString().slice(0,10);
+    const fd      = _hentTodoFilterData();
+
+    const forfaltTodos = fd.todos.filter(t => !t.fullfort && t.frist && t.frist < iDagStr)
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+    const dagsTodos    = fd.todos.filter(t => !t.fullfort && t.frist && t.frist === iDagStr);
+    const forfaltOpp   = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist < iDagStr)
+      .sort((a,b) => a.frist.localeCompare(b.frist));
+    const dagsOpp      = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist === iDagStr);
+
+    const totalForfalt = forfaltTodos.length + forfaltOpp.length;
+    const totalIdag    = dagsTodos.length + dagsOpp.length;
+
+    const innhold = document.createElement('div');
+    innhold.className = 'dags-innhold';
+
+    if (totalForfalt === 0 && totalIdag === 0) {
+      innhold.innerHTML = `<div style="padding:28px 0;text-align:center;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;"><polyline points="20 6 9 17 4 12"/></svg>
+        <div style="font-size:13px;color:var(--tekst-sek);font-weight:600;">Alt er i rute!</div>
+        <div style="font-size:11px;color:var(--tekst-sek);margin-top:3px;">Ingen gjøremål for i dag</div>
+      </div>`;
+    } else {
+      // Forfalt
+      if (totalForfalt > 0) {
+        const sec = document.createElement('div');
+        sec.style.marginBottom = '10px';
+        const tit = document.createElement('div');
+        tit.className = 'dags-seksjon-tittel';
+        tit.style.color = '#d94f4f';
+        tit.textContent = `Forfalt (${totalForfalt})`;
+        sec.appendChild(tit);
+        [...forfaltTodos, ...forfaltOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, fd.multi)));
+        innhold.appendChild(sec);
+      }
+      // I dag
+      if (totalIdag > 0) {
+        const sec = document.createElement('div');
+        if (totalForfalt > 0) { sec.style.borderTop = '1px solid var(--kant)'; sec.style.paddingTop = '10px'; }
+        const tit = document.createElement('div');
+        tit.className = 'dags-seksjon-tittel';
+        tit.style.color = 'var(--tekst-sek)';
+        tit.textContent = `I dag (${totalIdag})`;
+        sec.appendChild(tit);
+        [...dagsTodos, ...dagsOpp].forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, fd.multi)));
+        innhold.appendChild(sec);
+      }
+    }
+
+    popup.appendChild(innhold);
+  }
+
+  function _lagDagsRad(item, iDag, iDagStr, isMulti) {
+    const erTodo = 'tekst' in item;
+    const pFarge = (isMulti && item._prosjektId)
+      ? (prosjekter.find(p => p.id === item._prosjektId)?.farge || 'var(--grønn)')
+      : 'var(--grønn)';
+
+    const row = document.createElement('div');
+    row.className = 'dags-rad';
+    row.onclick = () => { document.getElementById('dagsoversiktPopup')?.remove(); erTodo ? åpneTodoInfo(item.id) : åpneOppgaveInfo(item.id); };
+
+    // Ikon
+    const ikon = document.createElement('div');
+    ikon.style.flexShrink = '0';
+    if (erTodo) {
+      ikon.style.cssText = `width:13px;height:13px;border-radius:50%;border:2px solid ${pFarge};flex-shrink:0;`;
+    } else {
+      ikon.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${pFarge}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9 11 12 14 15 11"/></svg>`;
+    }
+
+    // Tekst
+    const tekst = document.createElement('div');
+    tekst.style.cssText = 'flex:1;font-size:13px;color:var(--tekst);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    tekst.textContent = erTodo ? (item.tekst || '(uten tekst)') : (item.navn || '(uten navn)');
+
+    row.appendChild(ikon);
+    row.appendChild(tekst);
+
+    // Forfalt-badge
+    if (item.frist && item.frist < iDagStr) {
+      const diff = Math.round((iDag - new Date(item.frist + 'T00:00:00')) / 86400000);
+      const badge = document.createElement('span');
+      badge.textContent = diff === 1 ? 'i går' : `${diff}d siden`;
+      badge.style.cssText = 'font-size:10px;font-weight:700;color:#d94f4f;background:#fdeaea;padding:2px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap;';
+      row.appendChild(badge);
+    }
+
+    // Prosjekt-chip (multi)
+    if (isMulti && item._prosjektNavn) {
+      const chip = document.createElement('span');
+      chip.textContent = item._prosjektNavn;
+      chip.style.cssText = `font-size:10px;font-weight:700;color:${pFarge};background:${pFarge}22;padding:2px 6px;border-radius:8px;flex-shrink:0;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
+      row.appendChild(chip);
+    }
+
+    return row;
+  }
+
+  function _renderFilterSeksjonInnhold(container) {
+    container.innerHTML = '';
+
+    if (!_todoFilter.prosjekter) _todoFilter.prosjekter = [aktivtProsjektId];
+
+    // ── Prosjekter ──
+    const pTit = document.createElement('div');
+    pTit.style.cssText = "font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;";
+    pTit.textContent = 'Prosjekter';
+    container.appendChild(pTit);
+
+    prosjekter.forEach(p => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = _todoFilter.prosjekter.includes(p.id);
+      cb.style.cssText = 'width:15px;height:15px;accent-color:' + (p.farge||'var(--grønn)') + ';cursor:pointer;flex-shrink:0;';
+      cb.addEventListener('change', () => {
+        if (!_todoFilter.prosjekter) _todoFilter.prosjekter = [aktivtProsjektId];
+        if (cb.checked) { if (!_todoFilter.prosjekter.includes(p.id)) _todoFilter.prosjekter.push(p.id); }
+        else { _todoFilter.prosjekter = _todoFilter.prosjekter.filter(id => id !== p.id); }
+        _brukTodoFilter();
+      });
+      const dot = document.createElement('span');
+      dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + (p.farge||'var(--grønn)') + ';flex-shrink:0;';
+      const txt = document.createElement('span'); txt.textContent = p.navn;
+      label.appendChild(cb); label.appendChild(dot); label.appendChild(txt);
+      container.appendChild(label);
+    });
+
+    // ── Periode ──
+    const perDiv = document.createElement('div');
+    perDiv.style.cssText = 'margin-top:10px;border-top:1px solid var(--kant);padding-top:10px;';
+    const perTit = document.createElement('div');
+    perTit.style.cssText = "font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;";
+    perTit.textContent = 'Periode';
+    perDiv.appendChild(perTit);
+
+    const perioder = [
+      { val: null, label: 'Alle' },
+      { val: '1d',  label: '1 dag' },
+      { val: '3d',  label: '3 dager' },
+      { val: '7d',  label: '7 dager' },
+      { val: 'egendefinert', label: 'Egendefinert' }
+    ];
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+    const periodBtns = [];
+
+    const oppdaterPeriodeBtns = () => {
+      periodBtns.forEach(({ btn, val }) => {
+        const aktiv = _todoFilter.periode === val;
+        btn.style.borderColor = aktiv ? 'var(--grønn)' : 'var(--kant)';
+        btn.style.background  = aktiv ? 'var(--grønn-lys)' : 'var(--hvil)';
+        btn.style.color       = aktiv ? 'var(--grønn)' : 'var(--tekst-sek)';
+      });
+    };
+
+    const dateRow = document.createElement('div');
+    dateRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
+    dateRow.style.display = _todoFilter.periode === 'egendefinert' ? 'flex' : 'none';
+
+    let renderDebounce = null;
+    const makeInput = (val, key) => {
+      const inp = document.createElement('input');
+      inp.type = 'date'; inp.value = val || '';
+      inp.style.cssText = "flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);box-sizing:border-box;";
+      inp.oninput = () => {
+        _todoFilter[key] = inp.value;
+        clearTimeout(renderDebounce);
+        renderDebounce = setTimeout(() => _brukTodoFilter(), 300);
+      };
+      return inp;
+    };
+    dateRow.appendChild(makeInput(_todoFilter.egStart, 'egStart'));
+    dateRow.appendChild(makeInput(_todoFilter.egSlutt, 'egSlutt'));
+
+    perioder.forEach(({ val, label }) => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.style.cssText = "padding:5px 10px;border-radius:var(--rs);border:1.5px solid var(--kant);background:var(--hvit);color:var(--tekst-sek);font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all .1s;";
+      periodBtns.push({ btn, val });
+      btn.onclick = () => {
+        _todoFilter.periode = val;
+        dateRow.style.display = val === 'egendefinert' ? 'flex' : 'none';
+        oppdaterPeriodeBtns();
+        _brukTodoFilter();
+      };
+      btnRow.appendChild(btn);
+    });
+    oppdaterPeriodeBtns();
+    perDiv.appendChild(btnRow);
+    perDiv.appendChild(dateRow);
+    container.appendChild(perDiv);
+
+    // ── Nullstill ──
+    const reset = document.createElement('button');
+    reset.textContent = 'Nullstill filter';
+    reset.style.cssText = "width:100%;margin-top:10px;padding:7px;border:1px solid var(--kant);border-radius:var(--rs);background:var(--hvit);color:var(--tekst-sek);font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;";
+    reset.onclick = () => {
+      _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
+      _oppdaterTodoFilterKnapp();
+      renderTodos();
+      // Re-render filter section og innhold
+      const fs = document.getElementById('dagsFilterSeksjon');
+      if (fs && fs.style.display !== 'none') _renderFilterSeksjonInnhold(fs);
+      const popup = document.getElementById('dagsoversiktPopup');
+      if (popup) _renderDagsoversiktInnhold(popup);
+    };
+    container.appendChild(reset);
+  }
+
   function _oppdaterTodoFilterKnapp() {
-    const btn = document.getElementById('todoFilterKnapp');
-    if (!btn) return;
-    btn.classList.toggle('aktiv', !!_todoFilterAktiv());
+    const dot = document.getElementById('dagsoversiktFilterDot');
+    if (dot) dot.style.display = _todoFilterAktiv() ? 'block' : 'none';
+    // Oppdater filter-toggle knapp inne i popup hvis åpen
+    const filterToggle = document.querySelector('#dagsoversiktPopup .dags-filter-toggle');
+    if (filterToggle) {
+      const fs = document.getElementById('dagsFilterSeksjon');
+      const filterVist = fs && fs.style.display !== 'none';
+      filterToggle.classList.toggle('aktiv', filterVist || !!_todoFilterAktiv());
+    }
   }
 
   function _hentTodoFilterData() {
