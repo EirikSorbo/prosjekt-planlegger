@@ -1742,7 +1742,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.23</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.24</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3471,7 +3471,9 @@
     if (existing) existing.remove();
 
     const iDag    = new Date(); iDag.setHours(0,0,0,0);
-    const iDagStr = iDag.toISOString().slice(0,10);
+    // Bruk lokal dato (ikke UTC) for å unngå tidssone-feil i Norge (UTC+2)
+    const _pad    = n => String(n).padStart(2,'0');
+    const iDagStr = `${iDag.getFullYear()}-${_pad(iDag.getMonth()+1)}-${_pad(iDag.getDate())}`;
     const fd      = _hentTodoFilterData();
 
     const forfaltTodos = fd.todos.filter(t => !t.fullfort && t.frist && t.frist < iDagStr)
