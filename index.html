@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MishMash WP4</title>
+  <title>Projects</title>
   <meta name="theme-color" content="#2e2b45">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="MishMash WP4">
+  <meta name="apple-mobile-web-app-title" content="Projects">
   <link rel="icon" type="image/svg+xml" id="faviconLink">
   <link rel="apple-touch-icon" href="" id="touchIconLink">
   <script>
@@ -1479,7 +1479,7 @@
     </svg>
   </svg>
   <div style="text-align:center;">
-    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--tekst);font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;">MishMash WP4</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--tekst);font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;">Projects</div>
     <div style="font-family:'Nunito',sans-serif;font-size:13px;color:var(--tekst-sek);margin-top:4px;">Logg inn for å fortsette</div>
   </div>
   <button onclick="window._fbSignIn()" style="background:var(--grønn);color:white;border:none;border-radius:10px;padding:13px 28px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;">
@@ -1498,7 +1498,7 @@
         </g>
       </svg>
     </svg>
-    <span id="prosjektTittel">MishMash WP4</span>
+    <span id="prosjektTittel">Projects</span>
     <svg width="10" height="10" viewBox="0 0 10 10" style="opacity:0.5;flex-shrink:0;"><path d="M2 3.5L5 6.5L8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div id="prosjektMeny" style="display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--hvit);border:1px solid var(--kant);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px;z-index:200;overflow:hidden;"></div>
   </div>
@@ -1703,7 +1703,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.19</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.20</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2005,7 +2005,7 @@
   // ── Migrer eksisterende data til første prosjekt ──
   if (prosjekter.length === 0 && localStorage.getItem('lp_a')) {
     const migrertId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prosjekter = [{ id: migrertId, navn: 'MishMash WP4', farge: '#9490d4', opprettet: new Date().toISOString().slice(0,10) }];
+    prosjekter = [{ id: migrertId, navn: 'Projects', farge: '#9490d4', opprettet: new Date().toISOString().slice(0,10) }];
     aktivtProsjektId = migrertId;
     // Flytt eksisterende nøkler til prosjekt-nøkler
     ['a','o','t','k','tl','fa','fo'].forEach(suffix => {
@@ -5493,7 +5493,7 @@
       try {
         const data = JSON.parse(e.target.result);
         if (!Array.isArray(data.aktiviteter) || !Array.isArray(data.oppgaver)) {
-          alert('Filen ser ikke ut til å være en gyldig MishMash WP4-eksport.'); return;
+          alert('Filen ser ikke ut til å være en gyldig Projects-eksport.'); return;
         }
 
         // Merge: legg til kun elementer med nye IDer
@@ -5898,7 +5898,7 @@
     const katFilter = window._aktivRapportKatFilter || null;
     const data = beregnRapportData(katFilter);
     const fmtPer = (a, b) => `${fmtDato(a)} – ${fmtDato(b)}`;
-    const tittel = data.kat ? `Statusrapport — ${data.kat.label}` : `Statusrapport — MishMash WP4`;
+    const tittel = data.kat ? `Statusrapport — ${data.kat.label}` : `Statusrapport — Projects`;
 
     let md = `# ${tittel}\n\n`;
     md += `**Denne uken:** ${fmtPer(data.denneMandag, data.denneSondag)}  \n`;
@@ -5954,7 +5954,7 @@
     if (data.fullfortForrige.length === 0) md += `_Ingen registrerte fullføringer._\n\n`;
     else { data.fullfortForrige.forEach(item => { md += `- **${item.tittel}** _(${item.type}, ${fmtDatoFra(item.dato)})_\n`; }); md += `\n`; }
 
-    md += `---\n\n_Generert av MishMash WP4._\n`;
+    md += `---\n\n_Generert av Projects._\n`;
 
     const blob = new Blob([md], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
