@@ -1751,7 +1751,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.26</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.27</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3522,7 +3522,14 @@
 
     const row = document.createElement('div');
     row.className = 'dags-rad';
-    row.onclick = () => { document.getElementById('dagsoversiktPopup')?.remove(); erTodo ? åpneTodoInfo(item.id) : åpneOppgaveInfo(item.id); };
+    row.onclick = () => {
+      lukkDagsoversikt();
+      // Bytt til riktig prosjekt hvis elementet tilhører et annet prosjekt
+      if (item._prosjektId && item._prosjektId !== aktivtProsjektId) {
+        byttProsjekt(item._prosjektId);
+      }
+      erTodo ? åpneTodoInfo(item.id) : åpneOppgaveInfo(item.id);
+    };
 
     // Ikon
     const ikon = document.createElement('div');
@@ -3932,12 +3939,19 @@
 
       const kort = document.createElement('div');
       kort.className = 'todo-kort' + (t.fullfort ? ' fullfort' : '');
-      kort.onclick = () => åpneTodoInfo(t.id);
+      kort.onclick = () => {
+        if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
+        åpneTodoInfo(t.id);
+      };
 
       const cb = document.createElement('div');
       cb.className = 'todo-cb' + (t.fullfort ? ' sjekket' : '');
       cb.innerHTML = t.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
-      cb.onclick = e => { e.stopPropagation(); toggleTodo(t.id); };
+      cb.onclick = e => {
+        e.stopPropagation();
+        if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
+        toggleTodo(t.id);
+      };
 
       let metaHtml = '';
       if (isMulti && t._prosjektNavn) {
@@ -3991,12 +4005,19 @@
       kort.className = 'todo-kort' + (o.fullfort ? ' fullfort' : '');
       kort.style.borderLeft = `3px solid ${getKat(oType)?.farge || 'var(--grønn-mid)'}`;
       kort.style.cursor = 'pointer';
-      kort.onclick = () => åpneOppgaveInfo(o.id);
+      kort.onclick = () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        åpneOppgaveInfo(o.id);
+      };
 
       const cb = document.createElement('div');
       cb.className = 'todo-cb' + (o.fullfort ? ' sjekket' : '');
       cb.innerHTML = o.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
-      cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); renderTodos(); };
+      cb.onclick = e => {
+        e.stopPropagation();
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        toggleOppgave(o.id); renderTodos();
+      };
 
       let metaHtml = '';
       if (isMulti && o._prosjektNavn) {
