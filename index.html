@@ -1751,7 +1751,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.28</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.29</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3507,10 +3507,10 @@
     const _pad    = n => String(n).padStart(2,'0');
     const iDagStr = `${iDag.getFullYear()}-${_pad(iDag.getMonth()+1)}-${_pad(iDag.getDate())}`;
 
-    // Beregn grensedato basert på periode
-    const grense = new Date(iDag);
-    if (_dagsPeriode === '3d') grense.setDate(grense.getDate() + 3);
-    else if (_dagsPeriode === '7d') grense.setDate(grense.getDate() + 7);
+    // Beregn grensedato basert på periode (arbeidsdager)
+    const grense = _dagsPeriode === 'idag' ? new Date(iDag)
+                 : _dagsPeriode === '3d'   ? leggTilArbeidsdager(iDag, 3)
+                 :                           leggTilArbeidsdager(iDag, 7);
     const grenseStr = `${grense.getFullYear()}-${_pad(grense.getMonth()+1)}-${_pad(grense.getDate())}`;
 
     // Alltid alle prosjekter
@@ -3605,11 +3605,13 @@
     row.appendChild(ikon);
     row.appendChild(tekst);
 
-    // Forfalt-badge
+    // Forfalt-badge (arbeidsdager)
     if (item.frist && item.frist < iDagStr) {
-      const diff = Math.round((iDag - new Date(item.frist + 'T00:00:00')) / 86400000);
+      const fd = new Date(item.frist + 'T00:00:00');
+      const calDiff = Math.round((iDag - fd) / 86400000);
+      const diff = Math.abs(arbeidsdagerMellom(fd, iDag));
       const badge = document.createElement('span');
-      badge.textContent = diff === 1 ? 'i går' : `${diff}d siden`;
+      badge.textContent = calDiff === 1 ? 'i går' : `${diff}d siden`;
       badge.style.cssText = 'font-size:10px;font-weight:700;color:#d94f4f;background:#fdeaea;padding:2px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap;';
       row.appendChild(badge);
     }
@@ -3799,14 +3801,11 @@
     const d = new Date(frist + 'T00:00:00');
     const idag = new Date(); idag.setHours(0,0,0,0);
     if (_todoFilter.periode === '1d') {
-      const grense = new Date(idag); grense.setDate(grense.getDate() + 1);
-      return d <= grense;
+      return d <= leggTilArbeidsdager(idag, 1);
     } else if (_todoFilter.periode === '3d') {
-      const grense = new Date(idag); grense.setDate(grense.getDate() + 3);
-      return d <= grense;
+      return d <= leggTilArbeidsdager(idag, 3);
     } else if (_todoFilter.periode === '7d') {
-      const grense = new Date(idag); grense.setDate(grense.getDate() + 7);
-      return d <= grense;
+      return d <= leggTilArbeidsdager(idag, 7);
     } else if (_todoFilter.periode === 'egendefinert') {
       if (_todoFilter.egStart && frist < _todoFilter.egStart) return false;
       if (_todoFilter.egSlutt && frist > _todoFilter.egSlutt) return false;
@@ -4540,19 +4539,59 @@
   }
 
   /* ──────────────────────────────
+     ARBEIDSDAGER-HJELPERE
+  ────────────────────────────── */
+  // Legg til n arbeidsdager (hopp over lør+søn), returner ny Date
+  function leggTilArbeidsdager(dato, n) {
+    const d = new Date(dato);
+    let igjen = Math.abs(n);
+    const retning = n >= 0 ? 1 : -1;
+    while (igjen > 0) {
+      d.setDate(d.getDate() + retning);
+      const dag = d.getDay();
+      if (dag !== 0 && dag !== 6) igjen--;
+    }
+    return d;
+  }
+
+  // Tell arbeidsdager mellom to datoer (fortegn: positiv = til er etter fra)
+  function arbeidsdagerMellom(fra, til) {
+    const retning = til >= fra ? 1 : -1;
+    let teller = 0;
+    const d = new Date(fra);
+    while (true) {
+      d.setDate(d.getDate() + retning);
+      if (retning > 0 && d > til) break;
+      if (retning < 0 && d < til) break;
+      const dag = d.getDay();
+      if (dag !== 0 && dag !== 6) teller++;
+    }
+    return teller * retning;
+  }
+
+  // Dagsnavnet for en dato, stor forbokstav
+  const _DAGNAVN = ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
+
+  /* ──────────────────────────────
      FRIST HELPER
   ────────────────────────────── */
   function fristLabel(fristStr, fullfort = false) {
     if (!fristStr) return null;
-    const iDag  = new Date(); iDag.setHours(0,0,0,0);
-    const fd    = new Date(fristStr + 'T00:00:00');
-    const diff  = Math.round((fd - iDag) / 86400000);
+    const iDag    = new Date(); iDag.setHours(0,0,0,0);
+    const fd      = new Date(fristStr + 'T00:00:00');
+    const calDiff = Math.round((fd - iDag) / 86400000);  // kalender-dager
+    const wDiff   = arbeidsdagerMellom(iDag, fd);         // arbeidsdager
     const datoStr = fd.getDate() + '. ' + MAANEDER[fd.getMonth()];
 
-    if (!fullfort && diff < 0)   return { tekst: `⚠ ${Math.abs(diff)} dag${Math.abs(diff)===1?'':'er'} over`,  farge: '#c0392b', vekt: '700' };
-    if (!fullfort && diff === 0) return { tekst: 'I dag!',              farge: '#d48826', vekt: '700' };
-    if (!fullfort && diff === 1) return { tekst: 'I morgen',            farge: '#d48826', vekt: '600' };
-    if (!fullfort && diff <= 6)  return { tekst: `Om ${diff} dager`,    farge: 'var(--tekst-sek)', vekt: '500' };
+    if (!fullfort && calDiff < 0) {
+      const over = Math.abs(arbeidsdagerMellom(fd, iDag));
+      return { tekst: `⚠ ${over} dag${over === 1 ? '' : 'er'} over`, farge: '#c0392b', vekt: '700' };
+    }
+    if (!fullfort && calDiff === 0) return { tekst: 'I dag!',   farge: '#d48826', vekt: '700' };
+    if (!fullfort && calDiff === 1) return { tekst: 'I morgen', farge: '#d48826', vekt: '600' };
+    // 1 arbeidsdag unna men ikke bokstavelig i morgen (helg i mellom) → vis dagsnavn
+    if (!fullfort && wDiff === 1)   return { tekst: _DAGNAVN[fd.getDay()], farge: '#d48826', vekt: '600' };
+    if (!fullfort && wDiff <= 4)    return { tekst: `Om ${wDiff} dager`,   farge: 'var(--tekst-sek)', vekt: '500' };
     return { tekst: datoStr, farge: 'var(--tekst-sek)', vekt: '500' };
   }
 
