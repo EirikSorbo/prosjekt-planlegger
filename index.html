@@ -1718,7 +1718,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.36</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.37</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1735,7 +1735,6 @@
       <p style="font-size:13px;color:var(--tekst-sek);margin:0 0 16px;line-height:1.5;" id="slettProsjektBeskrivelse"></p>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <button id="slettProsjektSlettKnapp" style="width:100%;font-size:13px;background:#e74c3c;color:white;border:none;border-radius:var(--rs);padding:12px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗑 Slett permanent</button>
-        <button id="slettProsjektArkiverKnapp" style="width:100%;font-size:13px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:12px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiver</button>
         <button onclick="lukkModal('slettProsjektModal')" class="knapp-sek" style="width:100%;font-size:12px;padding:10px 14px;">Avbryt</button>
       </div>
     </div>
@@ -6948,12 +6947,17 @@
       const navn = document.createElement('span');
       navn.style.cssText = 'flex:1;font-size:12px;color:var(--tekst);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
       navn.textContent = p.navn;
+      const arkBtn = document.createElement('button');
+      arkBtn.style.cssText = 'font-size:11px;padding:4px 10px;background:none;color:var(--tekst-sek);border:1px solid var(--kant);border-radius:var(--rs);cursor:pointer;font-family:"Syne",sans-serif;font-weight:600;flex-shrink:0;';
+      arkBtn.textContent = 'Arkiver';
+      arkBtn.onclick = () => arkiverProsjekt(p.id);
       const btn = document.createElement('button');
       btn.style.cssText = 'font-size:11px;padding:4px 10px;background:none;color:#c0392b;border:1px solid #e6d0d0;border-radius:var(--rs);cursor:pointer;font-family:"Syne",sans-serif;font-weight:600;flex-shrink:0;';
-      btn.textContent = 'Fjern';
+      btn.textContent = 'Slett';
       btn.onclick = () => visSlettProsjektDialog(p.id);
       rad.appendChild(dot);
       rad.appendChild(navn);
+      rad.appendChild(arkBtn);
       rad.appendChild(btn);
       cont.appendChild(rad);
     });
@@ -6965,9 +6969,8 @@
     const modal = document.getElementById('slettProsjektModal');
     document.getElementById('slettProsjektTittel').textContent = 'Fjern «' + p.navn + '»';
     document.getElementById('slettProsjektBeskrivelse').textContent =
-      'Vil du slette eller arkivere dette prosjektet? Sletting fjerner all data permanent. Arkivering skjuler prosjektet, men beholder data i arkiv og rapporter.';
+      'Er du sikker på at du vil slette dette prosjektet? All data vil bli fjernet permanent og kan ikke gjenopprettes.';
     document.getElementById('slettProsjektSlettKnapp').onclick = () => { lukkModal('slettProsjektModal'); slettProsjekt(prosjektId); };
-    document.getElementById('slettProsjektArkiverKnapp').onclick = () => { lukkModal('slettProsjektModal'); arkiverProsjekt(prosjektId); };
     modal.classList.add('vis');
   }
 
