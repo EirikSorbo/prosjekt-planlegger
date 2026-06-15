@@ -180,7 +180,7 @@
     /* Bredere layout på tablet/desktop */
     @media (min-width: 700px) {
       main { max-width: 1100px; padding: 24px 24px 80px; }
-      #panel-todo, #panel-liste, #panel-oppgaver { max-width: 720px; margin: 0 auto; }
+      #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 720px; margin: 0 auto; }
     }
     @media (min-width: 1280px) {
       main { max-width: 1280px; }
@@ -1718,7 +1718,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.34</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.35</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3429,18 +3429,10 @@
     const maanedNavn = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
     const datoTekst  = `${dagNavn[iDag.getDay()]} ${iDag.getDate()}. ${maanedNavn[iDag.getMonth()]}`;
 
-    // ── Header ──
-    const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
-    header.innerHTML = `<div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--tekst);">Gjøremål</div>
-      <div style="font-size:12px;color:var(--tekst-sek);margin-top:2px;">${datoTekst}</div>
-    </div>`;
-    cont.appendChild(header);
-
-    // ── Filter-rad ──
+    // ── Filter-rad (same style as todo-hurtigknapper) ──
     const filterRad = document.createElement('div');
-    filterRad.style.cssText = 'display:flex;align-items:center;gap:6px;padding:10px 0 8px;flex-wrap:wrap;';
+    filterRad.className = 'todo-hurtigknapper';
+    filterRad.style.flexWrap = 'wrap';
 
     // Prosjektfilter-knapp
     const aktive = prosjekter.filter(p => !p.arkivert);
@@ -3528,32 +3520,31 @@
                      : _startFilter.periode === '7d' ? 'Neste uke'
                      : 'Periode';
 
-    // ── Innhold ──
+    // ── Innhold i kort-container ──
+    const kortCont = document.createElement('div');
+    kortCont.className = 'kort-container';
+
     if (totalForfalt === 0 && totalPeriode === 0 && totalUtenFrist === 0) {
-      cont.innerHTML += `<div style="padding:48px 0;text-align:center;">
+      kortCont.innerHTML = `<div class="tom-melding">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><polyline points="20 6 9 17 4 12"/></svg>
-        <div style="font-size:15px;color:var(--tekst);font-weight:700;">Alt er i rute!</div>
-        <div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">Ingen aktive gjøremål</div>
+        Alt er i rute!<br>Ingen aktive gjøremål
       </div>`;
     } else {
-      const lagSeksjon = (items, tittel, farge, harBorder) => {
+      const lagSeksjon = (items, tittel, farge) => {
         if (items.length === 0) return;
-        const sec = document.createElement('div');
-        if (harBorder) { sec.style.borderTop = '1px solid var(--kant)'; sec.style.paddingTop = '10px'; }
-        sec.style.marginBottom = '4px';
-        const tit = document.createElement('div');
-        tit.className = 'dags-seksjon-tittel';
-        tit.style.color = farge;
-        tit.textContent = `${tittel} (${items.length})`;
-        sec.appendChild(tit);
-        items.forEach(item => sec.appendChild(_lagStartRad(item, iDag, iDagStr, isMulti)));
-        cont.appendChild(sec);
+        const label = document.createElement('div');
+        label.className = 'maaned-label';
+        label.style.color = farge;
+        label.textContent = `${tittel} (${items.length})`;
+        kortCont.appendChild(label);
+        items.forEach(item => kortCont.appendChild(_lagStartRad(item, iDag, iDagStr, isMulti)));
       };
 
-      lagSeksjon([...forfaltTodos, ...forfaltOpp],       'Forfalt',     '#d94f4f',          false);
-      lagSeksjon([...periodeTodos, ...periodeOpp],       periodeLbl,    'var(--tekst-sek)', totalForfalt > 0);
-      lagSeksjon([...utenFristTodos, ...utenFristOpp],   'Uten frist',  'var(--tekst-sek)', totalForfalt + totalPeriode > 0);
+      lagSeksjon([...forfaltTodos, ...forfaltOpp],       'Forfalt',     '#d94f4f');
+      lagSeksjon([...periodeTodos, ...periodeOpp],       periodeLbl,    'var(--tekst-sek)');
+      lagSeksjon([...utenFristTodos, ...utenFristOpp],   'Uten frist',  'var(--tekst-sek)');
     }
+    cont.appendChild(kortCont);
   }
 
   function _lagStartRad(item, iDag, iDagStr, isMulti) {
@@ -3562,7 +3553,7 @@
     const pFarge = item._prosjektFarge || (prosjekter.find(p => p.id === pid)?.farge || 'var(--grønn)');
 
     const row = document.createElement('div');
-    row.className = 'dags-rad';
+    row.className = 'todo-kort';
     row.onclick = () => {
       if (pid !== aktivtProsjektId) byttProsjekt(pid);
       erTodo ? åpneTodoInfo(item.id) : åpneOppgaveInfo(item.id);
