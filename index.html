@@ -1705,6 +1705,7 @@
         <input type="color" id="innstProsjektFarge" oninput="oppdaterProsjektFarge(this.value)" style="width:32px;height:32px;border:1px solid var(--kant);border-radius:var(--rs);cursor:pointer;padding:2px;" />
       </div>
       <button onclick="lukkModal('kategoriModal');visNyttProsjektDialog()" style="width:100%;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">+ Nytt prosjekt</button>
+      <div id="innstProsjektListe" style="margin-top:10px;"></div>
     </div>
     <div id="innstillingerBruker" style="display:none;padding:12px 22px 14px;border-top:1px solid var(--kant);align-items:center;gap:10px;">
       <div style="width:32px;height:32px;border-radius:50%;background:var(--grønn-lys);border:1px solid var(--grønn-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -1714,8 +1715,26 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.32</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.33</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Slett/Arkiver prosjekt -->
+<div class="modal-overlay" id="slettProsjektModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <h2 id="slettProsjektTittel" style="font-size:15px;">Fjern prosjekt</h2>
+      <button class="lukk-knapp" onclick="lukkModal('slettProsjektModal')">×</button>
+    </div>
+    <div class="modal-body" style="padding:16px 22px;">
+      <p style="font-size:13px;color:var(--tekst-sek);margin:0 0 16px;line-height:1.5;" id="slettProsjektBeskrivelse"></p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button id="slettProsjektSlettKnapp" style="width:100%;font-size:13px;background:#e74c3c;color:white;border:none;border-radius:var(--rs);padding:12px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗑 Slett permanent</button>
+        <button id="slettProsjektArkiverKnapp" style="width:100%;font-size:13px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:12px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiver</button>
+        <button onclick="lukkModal('slettProsjektModal')" class="knapp-sek" style="width:100%;font-size:12px;padding:10px 14px;">Avbryt</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2747,7 +2766,7 @@
   function _hentMetaTidslinjeData() {
     const samlet = { aktiviteter: [], kategorier: [] };
     let globalStart = null, globalSlutt = null;
-    prosjekter.forEach(p => {
+    prosjekter.filter(p => !p.arkivert).forEach(p => {
       const erAktivt = p.id === aktivtProsjektId;
       const data = erAktivt ? { aktiviteter, kategorier } : _hentProsjektData(p.id);
       const tl = erAktivt ? { start: tidslinjeStartGrense, slutt: tidslinjeSluttGrense }
@@ -3377,7 +3396,7 @@
   // Hent todos+oppgaver fra ALLE prosjekter uavhengig av filter
   function _hentAlleProjekterDagsData() {
     let alleTodos = [], alleOppgaver = [];
-    prosjekter.forEach(p => {
+    prosjekter.filter(p => !p.arkivert).forEach(p => {
       const erAktivt = p.id === aktivtProsjektId;
       const data = erAktivt ? { todos, oppgaver } : _hentProsjektData(p.id);
       data.todos.forEach(t    => alleTodos.push({ ...t, _prosjektId: p.id, _prosjektNavn: p.navn, _prosjektFarge: p.farge }));
@@ -3631,7 +3650,7 @@
     pTit.textContent = 'Prosjekter';
     container.appendChild(pTit);
 
-    prosjekter.forEach(p => {
+    prosjekter.filter(p => !p.arkivert).forEach(p => {
       const label = document.createElement('label');
       label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
       const cb = document.createElement('input');
@@ -3868,7 +3887,7 @@
     pTittel.textContent = 'Prosjekter';
     popup.appendChild(pTittel);
 
-    prosjekter.forEach(p => {
+    prosjekter.filter(p => !p.arkivert).forEach(p => {
       const label = document.createElement('label');
       label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
       const cb = document.createElement('input');
@@ -4393,6 +4412,7 @@
     const p = hentAktivtProsjekt();
     document.getElementById('innstProsjektNavn').value = p.navn;
     document.getElementById('innstProsjektFarge').value = p.farge;
+    renderInnstProsjektListe();
     document.getElementById('kategoriModal').classList.add('vis');
   }
 
@@ -6586,7 +6606,7 @@
     const meny = document.getElementById('prosjektMeny');
     if (meny.style.display !== 'none') { meny.style.display = 'none'; return; }
     meny.innerHTML = '';
-    prosjekter.forEach(p => {
+    prosjekter.filter(p => !p.arkivert).forEach(p => {
       const el = document.createElement('div');
       el.style.cssText = `padding:10px 14px;font-size:13px;font-weight:${p.id===aktivtProsjektId?'700':'500'};font-family:'Nunito',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tekst);transition:background .1s;`;
       el.onmouseenter = () => el.style.background = 'var(--bg)';
@@ -6626,6 +6646,75 @@
     if (p) { p.farge = farge; lagreProsjekter(); settProsjektFarger(farge); }
   }
 
+  function renderInnstProsjektListe() {
+    const cont = document.getElementById('innstProsjektListe');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const aktive = prosjekter.filter(p => !p.arkivert);
+    if (aktive.length <= 1) return;
+    aktive.forEach(p => {
+      const rad = document.createElement('div');
+      rad.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;';
+      const dot = document.createElement('span');
+      dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:${p.farge};flex-shrink:0;`;
+      const navn = document.createElement('span');
+      navn.style.cssText = 'flex:1;font-size:12px;color:var(--tekst);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+      navn.textContent = p.navn;
+      const btn = document.createElement('button');
+      btn.style.cssText = 'font-size:11px;padding:4px 10px;background:none;color:#c0392b;border:1px solid #e6d0d0;border-radius:var(--rs);cursor:pointer;font-family:"Syne",sans-serif;font-weight:600;flex-shrink:0;';
+      btn.textContent = 'Fjern';
+      btn.onclick = () => visSlettProsjektDialog(p.id);
+      rad.appendChild(dot);
+      rad.appendChild(navn);
+      rad.appendChild(btn);
+      cont.appendChild(rad);
+    });
+  }
+
+  function visSlettProsjektDialog(prosjektId) {
+    const p = prosjekter.find(x => x.id === prosjektId);
+    if (!p) return;
+    const modal = document.getElementById('slettProsjektModal');
+    document.getElementById('slettProsjektTittel').textContent = 'Fjern «' + p.navn + '»';
+    document.getElementById('slettProsjektBeskrivelse').textContent =
+      'Vil du slette eller arkivere dette prosjektet? Sletting fjerner all data permanent. Arkivering skjuler prosjektet, men beholder data i arkiv og rapporter.';
+    document.getElementById('slettProsjektSlettKnapp').onclick = () => { lukkModal('slettProsjektModal'); slettProsjekt(prosjektId); };
+    document.getElementById('slettProsjektArkiverKnapp').onclick = () => { lukkModal('slettProsjektModal'); arkiverProsjekt(prosjektId); };
+    modal.classList.add('vis');
+  }
+
+  function slettProsjekt(prosjektId) {
+    const aktive = prosjekter.filter(p => !p.arkivert);
+    if (aktive.length <= 1) return;
+    if (prosjektId === aktivtProsjektId) {
+      const neste = aktive.find(p => p.id !== prosjektId);
+      if (neste) byttProsjekt(neste.id);
+      else return;
+    }
+    prosjekter = prosjekter.filter(p => p.id !== prosjektId);
+    lagreProsjekter();
+    ['a','o','t','k','tl','fa','fo'].forEach(s => localStorage.removeItem('lp_' + prosjektId + '_' + s));
+    if (window._currentUid && window._slettProsjektFraSky) window._slettProsjektFraSky(window._currentUid, prosjektId);
+    renderInnstProsjektListe();
+    åpneKategoriModal();
+  }
+
+  function arkiverProsjekt(prosjektId) {
+    const aktive = prosjekter.filter(p => !p.arkivert);
+    if (aktive.length <= 1) return;
+    if (prosjektId === aktivtProsjektId) {
+      const neste = aktive.find(p => p.id !== prosjektId);
+      if (neste) byttProsjekt(neste.id);
+      else return;
+    }
+    const p = prosjekter.find(x => x.id === prosjektId);
+    if (p) p.arkivert = true;
+    lagreProsjekter();
+    if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid);
+    renderInnstProsjektListe();
+    åpneKategoriModal();
+  }
+
   function init() {
     // Sett prosjektfarge og tittel
     const p = hentAktivtProsjekt();
@@ -6661,7 +6750,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, setDoc, getDoc, getDocFromServer, onSnapshot }
+  import { getFirestore, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -6762,6 +6851,16 @@
   }
 
   window._lagreTilSky = lagreTilSky;
+
+  window._slettProsjektFraSky = async function(userId, prosjektId) {
+    if (!userId) return;
+    try {
+      await deleteDoc(doc(db, 'brukere', userId, 'prosjekter', prosjektId));
+      await lagreTilSky(userId);
+    } catch(e) {
+      console.error('[SYNK] Sletting fra sky feilet:', e);
+    }
+  };
 
   // ── Hjelpefunksjon: oppdater app etter sky-data ──
   function _oppdaterAppFraSky() {
