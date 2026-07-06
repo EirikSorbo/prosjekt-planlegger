@@ -1799,7 +1799,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.51</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.52</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2514,6 +2514,16 @@
     aktivitetFilterState = lastFilterState(_pk('fa'));
     oppgaveFilterState   = lastFilterState(_pk('fo'));
     _migrerFlogEid(aktivtProsjektId);
+    // Bakfyll opprettet-dato på items uten (kan ikke kjenne ekte dato, bruk i
+    // dag — som ryddFullforte gjør med fullfortDato). Grunnlag for stagnasjon.
+    const iDagStr = _lokalDatoStr();
+    let _oppEndret = false;
+    todos.forEach(t    => { if (t && !t.opprettet) { t.opprettet = iDagStr; _oppEndret = true; } });
+    oppgaver.forEach(o => { if (o && !o.opprettet) { o.opprettet = iDagStr; _oppEndret = true; } });
+    if (_oppEndret) {
+      localStorage.setItem(_pk('t'), JSON.stringify(todos));
+      localStorage.setItem(_pk('o'), JSON.stringify(oppgaver));
+    }
     oppdaterDagerIgjen();
   }
 
@@ -3756,6 +3766,37 @@
     return kort;
   }
 
+  // Stagnasjons-kort: åpne todos/oppgaver som ble opprettet for over 2 uker
+  // siden og fortsatt ikke er fullført. Leser på tvers av Start-prosjektene.
+  const STAGN_DAGER = 14;
+  function _lagStagnasjonKort() {
+    const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
+    const grense = new Date(iDag); grense.setDate(iDag.getDate() - STAGN_DAGER);
+    const grenseStr = _lokalDatoStr(grense);
+    const stille = [];
+    _startProsjektIds().forEach(pid => {
+      const t = _parseSafe(localStorage.getItem('lp_' + pid + '_t'), []) || [];
+      const o = _parseSafe(localStorage.getItem('lp_' + pid + '_o'), []) || [];
+      t.forEach(x => { if (x && !x.fullfort && x.opprettet && x.opprettet <= grenseStr) stille.push({ tittel: x.tittel || '', opprettet: x.opprettet }); });
+      o.forEach(x => { if (x && !x.fullfort && x.opprettet && x.opprettet <= grenseStr) stille.push({ tittel: x.beskrivelse || '', opprettet: x.opprettet }); });
+    });
+    if (!stille.length) return null;
+    stille.sort((a, b) => a.opprettet.localeCompare(b.opprettet)); // eldste først
+    const alder = ds => Math.round((iDag - new Date(ds + 'T00:00:00')) / 86400000);
+    const vis = stille.slice(0, 3).map(s =>
+      `<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--tekst);padding:3px 0;">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(s.tittel)}</span>
+        <span style="color:var(--tekst-sek);white-space:nowrap;flex-shrink:0;">${alder(s.opprettet)} dager</span>
+      </div>`).join('');
+    const flere = stille.length > 3 ? `<div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">+ ${stille.length - 3} flere</div>` : '';
+    const kort = document.createElement('div');
+    kort.style.cssText = 'background:var(--grønn-lys);border:1px solid var(--grønn-mid);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;';
+    kort.innerHTML = `
+      <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);margin-bottom:8px;">⏳ Har stått stille (${stille.length})</div>
+      ${vis}${flere}`;
+    return kort;
+  }
+
   function renderStartside() {
     const cont = document.getElementById('startInnhold');
     if (!cont) return;
@@ -3763,6 +3804,8 @@
 
     const denneUka = _lagDenneUkaKort();
     if (denneUka) cont.appendChild(denneUka);
+    const stagn = _lagStagnasjonKort();
+    if (stagn) cont.appendChild(stagn);
 
     const iDag = new Date(); iDag.setHours(0,0,0,0);
     const iDagStr = _lokalDatoStr(iDag);
@@ -4640,13 +4683,13 @@
         id: uid(), tittel: item.tittel, beskrivelse: item.beskrivelse || '',
         frist: nyFrist, aktivitetId: item.aktivitetId || null, oppgaveId: item.oppgaveId || null,
         kategoriId: item.kategoriId || null, viktig: item.viktig || false, gjenta,
-        tagger: (item.tagger || []).slice(), fullfort: false,
+        tagger: (item.tagger || []).slice(), opprettet: _lokalDatoStr(), fullfort: false,
       });
     } else {
       oppgaver.push({
         id: uid(), beskrivelse: item.beskrivelse, notat: item.notat || '',
         frist: nyFrist, aktivitetId: item.aktivitetId || null, kategoriId: item.kategoriId || null,
-        viktig: item.viktig || false, gjenta, tagger: (item.tagger || []).slice(), fullfort: false,
+        viktig: item.viktig || false, gjenta, tagger: (item.tagger || []).slice(), opprettet: _lokalDatoStr(), fullfort: false,
       });
     }
     item.gjenta = null;
@@ -4918,7 +4961,7 @@
   function hurtigLeggTilTodo(tittel) {
     tittel = (tittel || '').trim();
     if (!tittel) return;
-    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, tagger: [], fullfort: false });
+    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, tagger: [], opprettet: _lokalDatoStr(), fullfort: false });
     lagre(); renderTodos();
     const inp = document.getElementById('hurtigTodoInput');
     if (inp) inp.focus();
@@ -4939,7 +4982,7 @@
       const t = todos.find(t => t.id === redigTodoId);
       if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.aktivitetId = aktivitetId; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; t.gjenta = gjenta; t.tagger = tagger; }
     } else {
-      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, aktivitetId, oppgaveId, kategoriId, gjenta, tagger, fullfort: false });
+      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, aktivitetId, oppgaveId, kategoriId, gjenta, tagger, opprettet: _lokalDatoStr(), fullfort: false });
     }
     lagre(); lukkModal('todoModal'); renderTodos();
   }
@@ -6408,7 +6451,7 @@
       const o = oppgaver.find(o => o.id === redigOppgaveId);
       Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger });
     } else {
-      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, fullfort: false };
+      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, opprettet: _lokalDatoStr(), fullfort: false };
       oppgaver.push(nyOppgave);
     }
 
