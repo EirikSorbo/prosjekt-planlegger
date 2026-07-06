@@ -1799,7 +1799,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.50</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.51</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3701,12 +3701,29 @@
     return alle;
   }
 
-  // «Denne uka»-kort: antall fullført denne uka + mini søylediagram per dag.
-  // Vises kun når det finnes fullført-historikk (skjules for helt ny bruker).
+  // Fullførings-streak: antall sammenhengende dager (endende i dag eller i går
+  // som grace) med minst én fullføring. i går-grace = dagens ennå ikke gjort
+  // bryter ikke streaken.
+  function _beregnStreak(flog) {
+    const dager = new Set(flog.map(e => e.dato).filter(Boolean));
+    if (!dager.size) return 0;
+    const cur = new Date(); cur.setHours(0, 0, 0, 0);
+    if (!dager.has(_lokalDatoStr(cur))) {
+      cur.setDate(cur.getDate() - 1);
+      if (!dager.has(_lokalDatoStr(cur))) return 0;
+    }
+    let streak = 0;
+    while (dager.has(_lokalDatoStr(cur))) { streak++; cur.setDate(cur.getDate() - 1); }
+    return streak;
+  }
+
+  // «Denne uka»-kort: antall fullført denne uka + mini søylediagram per dag +
+  // fullførings-streak. Vises kun når det finnes fullført-historikk.
   function _lagDenneUkaKort() {
     const { mandag, dagIndex } = _ukeInfo();
     const flog = _samleFlog(_startProsjektIds());
     if (!flog.length) return null;
+    const streak = _beregnStreak(flog);
     const ukedager = ['M', 'T', 'O', 'T', 'F', 'L', 'S'];
     const perDag = [];
     let total = 0;
@@ -3734,7 +3751,8 @@
         <span style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);">Denne uka</span>
         <span style="font-size:13px;color:var(--tekst-sek);"><strong style="color:var(--tekst);font-size:18px;font-family:'Syne',sans-serif;">${total}</strong> fullført</span>
       </div>
-      <div style="display:flex;gap:4px;align-items:flex-end;">${bars}</div>`;
+      <div style="display:flex;gap:4px;align-items:flex-end;">${bars}</div>
+      ${streak >= 2 ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--kant);font-size:13px;color:var(--tekst);display:flex;align-items:center;gap:6px;">🔥 <strong style="font-family:'Syne',sans-serif;">${streak}</strong> dager på rad</div>` : ''}`;
     return kort;
   }
 
