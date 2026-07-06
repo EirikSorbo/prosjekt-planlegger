@@ -522,12 +522,6 @@
     .filter-pill.fullforte.aktiv{ background: #999;    color: white; border-color: #999; }
 
     /* ── Sveip for å slette ── */
-    .sveip-container {
-      position: relative;
-      overflow: hidden;
-      border-radius: var(--r);
-    }
-    .sveip-container + .besk-panel { border-radius: 0 0 var(--r) var(--r); }
     .sveip-bakgrunn {
       position: absolute;
       inset: 0;
@@ -846,60 +840,6 @@
     .tilknyttet-chip.chip-admin { border-color: #5b9bd5; color: #5b9bd5; }
     .tilknyttet-chip.chip-annet { border-color: #d9729a; color: #d9729a; }
 
-    /* ── Frist-velger i oppgavemodal ── */
-    .frist-rad {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 14px;
-      cursor: pointer;
-      border-bottom: 1px solid var(--kant);
-      transition: background .1s;
-    }
-    .frist-rad:last-child { border-bottom: none; }
-    .frist-rad:hover { background: var(--grønn-lys); }
-
-    .frist-sirkel {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid var(--kant);
-      flex-shrink: 0;
-      transition: all .15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .frist-rad.aktiv .frist-sirkel {
-      border-color: var(--grønn);
-      background: var(--grønn);
-    }
-    .frist-rad.aktiv .frist-sirkel::after {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: white;
-    }
-
-    .frist-tekst-rad {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--tekst);
-    }
-    .frist-rad.aktiv .frist-tekst-rad {
-      color: var(--grønn-mørk);
-      font-weight: 700;
-    }
-
-    .frist-eg-felt {
-      margin-top: 10px;
-      display: none;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .frist-eg-felt.vis { display: flex; }
-
     /* ── To do ── */
     .todo-filter-knapp {
       display:flex;align-items:center;justify-content:center;
@@ -1066,7 +1006,6 @@
       border-radius: var(--rs);
     }
     .kat-oversikt-oppgave:hover { background: var(--grønn-lys); }
-    .kat-oversikt-oppgave.fullfort-opp { opacity: 0.4; text-decoration: line-through; }
 
     .info-ikon-knapp {
       width: 34px;
@@ -1532,7 +1471,7 @@
   <span style="font-size:12px;color:var(--tekst);font-family:'Nunito',sans-serif;">🔔 Tillat varsler for å se forfalte oppgaver på ikonet</span>
   <div style="display:flex;gap:8px;flex-shrink:0;">
     <button onclick="avvisVarsel()" style="background:none;border:1px solid var(--grønn-mid);border-radius:6px;padding:5px 10px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:var(--tekst-sek);cursor:pointer;">Ikke nå</button>
-    <button onclick="be0mVarsel()" style="background:var(--grønn);border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:white;cursor:pointer;">Tillat</button>
+    <button onclick="beOmVarsel()" style="background:var(--grønn);border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:white;cursor:pointer;">Tillat</button>
   </div>
 </div>
 
@@ -1718,7 +1657,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.39</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.40</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3409,9 +3348,6 @@
     }
     _oppdaterTodoFilterKnapp();
     renderTodos();
-    // Oppdater dagsoversikt-innhold hvis popup er åpen
-    const _dpo = document.getElementById('dagsoversiktPopup');
-    if (_dpo) _renderDagsoversiktInnhold(_dpo);
   }
 
   // ── Dagsoversikt-popup ──
@@ -3701,255 +3637,6 @@
     setTimeout(() => document.addEventListener('click', lukk), 0);
   }
 
-  let _dagsPeriode = 'idag'; // 'idag' | '3d' | '7d'
-
-  // Hent todos+oppgaver fra ALLE prosjekter uavhengig av filter
-  function _hentAlleProjekterDagsData() {
-    let alleTodos = [], alleOppgaver = [];
-    prosjekter.filter(p => !p.arkivert).forEach(p => {
-      const erAktivt = p.id === aktivtProsjektId;
-      const data = erAktivt ? { todos, oppgaver } : _hentProsjektData(p.id);
-      data.todos.forEach(t    => alleTodos.push({ ...t, _prosjektId: p.id, _prosjektNavn: p.navn, _prosjektFarge: p.farge }));
-      data.oppgaver.forEach(o => alleOppgaver.push({ ...o, _prosjektId: p.id, _prosjektNavn: p.navn, _prosjektFarge: p.farge }));
-    });
-    return { todos: alleTodos, oppgaver: alleOppgaver };
-  }
-
-  function visDagsoversiktPopup(anchorBtn) {
-    if (document.getElementById('dagsoversiktPopup')) {
-      lukkDagsoversikt(); return;
-    }
-
-    const backdrop = document.createElement('div');
-    backdrop.id = 'dagsoversiktBackdrop';
-    backdrop.className = 'dags-backdrop';
-    backdrop.addEventListener('click', lukkDagsoversikt);
-
-    const popup = document.createElement('div');
-    popup.id = 'dagsoversiktPopup';
-    popup.className = 'dags-popup';
-    popup.addEventListener('click', e => e.stopPropagation());
-
-    // ── Header ──
-    const iDag = new Date(); iDag.setHours(0,0,0,0);
-    const dagNavn    = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
-    const maanedNavn = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
-    const datoTekst  = `${dagNavn[iDag.getDay()]} ${iDag.getDate()}. ${maanedNavn[iDag.getMonth()]}`;
-
-    const header = document.createElement('div');
-    header.className = 'dags-popup-header';
-
-    const tittelDiv = document.createElement('div');
-    tittelDiv.innerHTML = `<div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--tekst);">Gjøremål</div>
-      <div style="font-size:12px;color:var(--tekst-sek);margin-top:2px;">${datoTekst}</div>`;
-
-    const lukkBtn = document.createElement('button');
-    lukkBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-    lukkBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--tekst-sek);padding:4px;border-radius:6px;display:flex;align-items:center;';
-    lukkBtn.onclick = lukkDagsoversikt;
-
-    header.appendChild(tittelDiv);
-    header.appendChild(lukkBtn);
-    popup.appendChild(header);
-
-    // ── Periodeknapper ──
-    const periodeRad = document.createElement('div');
-    periodeRad.id = 'dagsPeriodeRad';
-    periodeRad.style.cssText = 'display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid var(--kant);background:var(--bg);';
-
-    const perioder = [
-      { val: 'idag', label: 'I dag' },
-      { val: '3d',   label: '3 dager' },
-      { val: '7d',   label: '1 uke' },
-    ];
-    perioder.forEach(({ val, label }) => {
-      const btn = document.createElement('button');
-      btn.dataset.periode = val;
-      btn.textContent = label;
-      const aktiv = _dagsPeriode === val;
-      btn.style.cssText = `padding:6px 14px;border-radius:20px;border:1.5px solid ${aktiv ? 'var(--grønn)' : 'var(--kant)'};background:${aktiv ? 'var(--grønn-lys)' : 'var(--hvit)'};color:${aktiv ? 'var(--grønn)' : 'var(--tekst-sek)'};font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .12s;`;
-      btn.onclick = () => {
-        _dagsPeriode = val;
-        // Oppdater knapp-stiler
-        periodeRad.querySelectorAll('button').forEach(b => {
-          const a = b.dataset.periode === val;
-          b.style.borderColor = a ? 'var(--grønn)' : 'var(--kant)';
-          b.style.background  = a ? 'var(--grønn-lys)' : 'var(--hvit)';
-          b.style.color       = a ? 'var(--grønn)' : 'var(--tekst-sek)';
-        });
-        _renderDagsoversiktInnhold(popup);
-      };
-      periodeRad.appendChild(btn);
-    });
-    popup.appendChild(periodeRad);
-
-    // ── Innhold ──
-    _renderDagsoversiktInnhold(popup);
-
-    document.body.appendChild(backdrop);
-    document.body.appendChild(popup);
-  }
-
-  function lukkDagsoversikt() {
-    document.getElementById('dagsoversiktBackdrop')?.remove();
-    document.getElementById('dagsoversiktPopup')?.remove();
-    if (_todoFilter.prosjekter && _todoFilter.prosjekter.length === 0) _todoFilter.prosjekter = null;
-    _oppdaterTodoFilterKnapp();
-  }
-
-  function _renderDagsoversiktInnhold(popup) {
-    const existing = popup.querySelector('.dags-innhold');
-    if (existing) existing.remove();
-
-    const iDag    = new Date(); iDag.setHours(0,0,0,0);
-    const iDagStr = _lokalDatoStr(iDag);
-
-    // Beregn grensedato basert på periode (arbeidsdager)
-    const grense = _dagsPeriode === 'idag' ? new Date(iDag)
-                 : _dagsPeriode === '3d'   ? leggTilArbeidsdager(iDag, 3)
-                 :                           leggTilArbeidsdager(iDag, 7);
-    const grenseStr = _lokalDatoStr(grense);
-
-    // Alltid alle prosjekter
-    const fd = _hentAlleProjekterDagsData();
-    const isMulti = prosjekter.length > 1;
-
-    const forfaltTodos  = fd.todos.filter(t => !t.fullfort && t.frist && t.frist < iDagStr)
-      .sort((a,b) => a.frist.localeCompare(b.frist));
-    const periodeTodos  = fd.todos.filter(t => !t.fullfort && t.frist && t.frist >= iDagStr && t.frist <= grenseStr)
-      .sort((a,b) => a.frist.localeCompare(b.frist));
-    const forfaltOpp    = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist < iDagStr)
-      .sort((a,b) => a.frist.localeCompare(b.frist));
-    const periodeOpp    = fd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist >= iDagStr && o.frist <= grenseStr)
-      .sort((a,b) => a.frist.localeCompare(b.frist));
-    const utenFristTodos = fd.todos.filter(t => !t.fullfort && !t.frist);
-    const utenFristOpp   = fd.oppgaver.filter(o => !o.fullfort && !o.frist);
-
-    const totalForfalt    = forfaltTodos.length + forfaltOpp.length;
-    const totalPeriode    = periodeTodos.length + periodeOpp.length;
-    const totalUtenFrist  = utenFristTodos.length + utenFristOpp.length;
-
-    const periodeLbl = _dagsPeriode === 'idag' ? 'I dag' : _dagsPeriode === '3d' ? 'Neste 3 dager' : 'Neste uke';
-
-    const innhold = document.createElement('div');
-    innhold.className = 'dags-innhold';
-
-    if (totalForfalt === 0 && totalPeriode === 0 && totalUtenFrist === 0) {
-      innhold.innerHTML = `<div style="padding:48px 0;text-align:center;">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><polyline points="20 6 9 17 4 12"/></svg>
-        <div style="font-size:15px;color:var(--tekst);font-weight:700;">Alt er i rute!</div>
-        <div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">Ingen aktive gjøremål</div>
-      </div>`;
-    } else {
-      const lagSeksjon = (items, tittel, farge, harBorder) => {
-        if (items.length === 0) return;
-        const sec = document.createElement('div');
-        if (harBorder) { sec.style.borderTop = '1px solid var(--kant)'; sec.style.paddingTop = '10px'; }
-        sec.style.marginBottom = '4px';
-        const tit = document.createElement('div');
-        tit.className = 'dags-seksjon-tittel';
-        tit.style.color = farge;
-        tit.textContent = `${tittel} (${items.length})`;
-        sec.appendChild(tit);
-        items.forEach(item => sec.appendChild(_lagDagsRad(item, iDag, iDagStr, isMulti)));
-        innhold.appendChild(sec);
-      };
-
-      lagSeksjon([...forfaltTodos, ...forfaltOpp],   'Forfalt',        '#d94f4f',           false);
-      lagSeksjon([...periodeTodos, ...periodeOpp],   periodeLbl,       'var(--tekst-sek)',  totalForfalt > 0);
-      lagSeksjon([...utenFristTodos, ...utenFristOpp], 'Uten frist',   'var(--tekst-sek)',  totalForfalt + totalPeriode > 0);
-    }
-
-    popup.appendChild(innhold);
-  }
-
-  // Toggle fullført for et item i et vilkårlig prosjekt (uten å bytte aktivt prosjekt)
-  function _toggleDagsItem(erTodo, itemId, prosjektId) {
-    const idag = _lokalDatoStr();
-    if (prosjektId === aktivtProsjektId) {
-      // Aktivt prosjekt — bruk eksisterende funksjoner
-      if (erTodo) toggleTodo(itemId);
-      else { toggleOppgave(itemId); renderTodos(); }
-    } else {
-      // Annet prosjekt — les, oppdater, lagre direkte i localStorage
-      const pk = s => 'lp_' + prosjektId + '_' + s;
-      const nøkkel = erTodo ? pk('t') : pk('o');
-      const liste = JSON.parse(localStorage.getItem(nøkkel) || '[]');
-      const item = liste.find(x => x.id === itemId);
-      if (!item) return;
-      item.fullfort = !item.fullfort;
-      item.fullfortDato = item.fullfort ? idag : null;
-      localStorage.setItem(nøkkel, JSON.stringify(liste));
-      localStorage.setItem(pk('dirty'), Date.now().toString());
-      // Synk til Firebase hvis tilgjengelig — send prosjektId eksplisitt.
-      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid, prosjektId);
-    }
-    // Re-render dagsoversikten
-    const popup = document.getElementById('dagsoversiktPopup');
-    if (popup) _renderDagsoversiktInnhold(popup);
-  }
-
-  function _lagDagsRad(item, iDag, iDagStr, isMulti) {
-    const erTodo = 'tittel' in item;
-    const pid    = item._prosjektId || aktivtProsjektId;
-    const pFarge = item._prosjektFarge || (prosjekter.find(p => p.id === pid)?.farge || 'var(--grønn)');
-
-    const row = document.createElement('div');
-    row.className = 'dags-rad';
-    // Klikk på selve raden (ikke hake-sirkelen) → åpne detaljevisning
-    row.onclick = () => {
-      lukkDagsoversikt();
-      if (pid !== aktivtProsjektId) byttProsjekt(pid);
-      erTodo ? åpneTodoInfo(item.id) : åpneOppgaveInfo(item.id);
-    };
-
-    // ── Hake-sirkel (klikk for å fullføre) ──
-    const hake = document.createElement('div');
-    hake.style.cssText = `width:20px;height:20px;border-radius:50%;border:2px solid ${pFarge};flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s;`;
-    if (!erTodo) {
-      // Oppgave: avrundet firkant
-      hake.style.borderRadius = '5px';
-    }
-    hake.title = 'Merk som fullført';
-    hake.onclick = e => {
-      e.stopPropagation();
-      // Visuell feedback — fyll sirkelen momentant
-      hake.style.background = pFarge;
-      hake.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      // Liten forsinkelse så brukeren ser animasjonen før raden forsvinner
-      setTimeout(() => _toggleDagsItem(erTodo, item.id, pid), 300);
-    };
-
-    // Tekst
-    const tekst = document.createElement('div');
-    tekst.style.cssText = 'flex:1;font-size:13px;color:var(--tekst);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-    tekst.textContent = erTodo ? (item.tittel || '(uten tittel)') : (item.beskrivelse || '(uten navn)');
-
-    row.appendChild(hake);
-    row.appendChild(tekst);
-
-    // Forfalt-badge (arbeidsdager)
-    if (item.frist && item.frist < iDagStr) {
-      const fd = new Date(item.frist + 'T00:00:00');
-      const calDiff = Math.round((iDag - fd) / 86400000);
-      const diff = Math.abs(arbeidsdagerMellom(fd, iDag));
-      const badge = document.createElement('span');
-      badge.textContent = calDiff === 1 ? 'i går' : `${diff}d siden`;
-      badge.style.cssText = 'font-size:10px;font-weight:700;color:#d94f4f;background:#fdeaea;padding:2px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap;';
-      row.appendChild(badge);
-    }
-
-    // Prosjekt-chip (multi)
-    if (isMulti && item._prosjektNavn) {
-      const chip = document.createElement('span');
-      chip.textContent = item._prosjektNavn;
-      chip.style.cssText = `font-size:10px;font-weight:700;color:${pFarge};background:${pFarge}22;padding:2px 6px;border-radius:8px;flex-shrink:0;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
-      row.appendChild(chip);
-    }
-
-    return row;
-  }
-
   function _renderFilterSeksjonInnhold(container) {
     container.innerHTML = '';
 
@@ -4054,8 +3741,6 @@
       _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
       _oppdaterTodoFilterKnapp();
       renderTodos();
-      const popup = document.getElementById('dagsoversiktPopup');
-      if (popup) _renderDagsoversiktInnhold(popup);
     };
     container.appendChild(reset);
   }
@@ -7065,7 +6750,7 @@
     oppdaterForfaltBadge();
   }
 
-  function be0mVarsel() {
+  function beOmVarsel() {
     document.getElementById('varselBanner').style.display = 'none';
     Notification.requestPermission().then(result => {
       if (result === 'granted') {
