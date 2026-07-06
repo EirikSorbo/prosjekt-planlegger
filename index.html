@@ -1767,6 +1767,7 @@
       </div>
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
       <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiv</button>
+      <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗑 Papirkurv</button>
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
     <div style="padding:14px 22px 8px;border-top:1px solid var(--kant);">
@@ -1789,8 +1790,28 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.45</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.46</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Papirkurv (soft-delete) -->
+<div class="modal-overlay" id="papirkurvModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel">Papirkurv</div>
+      <button class="lukk-knapp" onclick="lukkModal('papirkurvModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--tekst-sek);margin:0 0 12px;line-height:1.5;">Slettede elementer tas vare på her i 30 dager, og kan gjenopprettes.</p>
+      <div id="papirkurvListe"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="knapp-fare" id="papirkurvTømKnapp" onclick="_papirkurvTøm()" style="display:none;">Tøm papirkurv</button>
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('papirkurvModal')">Lukk</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3220,6 +3241,7 @@
         ytre.appendChild(slettBg);
         ytre.appendChild(wrapper);
         leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+          _papirkurvLegg('oppgave', o);
           oppgaver = oppgaver.filter(x => x.id !== o.id);
           lagre();
           renderValgtDag(ds);
@@ -4258,6 +4280,7 @@
       ytre.appendChild(wrapper);
       leggTilSveipSlett(ytre, wrapper, slettBg, () => {
         if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
+        _papirkurvLegg('todo', t);
         todos = todos.filter(x => x.id !== t.id);
         lagre(); renderTodos();
       }, () => {
@@ -4330,6 +4353,7 @@
       ytre.appendChild(wrapper);
       leggTilSveipSlett(ytre, wrapper, slettBg, () => {
         if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        _papirkurvLegg('oppgave', o);
         oppgaver = oppgaver.filter(x => x.id !== o.id);
         lagre(); renderTodos();
       }, () => {
@@ -4737,6 +4761,7 @@
 
   function slettTodo() {
     if (!confirm('Slett denne to do?')) return;
+    _papirkurvLegg('todo', todos.find(t => t.id === redigTodoId));
     todos = todos.filter(t => t.id !== redigTodoId);
     lagre(); lukkModal('todoModal'); renderTodos();
   }
@@ -4782,6 +4807,7 @@
     document.getElementById('todoInfoRedigKnapp').onclick = () => { lukkModal('todoInfoModal'); åpneTodoModal(id); };
     document.getElementById('todoInfoSlettKnapp').onclick = () => {
       if (!confirm('Slett denne to do?')) return;
+      _papirkurvLegg('todo', todos.find(x => x.id === id));
       todos = todos.filter(x => x.id !== id);
       lagre(); lukkModal('todoInfoModal'); renderTodos();
     };
@@ -5062,6 +5088,95 @@
     oppdaterAktivPanel();
   }
 
+  // ── Papirkurv (soft-delete) ──
+  // Slettede elementer havner i lp_<pid>_trash (LOKAL, ikke synket) og kan
+  // gjenopprettes. Auto-tømmes etter 30 dager; maks 200 oppføringer.
+  const PAPIRKURV_DAGER = 30, PAPIRKURV_MAKS = 200;
+  const _papirkurvNavn = { todo: 'To do', oppgave: 'Oppgave', aktivitet: 'Leveranse' };
+
+  function _papirkurvHent() { return _parseSafe(localStorage.getItem(_pk('trash')), []) || []; }
+  function _papirkurvLagre(liste) { localStorage.setItem(_pk('trash'), JSON.stringify(liste)); }
+
+  // Fjern oppføringer eldre enn PAPIRKURV_DAGER. Muterer lista, lagrer ikke.
+  function _papirkurvRydd(liste) {
+    const grense = Date.now() - PAPIRKURV_DAGER * 86400000;
+    for (let i = liste.length - 1; i >= 0; i--) {
+      if ((liste[i].ts || 0) < grense) liste.splice(i, 1);
+    }
+  }
+
+  // Legg et slettet element i papirkurven (kalles rett før fjerning fra lista).
+  function _papirkurvLegg(type, item) {
+    if (!item) return;
+    const liste = _papirkurvHent();
+    liste.push({ eid: uid(), type, item: JSON.parse(JSON.stringify(item)), slettet: _lokalDatoStr(), ts: Date.now() });
+    _papirkurvRydd(liste);
+    if (liste.length > PAPIRKURV_MAKS) liste.splice(0, liste.length - PAPIRKURV_MAKS);
+    _papirkurvLagre(liste);
+  }
+
+  // Angre siste papirkurv-oppføring (brukes når sveip-slett angres via toast, så
+  // det gjenopprettede elementet ikke også blir liggende igjen i papirkurven).
+  function _papirkurvPopSiste() {
+    const liste = _papirkurvHent();
+    liste.pop();
+    _papirkurvLagre(liste);
+  }
+
+  function _papirkurvGjenopprett(eid) {
+    const liste = _papirkurvHent();
+    const idx = liste.findIndex(e => e.eid === eid);
+    if (idx < 0) return;
+    const e = liste[idx];
+    const mål = e.type === 'todo' ? todos : e.type === 'oppgave' ? oppgaver : aktiviteter;
+    if (!mål.some(x => x.id === e.item.id)) mål.push(e.item);
+    liste.splice(idx, 1);
+    _papirkurvLagre(liste);
+    lagre(); oppdaterAktivPanel();
+    renderPapirkurv();
+  }
+
+  function _papirkurvTøm() {
+    if (!confirm('Tøm papirkurven permanent?')) return;
+    _papirkurvLagre([]);
+    renderPapirkurv();
+  }
+
+  function åpnePapirkurv() {
+    renderPapirkurv();
+    document.getElementById('papirkurvModal').classList.add('vis');
+  }
+
+  function renderPapirkurv() {
+    const container = document.getElementById('papirkurvListe');
+    if (!container) return;
+    const liste = _papirkurvHent();
+    _papirkurvRydd(liste);
+    _papirkurvLagre(liste); // persister evt. auto-rydding
+    document.getElementById('papirkurvTømKnapp').style.display = liste.length ? 'inline-flex' : 'none';
+    if (!liste.length) {
+      container.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;color:var(--tekst-sek);">Papirkurven er tom.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    liste.slice().reverse().forEach(e => {
+      const tittel = e.item.tittel || e.item.beskrivelse || '(uten tittel)';
+      const rad = document.createElement('div');
+      rad.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--kant);';
+      rad.innerHTML = `<div style="flex:1;min-width:0;">
+          <div style="font-size:13px;color:var(--tekst);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(tittel)}</div>
+          <div style="font-size:11px;color:var(--tekst-sek);">${_papirkurvNavn[e.type] || e.type} · slettet ${escapeHtml(e.slettet || '')}</div>
+        </div>`;
+      const btn = document.createElement('button');
+      btn.className = 'knapp-sek';
+      btn.style.cssText = 'font-size:12px;padding:6px 12px;flex-shrink:0;';
+      btn.textContent = '↩ Gjenopprett';
+      btn.onclick = () => _papirkurvGjenopprett(e.eid);
+      rad.appendChild(btn);
+      container.appendChild(rad);
+    });
+  }
+
   // Sveip venstre = slett (med angre-toast). Sveip høyre = fullfør (opt-in via
   // onFullfor — kun to do/oppgave-kort har fullført-toggle).
   function leggTilSveipSlett(container, innhold, bakgrunn, onSlett, onFullfor) {
@@ -5124,7 +5239,7 @@
         setTimeout(() => {
           const snap = _dataSnapshot();
           onSlett();
-          visAngreToast('Slettet', () => _dataRestore(snap));
+          visAngreToast('Slettet', () => { _dataRestore(snap); _papirkurvPopSiste(); });
         }, 380);
       } else if (retning > 0 && dx > TERSKEL && onFullfor) {
         innhold.style.transform = 'translateX(0)';
@@ -5233,6 +5348,7 @@
     ytre.appendChild(wrapper);
     leggTilSveipSlett(ytre, wrapper, slettBg, () => {
       if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
+      _papirkurvLegg('aktivitet', a);
       aktiviteter = aktiviteter.filter(x => x.id !== a.id);
       oppgaver.forEach(o => { if (o.aktivitetId === a.id) o.aktivitetId = null; });
       lagre();
@@ -5419,6 +5535,7 @@
       ytre.appendChild(wrapper);
       leggTilSveipSlett(ytre, wrapper, slettBg, () => {
         if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        _papirkurvLegg('oppgave', o);
         todos.forEach(t => { if (t.oppgaveId === o.id) t.oppgaveId = null; });
         oppgaver = oppgaver.filter(x => x.id !== o.id);
         lagre();
@@ -5537,6 +5654,7 @@
     };
     document.getElementById('oppInfoSlettKnapp').onclick = () => {
       if (!confirm('Slett denne oppgaven?')) return;
+      _papirkurvLegg('oppgave', oppgaver.find(x => x.id === id));
       todos.forEach(t => { if (t.oppgaveId === id) t.oppgaveId = null; });
       oppgaver = oppgaver.filter(x => x.id !== id);
       lagre(); lukkModal('oppgaveInfoModal'); renderOppgaver(); renderTodos();
@@ -5645,6 +5763,7 @@
         ytre.appendChild(slettBg);
         ytre.appendChild(wrapper);
         leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+          _papirkurvLegg('oppgave', o);
           oppgaver = oppgaver.filter(x => x.id !== o.id);
           lagre();
           åpneAktivitetInfo(id);
@@ -5768,6 +5887,7 @@
     };
     document.getElementById('infoModalSlettKnapp').onclick = () => {
       if (!confirm('Slett denne leveransen?')) return;
+      _papirkurvLegg('aktivitet', aktiviteter.find(x => x.id === id));
       aktiviteter = aktiviteter.filter(x => x.id !== id);
       oppgaver.forEach(o => { if (o.aktivitetId === id) o.aktivitetId = null; });
       lagre(); lukkModal('aktivitetInfoModal'); oppdaterAktivPanel();
@@ -5998,6 +6118,7 @@
 
   function slettAktivitet() {
     if (!confirm('Slett denne leveransen?')) return;
+    _papirkurvLegg('aktivitet', aktiviteter.find(a => a.id === redigAktivitetId));
     aktiviteter = aktiviteter.filter(a => a.id !== redigAktivitetId);
     oppgaver.forEach(o => { if (o.aktivitetId === redigAktivitetId) o.aktivitetId = null; });
     lagre();
@@ -6112,6 +6233,7 @@
 
   function slettOppgave() {
     if (!confirm('Slett denne oppgaven?')) return;
+    _papirkurvLegg('oppgave', oppgaver.find(o => o.id === redigOppgaveId));
     todos.forEach(t => { if (t.oppgaveId === redigOppgaveId) t.oppgaveId = null; });
     oppgaver = oppgaver.filter(o => o.id !== redigOppgaveId);
     lagre();
