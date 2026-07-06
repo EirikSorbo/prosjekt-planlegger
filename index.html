@@ -1799,7 +1799,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.48</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.49</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2513,6 +2513,7 @@
     tidslinjeSluttGrense = tl.slutt || null;
     aktivitetFilterState = lastFilterState(_pk('fa'));
     oppgaveFilterState   = lastFilterState(_pk('fo'));
+    _migrerFlogEid(aktivtProsjektId);
     oppdaterDagerIgjen();
   }
 
@@ -4471,14 +4472,16 @@
   }
 
   // Append-only fullført-logg per prosjekt (lp_<pid>_flog). Overlever
-  // ryddFullforte, så historikk (streaks/trender/«hva ble gjort») blir mulig
-  // senere. Lokal foreløpig — synkes ikke ennå (gjøres når en innsikts-funksjon
-  // faktisk leser den). Holdes til siste 1000 hendelser.
+  // ryddFullforte, så historikk (streaks/trender/«hva ble gjort») blir mulig.
+  // Synkes append-only på tvers av enheter: hver oppføring har en unik eid, og
+  // sky/lokal merges med union på eid (se _flogUnion + sync-laget). Holdes til
+  // siste 1000 hendelser lokalt.
   function _loggFullfort(item, type) {
     try {
       const key = _pk('flog');
       const logg = _parseSafe(localStorage.getItem(key), []) || [];
       logg.push({
+        eid: uid(),
         dato: _lokalDatoStr(),
         type,
         kategoriId: item.kategoriId || item.type || null,
@@ -4487,6 +4490,35 @@
       if (logg.length > 1000) logg.splice(0, logg.length - 1000);
       localStorage.setItem(key, JSON.stringify(logg));
     } catch (e) { /* logg er best-effort, aldri kritisk */ }
+  }
+
+  // Union av to fullført-logger, dedup på eid. Oppføringer uten eid (fra før
+  // eid ble innført) kan ikke dedupes og beholdes alltid — kan gi engangs-
+  // duplikat på tvers av enheter, men aldri ubegrenset vekst (bakfylles med
+  // stabil eid i hent()). Kappes til siste 2000.
+  function _flogUnion(a, b) {
+    const ut = [], sett = new Set();
+    [...(a || []), ...(b || [])].forEach(e => {
+      if (!e) return;
+      if (e.eid) { if (sett.has(e.eid)) return; sett.add(e.eid); }
+      ut.push(e);
+    });
+    if (ut.length > 2000) ut.splice(0, ut.length - 2000);
+    return ut;
+  }
+  window._flogUnion = _flogUnion;
+
+  // Engangs-bakfyll av eid på eksisterende flog-oppføringer for ett prosjekt,
+  // så union-dedup fungerer stabilt framover. Kalles fra hent() per prosjekt.
+  function _migrerFlogEid(pid) {
+    try {
+      const key = 'lp_' + pid + '_flog';
+      const logg = _parseSafe(localStorage.getItem(key), null);
+      if (!Array.isArray(logg) || !logg.length) return;
+      let endret = false;
+      logg.forEach(e => { if (e && !e.eid) { e.eid = uid(); endret = true; } });
+      if (endret) localStorage.setItem(key, JSON.stringify(logg));
+    } catch (e) { /* best-effort */ }
   }
 
   // ── Gjentakelse (recurring) ──
@@ -7660,6 +7692,17 @@
         oppdatert: new Date().toISOString()
       });
 
+      // Fullført-logg: merge sky + lokal (append-only, union på eid) så ingen
+      // enhet mister historikk ved et blindt skriv. Skriv merged både til sky
+      // og tilbake til localStorage.
+      let mergedFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]');
+      try {
+        const pSnap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', pid));
+        const skyFlog = (pSnap.exists() && Array.isArray(pSnap.data().flog)) ? pSnap.data().flog : [];
+        mergedFlog = window._flogUnion(mergedFlog, skyFlog);
+        localStorage.setItem(pk('flog'), JSON.stringify(mergedFlog));
+      } catch(e) { /* lesefeil: behold lokal flog */ }
+
       // Lagre prosjektdata i subcollection
       await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid), {
         aktiviteter: JSON.parse(localStorage.getItem(pk('a')) || '[]'),
@@ -7669,6 +7712,7 @@
         filterAkt:   JSON.parse(localStorage.getItem(pk('fa')) || '{}'),
         filterOpp:   JSON.parse(localStorage.getItem(pk('fo')) || '{}'),
         tidslinjeGrenser: JSON.parse(localStorage.getItem(pk('tl')) || '{}'),
+        flog:        mergedFlog,
         oppdatert:   new Date().toISOString()
       });
       // Skriv bekreftet: tøm dirty-markøren — men KUN hvis ingen ny lokal
@@ -7734,6 +7778,9 @@
       if (data.filterAkt) localStorage.setItem(pk('fa'), JSON.stringify(data.filterAkt));
       if (data.filterOpp) localStorage.setItem(pk('fo'), JSON.stringify(data.filterOpp));
       if (data.tidslinjeGrenser) localStorage.setItem(pk('tl'), JSON.stringify(data.tidslinjeGrenser));
+      // Fullført-logg: union (aldri overskriv lokal historikk).
+      const lokalFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]');
+      localStorage.setItem(pk('flog'), JSON.stringify(window._flogUnion(lokalFlog, data.flog || [])));
     }
   }
 
@@ -7747,6 +7794,13 @@
       if (!snap.exists()) return;
       const data = snap.data();
       console.log('[SYNK] onSnapshot: endring mottatt for prosjekt', prosjektId);
+      // Fullført-logg: union inn i lokal uavhengig av øvrige felt (append-only).
+      if (Array.isArray(data.flog)) {
+        const lokalFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]');
+        const mergetFlog = window._flogUnion(lokalFlog, data.flog);
+        if (JSON.stringify(mergetFlog) !== localStorage.getItem(pk('flog')))
+          localStorage.setItem(pk('flog'), JSON.stringify(mergetFlog));
+      }
       const nyA = JSON.stringify(data.aktiviteter || []);
       const nyO = JSON.stringify(data.oppgaver    || []);
       const nyT = JSON.stringify(data.todos       || []);
