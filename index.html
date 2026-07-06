@@ -1718,7 +1718,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.38</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.39</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -6867,13 +6867,20 @@
 
   function ryddFullforte() {
     const iDag = new Date();
+    const iDagStr = _lokalDatoStr(iDag);
     const grense = new Date(iDag); grense.setDate(iDag.getDate() - 3);
     const g3 = _lokalDatoStr(grense);
     const forOpp = oppgaver.length;
     const forTod = todos.length;
-    oppgaver = oppgaver.filter(o => !(o.fullfort && (!o.fullfortDato || o.fullfortDato < g3)));
-    todos    = todos.filter(t => !(t.fullfort && (!t.fullfortDato || t.fullfortDato < g3)));
-    if (oppgaver.length !== forOpp || todos.length !== forTod) lagre();
+    // Bakfyll manglende fullfortDato på fullførte elementer (gammel/importert
+    // data) til i dag, så de STARTER 3-dagers-klokka i stedet for å bli slettet
+    // umiddelbart. Deretter slettes kun det som har en dato eldre enn 3 dager.
+    let endret = false;
+    for (const x of oppgaver) if (x.fullfort && !x.fullfortDato) { x.fullfortDato = iDagStr; endret = true; }
+    for (const x of todos)    if (x.fullfort && !x.fullfortDato) { x.fullfortDato = iDagStr; endret = true; }
+    oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < g3));
+    todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < g3));
+    if (endret || oppgaver.length !== forOpp || todos.length !== forTod) lagre();
   }
 
   function renderHovedFilter() {
@@ -7080,7 +7087,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc }
+  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -7094,7 +7101,18 @@
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db   = getFirestore(app);
+  // Persistent lokal cache (IndexedDB): køede skriv overlever at fanen/appen
+  // lukkes offline, og reads virker offline. Faller tilbake til minne-cache i
+  // nettlesere uten IndexedDB (f.eks. privat Safari), så appen alltid starter.
+  let db;
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+  } catch (e) {
+    console.warn('[SYNK] Persistent Firestore-cache utilgjengelig – bruker minne-cache:', e?.message || e);
+    db = getFirestore(app);
+  }
 
   // ── Eksponér til resten av appen ──
   window._fbSignIn = async () => {
