@@ -639,6 +639,35 @@
     .hurtig-todo-rad input:focus { outline: none; border-style: solid; border-color: var(--grønn); }
     .hurtig-todo-rad input::placeholder { color: var(--tekst-sek); }
 
+    /* ── Fritekst-søk på startsiden ── */
+    .start-sok-rad { margin-bottom: 10px; }
+    .start-sok-rad input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 14px;
+      border: 1px solid var(--kant);
+      border-radius: var(--r);
+      background: var(--hvit);
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      color: var(--tekst);
+    }
+    .start-sok-rad input:focus { outline: none; border-color: var(--grønn); }
+    .sok-treff {
+      padding: 11px 14px;
+      margin-bottom: 6px;
+      background: var(--hvit);
+      border: 1px solid var(--kant);
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: background .1s;
+    }
+    .sok-treff:hover { background: var(--grønn-lys); }
+    .sok-treff-tittel { font-size: 14px; font-weight: 600; color: var(--tekst); }
+    .sok-treff-tittel.fullfort { text-decoration: line-through; color: var(--tekst-sek); }
+    .sok-treff-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--tekst-sek); }
+    .sok-chip { border: 1px solid; border-radius: 8px; padding: 1px 6px; font-size: 10px; font-weight: 700; }
+
     /* ── Oppgave type-stripe ── */
     .oppgave-kort {
       padding: 13px 20px 13px 16px;
@@ -1559,6 +1588,10 @@
 
   <!-- Start -->
   <div id="panel-start" class="panel aktiv">
+    <div class="start-sok-rad">
+      <input type="search" id="startSokInput" placeholder="Søk i alt — alle prosjekter" autocomplete="off" oninput="_sokStartside(this.value)" />
+    </div>
+    <div id="startSokResultater" style="display:none;"></div>
     <div id="startInnhold"></div>
   </div>
 
@@ -1750,7 +1783,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.41</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.42</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3471,6 +3504,51 @@
       data.oppgaver.forEach(o => alleOppgaver.push({ ...o, _prosjektId: p.id, _prosjektNavn: p.navn, _prosjektFarge: p.farge }));
     });
     return { todos: alleTodos, oppgaver: alleOppgaver };
+  }
+
+  // Fritekst-søk på tvers av ALLE ikke-arkiverte prosjekter (todos/oppgaver/
+  // leveranser). Tom streng = normal startside; ellers vis trefflista.
+  let _startSok = '';
+  function _sokStartside(q) {
+    _startSok = (q || '').trim();
+    const resDiv  = document.getElementById('startSokResultater');
+    const innhold = document.getElementById('startInnhold');
+    if (!resDiv || !innhold) return;
+    const ql = _startSok.toLowerCase();
+    if (!ql) { resDiv.style.display = 'none'; resDiv.innerHTML = ''; innhold.style.display = ''; return; }
+    innhold.style.display = 'none';
+    resDiv.style.display = '';
+
+    const match = s => (s || '').toLowerCase().includes(ql);
+    const treff = [];
+    prosjekter.filter(p => !p.arkivert).forEach(p => {
+      const erAktivt = p.id === aktivtProsjektId;
+      const d = erAktivt ? { todos, oppgaver, aktiviteter } : _hentProsjektData(p.id);
+      (d.todos || []).forEach(t     => { if (match(t.tittel) || match(t.beskrivelse)) treff.push({ type: 'todo', item: t, p }); });
+      (d.oppgaver || []).forEach(o  => { if (match(o.beskrivelse) || match(o.notat)) treff.push({ type: 'oppgave', item: o, p }); });
+      (d.aktiviteter || []).forEach(a => { if (match(a.tittel) || match(a.beskrivelse)) treff.push({ type: 'aktivitet', item: a, p }); });
+    });
+
+    resDiv.innerHTML = '';
+    if (!treff.length) {
+      resDiv.innerHTML = `<div style="text-align:center;color:var(--tekst-sek);padding:24px 12px;font-size:13px;">Ingen treff på «${escapeHtml(_startSok)}»</div>`;
+      return;
+    }
+    treff.forEach(({ type, item, p }) => {
+      const tittel = type === 'oppgave' ? item.beskrivelse : item.tittel;
+      const typeLabel = type === 'todo' ? 'To do' : type === 'oppgave' ? 'Oppgave' : 'Leveranse';
+      const rad = document.createElement('div');
+      rad.className = 'sok-treff';
+      rad.innerHTML = `<div class="sok-treff-tittel${item.fullfort ? ' fullfort' : ''}">${escapeHtml(tittel || '(uten tittel)')}</div>
+        <div class="sok-treff-meta"><span class="sok-chip" style="border-color:${p.farge};color:${p.farge};">${escapeHtml(p.navn)}</span><span>${typeLabel}${item.frist ? ' · ' + item.frist : ''}</span></div>`;
+      rad.onclick = () => {
+        if (p.id !== aktivtProsjektId) byttProsjekt(p.id);
+        if (type === 'todo') åpneTodoInfo(item.id);
+        else if (type === 'oppgave') åpneOppgaveInfo(item.id);
+        else åpneAktivitetInfo(item.id);
+      };
+      resDiv.appendChild(rad);
+    });
   }
 
   function renderStartside() {
