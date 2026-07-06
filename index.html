@@ -559,6 +559,86 @@
     }
     .sveip-innhold.ingen-trans { transition: none; }
 
+    /* Grønn «fullfør»-bakgrunn (venstre side, vises ved høyre-sveip) */
+    .sveip-fullfor {
+      position: absolute;
+      inset: 0;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 16px;
+      pointer-events: none;
+      border-radius: var(--r);
+    }
+    .sveip-fullfor .fullfor-sirkel {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #27ae60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.15s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .sveip-fullfor.vis .fullfor-sirkel { opacity: 1; transform: scale(1); }
+
+    /* ── Angre-toast (klikkbar, i motsetning til synk-status) ── */
+    .angre-toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #2e2b45;
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 12px 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Nunito', sans-serif;
+      z-index: 10000;
+      box-shadow: 0 6px 24px rgba(0,0,0,.28);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      max-width: 90vw;
+    }
+    .angre-toast.vis { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    .angre-toast-btn {
+      background: transparent;
+      border: none;
+      color: #7fd1a8;
+      font-weight: 800;
+      font-size: 12px;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer;
+      padding: 4px 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    /* ── Hurtig-tillegg av to do (inline input) ── */
+    .hurtig-todo-rad { margin-bottom: 8px; }
+    .hurtig-todo-rad input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 11px 14px;
+      border: 1px dashed var(--kant);
+      border-radius: var(--r);
+      background: var(--hvit);
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      color: var(--tekst);
+    }
+    .hurtig-todo-rad input:focus { outline: none; border-style: solid; border-color: var(--grønn); }
+    .hurtig-todo-rad input::placeholder { color: var(--tekst-sek); }
+
     /* ── Oppgave type-stripe ── */
     .oppgave-kort {
       padding: 13px 20px 13px 16px;
@@ -1494,6 +1574,10 @@
       </button>
     </div>
     <div class="kat-oversikt-rad" id="katOversiktRad"></div>
+    <div class="hurtig-todo-rad">
+      <input type="text" id="hurtigTodoInput" placeholder="+ Ny to do — trykk Enter" autocomplete="off"
+        onkeydown="if(event.key==='Enter'){hurtigLeggTilTodo(this.value);this.value='';}" />
+    </div>
     <div class="kort-container" id="todoListe"></div>
   </div>
 
@@ -1625,6 +1709,15 @@
         <input type="checkbox" id="visDagerIgjenToggle" onchange="toggleVisDagerIgjen(this.checked)" style="width:16px;height:16px;accent-color:var(--grønn);cursor:pointer;" />
         <span style="font-size:12px;color:var(--tekst);font-weight:600;">Vis «dager igjen» i header</span>
       </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+        <span style="font-size:12px;color:var(--tekst);font-weight:600;flex:1;">Behold fullførte i listen</span>
+        <select id="ryddDagerSelect" onchange="settRyddDager(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);cursor:pointer;">
+          <option value="3">3 dager</option>
+          <option value="7">1 uke</option>
+          <option value="30">30 dager</option>
+          <option value="aldri">Alltid</option>
+        </select>
+      </label>
     </div>
     <div style="padding:16px 22px 8px;">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Data</div>
@@ -1657,7 +1750,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.40</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.41</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2104,6 +2197,13 @@
     _visDagerIgjen = vis;
     localStorage.setItem('lp_visDagerIgjen', vis ? 'true' : 'false');
     oppdaterDagerIgjen();
+  }
+
+  // Hvor lenge fullførte oppgaver/todos blir i listen før auto-opprydding.
+  function settRyddDager(val) {
+    localStorage.setItem('lp_ryddDager', val);
+    ryddFullforte();
+    oppdaterAktivPanel();
   }
 
   function oppdaterDagerIgjen() {
@@ -4043,6 +4143,9 @@
         if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
         todos = todos.filter(x => x.id !== t.id);
         lagre(); renderTodos();
+      }, () => {
+        if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
+        toggleTodo(t.id);
       });
       return ytre;
     };
@@ -4108,6 +4211,9 @@
         if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
         oppgaver = oppgaver.filter(x => x.id !== o.id);
         lagre(); renderTodos();
+      }, () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        toggleOppgave(o.id);
       });
       return ytre;
     };
@@ -4148,11 +4254,31 @@
     }
   }
 
+  // Append-only fullført-logg per prosjekt (lp_<pid>_flog). Overlever
+  // ryddFullforte, så historikk (streaks/trender/«hva ble gjort») blir mulig
+  // senere. Lokal foreløpig — synkes ikke ennå (gjøres når en innsikts-funksjon
+  // faktisk leser den). Holdes til siste 1000 hendelser.
+  function _loggFullfort(item, type) {
+    try {
+      const key = _pk('flog');
+      const logg = _parseSafe(localStorage.getItem(key), []) || [];
+      logg.push({
+        dato: _lokalDatoStr(),
+        type,
+        kategoriId: item.kategoriId || item.type || null,
+        tittel: item.tittel || item.beskrivelse || '',
+      });
+      if (logg.length > 1000) logg.splice(0, logg.length - 1000);
+      localStorage.setItem(key, JSON.stringify(logg));
+    } catch (e) { /* logg er best-effort, aldri kritisk */ }
+  }
+
   function toggleTodo(id) {
     const t = todos.find(t => t.id === id);
     if (t) {
       t.fullfort = !t.fullfort;
       t.fullfortDato = t.fullfort ? _lokalDatoStr() : null;
+      if (t.fullfort) _loggFullfort(t, 'todo');
       lagre(); renderTodos();
     }
   }
@@ -4314,6 +4440,17 @@
     setTimeout(() => document.getElementById('todoFeltTittel').focus(), 100);
   }
 
+  // Hurtig-opprett: skriv rett i lista, Enter lagrer med bare tittel.
+  // Full modal (åpneTodoModal) forblir for frist/kobling.
+  function hurtigLeggTilTodo(tittel) {
+    tittel = (tittel || '').trim();
+    if (!tittel) return;
+    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, fullfort: false });
+    lagre(); renderTodos();
+    const inp = document.getElementById('hurtigTodoInput');
+    if (inp) inp.focus();
+  }
+
   function lagreTodo() {
     const tittel = document.getElementById('todoFeltTittel').value.trim();
     if (!tittel) { alert('Tittel er påkrevd.'); return; }
@@ -4406,6 +4543,8 @@
     // Dager igjen checkbox
     const diCb = document.getElementById('visDagerIgjenToggle');
     if (diCb) diCb.checked = _visDagerIgjen;
+    const rdSel = document.getElementById('ryddDagerSelect');
+    if (rdSel) rdSel.value = localStorage.getItem('lp_ryddDager') || '3';
     // Fyll prosjekt-felter
     const p = hentAktivtProsjekt();
     document.getElementById('innstProsjektNavn').value = p.navn;
@@ -4612,14 +4751,64 @@
   /* ──────────────────────────────
      SVEIP FOR Å SLETTE
   ────────────────────────────── */
-  function leggTilSveipSlett(container, innhold, bakgrunn, onSlett) {
+  // Klikkbar angre-toast (visSynkStatus er pointer-events:none og kan ikke holde knapp).
+  let _angreToastTimer = null;
+  function visAngreToast(tekst, angreFn) {
+    let el = document.getElementById('angreToast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'angreToast';
+      el.className = 'angre-toast';
+      document.body.appendChild(el);
+    }
+    el.innerHTML = '';
+    const t = document.createElement('span');
+    t.textContent = tekst;
+    const btn = document.createElement('button');
+    btn.className = 'angre-toast-btn';
+    btn.textContent = 'Angre';
+    const skjul = () => { el.classList.remove('vis'); clearTimeout(_angreToastTimer); };
+    btn.onclick = () => { skjul(); angreFn(); };
+    el.appendChild(t);
+    el.appendChild(btn);
+    el.classList.add('vis');
+    clearTimeout(_angreToastTimer);
+    _angreToastTimer = setTimeout(skjul, 5000);
+  }
+
+  // Snapshot/gjenoppretting av datalistene for angre-slett. Kopierer hele
+  // listene så kaskade-nulling (fremmednøkler) også gjenopprettes korrekt.
+  function _dataSnapshot() {
+    return {
+      todos: JSON.parse(JSON.stringify(todos)),
+      oppgaver: JSON.parse(JSON.stringify(oppgaver)),
+      aktiviteter: JSON.parse(JSON.stringify(aktiviteter)),
+    };
+  }
+  function _dataRestore(snap) {
+    todos = snap.todos; oppgaver = snap.oppgaver; aktiviteter = snap.aktiviteter;
+    lagre();
+    oppdaterAktivPanel();
+  }
+
+  // Sveip venstre = slett (med angre-toast). Sveip høyre = fullfør (opt-in via
+  // onFullfor — kun to do/oppgave-kort har fullført-toggle).
+  function leggTilSveipSlett(container, innhold, bakgrunn, onSlett, onFullfor) {
     const TERSKEL = 90;
-    let startX = 0, startY = 0, dx = 0, sveiper = false, retningBestemt = false;
+    let startX = 0, startY = 0, dx = 0, sveiper = false, retningBestemt = false, retning = 0;
+
+    let fullforBg = null;
+    if (onFullfor) {
+      fullforBg = document.createElement('div');
+      fullforBg.className = 'sveip-fullfor';
+      fullforBg.innerHTML = `<div class="fullfor-sirkel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+      container.insertBefore(fullforBg, innhold);
+    }
 
     innhold.addEventListener('touchstart', e => {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
-      dx = 0; sveiper = false; retningBestemt = false;
+      dx = 0; sveiper = false; retningBestemt = false; retning = 0;
       innhold.classList.add('ingen-trans');
     }, { passive: true });
 
@@ -4632,20 +4821,25 @@
       if (!retningBestemt) {
         if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) return;
         retningBestemt = true;
-        sveiper = Math.abs(diffX) > Math.abs(diffY) && diffX < 0;
+        const vannrett = Math.abs(diffX) > Math.abs(diffY);
+        if (vannrett && diffX < 0) { sveiper = true; retning = -1; }
+        else if (vannrett && diffX > 0 && onFullfor) { sveiper = true; retning = 1; }
       }
       if (!sveiper) return;
       e.preventDefault();
-      dx = Math.min(0, diffX);
+      if (retning < 0) {
+        dx = Math.min(0, diffX);
+        if (dx < -30) bakgrunn.classList.add('vis'); else bakgrunn.classList.remove('vis');
+      } else {
+        dx = Math.max(0, diffX);
+        if (fullforBg) { if (dx > 30) fullforBg.classList.add('vis'); else fullforBg.classList.remove('vis'); }
+      }
       innhold.style.transform = `translateX(${dx}px)`;
-      // Vis sirkelen når vi har dratt nok
-      if (dx < -30) bakgrunn.classList.add('vis');
-      else bakgrunn.classList.remove('vis');
     }, { passive: false });
 
     innhold.addEventListener('touchend', () => {
       innhold.classList.remove('ingen-trans');
-      if (dx < -TERSKEL) {
+      if (retning < 0 && dx < -TERSKEL) {
         innhold.style.transform = `translateX(-100%)`;
         innhold.style.opacity = '0';
         innhold.style.transition = 'transform 0.2s ease, opacity 0.2s';
@@ -4656,10 +4850,19 @@
           container.style.overflow = 'hidden';
           container.style.opacity = '0';
         }, 150);
-        setTimeout(onSlett, 380);
+        setTimeout(() => {
+          const snap = _dataSnapshot();
+          onSlett();
+          visAngreToast('Slettet', () => _dataRestore(snap));
+        }, 380);
+      } else if (retning > 0 && dx > TERSKEL && onFullfor) {
+        innhold.style.transform = 'translateX(0)';
+        if (fullforBg) fullforBg.classList.remove('vis');
+        onFullfor();
       } else {
         innhold.style.transform = 'translateX(0)';
         bakgrunn.classList.remove('vis');
+        if (fullforBg) fullforBg.classList.remove('vis');
         dx = 0;
       }
     });
@@ -4943,6 +5146,9 @@
         lagre();
         renderOppgaver();
         renderTodos();
+      }, () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        toggleOppgave(o.id);
       });
       container.appendChild(ytre);
       }); // end g.items.forEach
@@ -5067,6 +5273,7 @@
     if (o) {
       o.fullfort = !o.fullfort;
       o.fullfortDato = o.fullfort ? _lokalDatoStr() : null;
+      if (o.fullfort) _loggFullfort(o, 'oppgave');
       lagre(); renderOppgaver(); renderTodos();
     }
   }
@@ -5663,6 +5870,9 @@
   });
   document.getElementById('oppFeltBesk').addEventListener('keydown', e => {
     if (e.key === 'Enter') lagreOppgave();
+  });
+  document.getElementById('todoFeltTittel').addEventListener('keydown', e => {
+    if (e.key === 'Enter') lagreTodo();
   });
 
   // Auto-koble kategori (og leveranse) når oppgave velges i todo-modal
@@ -6553,16 +6763,21 @@
   function ryddFullforte() {
     const iDag = new Date();
     const iDagStr = _lokalDatoStr(iDag);
-    const grense = new Date(iDag); grense.setDate(iDag.getDate() - 3);
-    const g3 = _lokalDatoStr(grense);
-    const forOpp = oppgaver.length;
-    const forTod = todos.length;
     // Bakfyll manglende fullfortDato på fullførte elementer (gammel/importert
-    // data) til i dag, så de STARTER 3-dagers-klokka i stedet for å bli slettet
-    // umiddelbart. Deretter slettes kun det som har en dato eldre enn 3 dager.
+    // data) til i dag — holder data konsistent uansett oppbevaringsvalg.
     let endret = false;
     for (const x of oppgaver) if (x.fullfort && !x.fullfortDato) { x.fullfortDato = iDagStr; endret = true; }
     for (const x of todos)    if (x.fullfort && !x.fullfortDato) { x.fullfortDato = iDagStr; endret = true; }
+    // Oppbevaring av fullførte i listen er nå en innstilling (lp_ryddDager):
+    // 'aldri' = behold alt, ellers antall dager. Fullført-loggen (flog) bevarer
+    // historikk uansett; dette styrer bare hvor lenge de vises i selve listen.
+    const ryddDager = localStorage.getItem('lp_ryddDager') || '3';
+    if (ryddDager === 'aldri') { if (endret) lagre(); return; }
+    const dager = parseInt(ryddDager, 10) || 3;
+    const grense = new Date(iDag); grense.setDate(iDag.getDate() - dager);
+    const g3 = _lokalDatoStr(grense);
+    const forOpp = oppgaver.length;
+    const forTod = todos.length;
     oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < g3));
     todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < g3));
     if (endret || oppgaver.length !== forOpp || todos.length !== forTod) lagre();
