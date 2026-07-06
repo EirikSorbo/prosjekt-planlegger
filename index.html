@@ -1718,7 +1718,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.37</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.38</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2211,7 +2211,10 @@
   function genererKategoriCSS() {
     let css = '';
     kategorier.forEach(k => {
-      const id = k.id, f = k.farge;
+      const id = k.id;
+      // Valider fargen: kun #rrggbb slipper inn i <style> (importerte/synkede
+      // data kan ellers smugle inn ekstra CSS-regler). Ugyldig → nøytral default.
+      const f = /^#[0-9a-fA-F]{6}$/.test(k.farge) ? k.farge : '#9490d4';
       // Lys hover-bakgrunn (bland hvit 85%)
       const hex2rgb = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
       const [r,g,b] = hex2rgb(f);
@@ -2270,11 +2273,28 @@
   /* ──────────────────────────────
      LAGRING
   ────────────────────────────── */
+  // Escape brukertekst før innsetting i innerHTML — hindrer at et navn/en tekst
+  // med < eller " bryter markup (og nøytraliserer XSS fra data synket fra en
+  // annen enhet). Tåler null/undefined.
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // Trygg JSON-parse: en korrupt localStorage-nøkkel skal degradere til et tomt
+  // datasett, ikke krasje hele app-lasten.
+  function _parseSafe(str, fallback) {
+    try { return JSON.parse(str); } catch { return fallback; }
+  }
+
   function lagre() {
     localStorage.setItem(_pk('a'), JSON.stringify(aktiviteter));
     localStorage.setItem(_pk('o'), JSON.stringify(oppgaver));
     localStorage.setItem(_pk('t'), JSON.stringify(todos));
     localStorage.setItem(_pk('k'), JSON.stringify(kategorier));
+    // Marker prosjektet som «endret lokalt, ikke bekreftet synket» — brukes til
+    // å hindre at en senere sky-henting overskriver usynkede endringer.
+    localStorage.setItem(_pk('dirty'), Date.now().toString());
     oppdaterForfaltBadge();
     if (window._currentUid && window._lagreTilSky) {
       window._lagreTilSky(window._currentUid);
@@ -2286,13 +2306,13 @@
     const o = localStorage.getItem(_pk('o'));
     const t = localStorage.getItem(_pk('t'));
     const k = localStorage.getItem(_pk('k'));
-    aktiviteter = a ? JSON.parse(a) : [];
-    oppgaver    = o ? JSON.parse(o) : [];
-    todos       = t ? JSON.parse(t) : [];
-    kategorier  = k ? JSON.parse(k) : [];
+    aktiviteter = a ? _parseSafe(a, []) : [];
+    oppgaver    = o ? _parseSafe(o, []) : [];
+    todos       = t ? _parseSafe(t, []) : [];
+    kategorier  = k ? _parseSafe(k, []) : [];
     genererKategoriCSS();
     // Last tidslinje-grenser for dette prosjektet
-    const tl = JSON.parse(localStorage.getItem(_pk('tl')) || '{}');
+    const tl = _parseSafe(localStorage.getItem(_pk('tl')) || '{}', {});
     tidslinjeStartGrense = tl.start || null;
     tidslinjeSluttGrense = tl.slutt || null;
     aktivitetFilterState = lastFilterState(_pk('fa'));
@@ -3081,7 +3101,7 @@
         let metaHtml = '';
         if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
         if (akt) {
-          metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
+          metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
         } else if (o.kategoriId) {
           const katV = getKat(o.kategoriId);
           if (katV) metaHtml += `<span class="tilknyttet-chip chip-${katV.id}">${katV.label}</span>`;
@@ -3617,7 +3637,10 @@
       item.fullfort = !item.fullfort;
       item.fullfortDato = item.fullfort ? idag : null;
       localStorage.setItem(nøkkel, JSON.stringify(liste));
-      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid);
+      localStorage.setItem(pk('dirty'), Date.now().toString());
+      // Send prosjektId eksplisitt — ellers synker lagreTilSky det AKTIVE
+      // prosjektet i stedet, og denne avhukningen når aldri sky.
+      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid, prosjektId);
     }
     renderStartside();
   }
@@ -3857,8 +3880,9 @@
       item.fullfort = !item.fullfort;
       item.fullfortDato = item.fullfort ? idag : null;
       localStorage.setItem(nøkkel, JSON.stringify(liste));
-      // Synk til Firebase hvis tilgjengelig
-      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid);
+      localStorage.setItem(pk('dirty'), Date.now().toString());
+      // Synk til Firebase hvis tilgjengelig — send prosjektId eksplisitt.
+      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid, prosjektId);
     }
     // Re-render dagsoversikten
     const popup = document.getElementById('dagsoversiktPopup');
@@ -4308,21 +4332,21 @@
       let metaHtml = '';
       if (isMulti && t._prosjektNavn) {
         const pFarge = prosjekter.find(p => p.id === t._prosjektId)?.farge || 'var(--grønn)';
-        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${t._prosjektNavn}</span>`;
+        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(t._prosjektNavn)}</span>`;
       }
       if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort);
       if (t.oppgaveId) {
         const opp = fOppgaver.find(o => o.id === t.oppgaveId);
-        if (opp) metaHtml += `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${opp.beskrivelse}</span>`;
+        if (opp) metaHtml += `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${escapeHtml(opp.beskrivelse)}</span>`;
       }
       if (t.kategoriId) {
         const katT = getKat(t.kategoriId);
-        if (katT) metaHtml += `<span class="tilknyttet-chip chip-${katT.id}">${katT.label}</span>`;
+        if (katT) metaHtml += `<span class="tilknyttet-chip chip-${katT.id}">${escapeHtml(katT.label)}</span>`;
       }
 
       const info = document.createElement('div');
       info.className = 'todo-info';
-      info.innerHTML = `<div class="todo-tittel">${t.tittel}</div>
+      info.innerHTML = `<div class="todo-tittel">${escapeHtml(t.tittel)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
 
       kort.appendChild(cb);
@@ -4331,6 +4355,7 @@
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
       leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+        if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
         todos = todos.filter(x => x.id !== t.id);
         lagre(); renderTodos();
       });
@@ -4374,19 +4399,19 @@
       let metaHtml = '';
       if (isMulti && o._prosjektNavn) {
         const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--grønn)';
-        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${o._prosjektNavn}</span>`;
+        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
       }
       metaHtml += fristSpan(o.frist, o.fullfort);
       if (akt) {
-        metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${akt.tittel}</span>`;
+        metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
       } else if (o.kategoriId) {
         const katO = getKat(o.kategoriId);
-        if (katO) metaHtml += `<span class="tilknyttet-chip chip-${katO.id}">${katO.label}</span>`;
+        if (katO) metaHtml += `<span class="tilknyttet-chip chip-${katO.id}">${escapeHtml(katO.label)}</span>`;
       }
 
       const info = document.createElement('div');
       info.className = 'todo-info';
-      info.innerHTML = `<div class="todo-tittel">${o.beskrivelse}</div>
+      info.innerHTML = `<div class="todo-tittel">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
 
       kort.appendChild(cb);
@@ -4395,6 +4420,7 @@
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
       leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
         oppgaver = oppgaver.filter(x => x.id !== o.id);
         lagre(); renderTodos();
       });
@@ -4968,7 +4994,10 @@
     const kort = document.createElement('div');
     kort.className = 'aktivitet-kort' + (a.type ? ' hover-' + a.type : '');
     kort.style.cursor = 'pointer';
-    kort.onclick = () => åpneAktivitetInfo(a.id);
+    kort.onclick = () => {
+      if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
+      åpneAktivitetInfo(a.id);
+    };
 
     const erMilepel = a.leveranseType === 'milep\u00e6l';
     const badge = document.createElement('span');
@@ -5044,6 +5073,7 @@
     ytre.appendChild(slettBg);
     ytre.appendChild(wrapper);
     leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+      if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
       aktiviteter = aktiviteter.filter(x => x.id !== a.id);
       oppgaver.forEach(o => { if (o.aktivitetId === a.id) o.aktivitetId = null; });
       lagre();
@@ -5177,7 +5207,11 @@
       const cb = document.createElement('div');
       cb.className = 'checkbox' + (o.fullfort ? ' sjekket' : '');
       cb.textContent = o.fullfort ? '✓' : '';
-      cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); };
+      cb.onclick = e => {
+        e.stopPropagation();
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        toggleOppgave(o.id);
+      };
 
       const info = document.createElement('div');
       info.className = 'oppgave-info';
@@ -5185,15 +5219,15 @@
       let metaHtml = '';
       if (isMulti && o._prosjektNavn) {
         const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--grønn)';
-        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${o._prosjektNavn}</span>`;
+        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
       }
       if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
       if (o.aktivitetId) {
         const aktM = fAktiviteter.find(a => a.id === o.aktivitetId);
-        if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${aktM.type || "fri"}">${aktM.tittel}</span>`;
+        if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${aktM.type || "fri"}">${escapeHtml(aktM.tittel)}</span>`;
       } else if (o.kategoriId) {
         const katM = getKat(o.kategoriId);
-        if (katM) metaHtml += `<span class="tilknyttet-chip chip-${katM.id}">${katM.label}</span>`;
+        if (katM) metaHtml += `<span class="tilknyttet-chip chip-${katM.id}">${escapeHtml(katM.label)}</span>`;
       }
       const oppTodos = todos.filter(t => t.oppgaveId === o.id);
       if (oppTodos.length > 0) {
@@ -5202,11 +5236,14 @@
       }
 
       info.innerHTML = `
-        <div class="oppgave-besk">${o.beskrivelse}</div>
+        <div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
 
       kort.style.cursor = 'pointer';
-      kort.onclick = () => åpneOppgaveInfo(o.id);
+      kort.onclick = () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        åpneOppgaveInfo(o.id);
+      };
 
       kort.appendChild(cb);
       kort.appendChild(info);
@@ -5215,6 +5252,7 @@
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
       leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
         todos.forEach(t => { if (t.oppgaveId === o.id) t.oppgaveId = null; });
         oppgaver = oppgaver.filter(x => x.id !== o.id);
         lagre();
@@ -6767,7 +6805,7 @@
     åpneRapport(katFilter);
     document.querySelector('#rapportModal .modal-tittel').textContent = tittel;
     const el = document.querySelector('.rapport-tittel-stor');
-    if (el) el.innerHTML = undertittel;
+    if (el) el.textContent = undertittel;
     // Gjenopprett
     aktiviteter = bak.aktiviteter;
     oppgaver = bak.oppgaver;
@@ -6819,7 +6857,7 @@
     åpneRapport();
     document.querySelector('#rapportModal .modal-tittel').textContent = tittel;
     const tittelEl = document.querySelector('.rapport-tittel-stor');
-    if (tittelEl) tittelEl.innerHTML = undertittel;
+    if (tittelEl) tittelEl.textContent = undertittel;
     aktiviteter = bak.aktiviteter;
     oppgaver = bak.oppgaver;
     todos = bak.todos;
@@ -7091,10 +7129,13 @@
   }
 
   // ── Synkroniser data med Firestore ──
-  async function lagreTilSky(userId) {
-    const pid = window._getAktivtProsjektId();
+  async function lagreTilSky(userId, pid) {
+    // pid kan sendes eksplisitt (f.eks. ved kryss-prosjekt-avhuking fra
+    // startsiden) — ellers synkes det aktive prosjektet.
+    if (!pid) pid = window._getAktivtProsjektId();
     if (!pid) return;
     const pk = s => 'lp_' + pid + '_' + s;
+    const dirtyToken = localStorage.getItem(pk('dirty'));
     try {
       visSynkStatus('Synkroniserer…', '#f39c12');
 
@@ -7117,10 +7158,12 @@
         }
       } catch(e) { /* ignorer merge-feil, bruk lokale */ }
 
-      // Lagre prosjektliste på brukernivå
+      // Lagre prosjektliste på brukernivå. aktivtProsjekt skal alltid peke på
+      // det FAKTISK aktive prosjektet — ikke nødvendigvis pid-en vi bakgrunns-
+      // synker (som kan være et annet prosjekt ved kryss-prosjekt-avhuking).
       await setDoc(doc(db, 'brukere', userId), {
         prosjekter: mergedProsjekter,
-        aktivtProsjekt: pid,
+        aktivtProsjekt: window._getAktivtProsjektId() || pid,
         oppdatert: new Date().toISOString()
       });
 
@@ -7135,6 +7178,10 @@
         tidslinjeGrenser: JSON.parse(localStorage.getItem(pk('tl')) || '{}'),
         oppdatert:   new Date().toISOString()
       });
+      // Skriv bekreftet: tøm dirty-markøren — men KUN hvis ingen ny lokal
+      // endring kom mens skrivet pågikk (da endres tokenet og vi lar den stå,
+      // så neste lagre() re-synker).
+      if (localStorage.getItem(pk('dirty')) === dirtyToken) localStorage.removeItem(pk('dirty'));
       visSynkStatus('✓ Synkronisert', '#27ae60');
     } catch(e) {
       visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
@@ -7168,6 +7215,15 @@
   // ── Last prosjektdata fra sky ──
   async function _lastProsjektFraSky(userId, prosjektId) {
     const pk = s => 'lp_' + prosjektId + '_' + s;
+    // Datataps-vakt: hvis prosjektet har usynkede lokale endringer (dirty),
+    // IKKE overskriv localStorage med (muligens eldre) sky-data. Behold lokalt
+    // og push det heller opp. Dette hindrer at et fire-and-forget-skriv som
+    // ikke rakk å fullføre (lukket fane / offline) klobres ved neste oppstart.
+    if (localStorage.getItem(pk('dirty'))) {
+      console.warn('[SYNK] Usynkede lokale endringer for', prosjektId, '— beholder lokalt og pusher til sky');
+      try { await lagreTilSky(userId, prosjektId); } catch(e) { /* la dirty stå til neste forsøk */ }
+      return;
+    }
     let snap;
     try {
       snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', prosjektId));

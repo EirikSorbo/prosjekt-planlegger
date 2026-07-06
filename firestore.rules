@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// Sikkerhetsregler for Firestore (prosjekt: mishmash-wp4).
+// ---------------------------------------------------------------------------
+// Denne fila er dokumentasjon/versjonskontroll av reglene. Firestore leser
+// dem IKKE herfra — de må limes inn og publiseres i Firebase Console
+// (Firestore Database → Rules) for å tre i kraft. Hold denne fila i synk med
+// det som faktisk er publisert.
+//
+// Datamodell: hver bruker eier hele treet under brukere/<uid>:
+//   brukere/<uid>                      (prosjektliste + aktivt prosjekt)
+//   brukere/<uid>/prosjekter/<pid>     (aktiviteter, oppgaver, todos, …)
+// ---------------------------------------------------------------------------
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Kun den innloggede eieren får lese/skrive sitt eget tre. Den nestede
+    // match-en dekker både selve brukerdokumentet OG alle underdokumenter
+    // (prosjekter/<pid>) på alle nivåer.
+    match /brukere/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Alt annet er stengt: uten en eksplisitt allow her får ingen tilgang.
+  }
+}
