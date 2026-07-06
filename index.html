@@ -1789,7 +1789,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.43</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.44</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1912,6 +1912,15 @@
           <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settTodoFrist(7)">1 uke</button>
         </div>
         <input type="date" id="todoFeltFrist" />
+      </div>
+      <div class="felt">
+        <label>Gjenta</label>
+        <select id="todoFeltGjenta">
+          <option value="">Aldri</option>
+          <option value="daglig">Daglig</option>
+          <option value="ukentlig">Ukentlig</option>
+          <option value="månedlig">Månedlig</option>
+        </select>
       </div>
       <div class="felt">
         <label>Beskrivelse</label>
@@ -2081,6 +2090,15 @@
         </div>
         <input type="date" id="oppFeltFrist" style="display:none;width:100%;" />
         <div id="fristRelativInfo" style="font-size:12px;color:var(--tekst-sek);margin-top:6px;display:none;"></div>
+      </div>
+      <div class="felt">
+        <label>Gjenta</label>
+        <select id="oppFeltGjenta">
+          <option value="">Aldri</option>
+          <option value="daglig">Daglig</option>
+          <option value="ukentlig">Ukentlig</option>
+          <option value="månedlig">Månedlig</option>
+        </select>
       </div>
       <div class="felt">
         <label>Notater</label>
@@ -4204,6 +4222,7 @@
         metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(t._prosjektNavn)}</span>`;
       }
       if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort);
+      metaHtml += _gjentaChip(t.gjenta);
       if (t.oppgaveId) {
         const opp = fOppgaver.find(o => o.id === t.oppgaveId);
         if (opp) metaHtml += `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${escapeHtml(opp.beskrivelse)}</span>`;
@@ -4275,6 +4294,7 @@
         metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
       }
       metaHtml += fristSpan(o.frist, o.fullfort);
+      metaHtml += _gjentaChip(o.gjenta);
       if (akt) {
         metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
       } else if (o.kategoriId) {
@@ -4359,12 +4379,60 @@
     } catch (e) { /* logg er best-effort, aldri kritisk */ }
   }
 
+  // ── Gjentakelse (recurring) ──
+  // gjenta-felt: 'daglig' | 'ukentlig' | 'månedlig' | null/'' = aldri.
+  const GJENTA_LABEL = { daglig: 'Daglig', ukentlig: 'Ukentlig', 'månedlig': 'Månedlig' };
+
+  // Liten chip som markerer at et element er gjentakende.
+  function _gjentaChip(gjenta) {
+    if (!gjenta || !GJENTA_LABEL[gjenta]) return '';
+    return `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">🔁 ${GJENTA_LABEL[gjenta]}</span>`;
+  }
+
+  // Neste frist: gammel frist + ett intervall, hopper frem til første dato >= i dag
+  // (etterskudd). Uten gammel frist ankres den på fullføringsdato (i dag).
+  function _nesteFrist(gammelFrist, gjenta) {
+    const iDag = _lokalDatoStr();
+    const d = gammelFrist ? new Date(gammelFrist + 'T00:00:00') : new Date();
+    d.setHours(0, 0, 0, 0);
+    const steg = () => {
+      if (gjenta === 'daglig') d.setDate(d.getDate() + 1);
+      else if (gjenta === 'ukentlig') d.setDate(d.getDate() + 7);
+      else if (gjenta === 'månedlig') d.setMonth(d.getMonth() + 1);
+    };
+    do { steg(); } while (_lokalDatoStr(d) < iDag);
+    return _lokalDatoStr(d);
+  }
+
+  // Ved fullføring av en gjentakende item: spawn ny åpen forekomst med neste frist.
+  // Den fullførte raden blir stående (historikk/streak) men mister gjenta, så
+  // serien flyttes til den nye raden og angre→re-fullfør ikke lager duplikater.
+  function _spawnGjentakelse(item, type) {
+    if (!item.gjenta || !GJENTA_LABEL[item.gjenta]) return;
+    const gjenta = item.gjenta;
+    const nyFrist = _nesteFrist(item.frist, gjenta);
+    if (type === 'todo') {
+      todos.push({
+        id: uid(), tittel: item.tittel, beskrivelse: item.beskrivelse || '',
+        frist: nyFrist, aktivitetId: item.aktivitetId || null, oppgaveId: item.oppgaveId || null,
+        kategoriId: item.kategoriId || null, viktig: item.viktig || false, gjenta, fullfort: false,
+      });
+    } else {
+      oppgaver.push({
+        id: uid(), beskrivelse: item.beskrivelse, notat: item.notat || '',
+        frist: nyFrist, aktivitetId: item.aktivitetId || null, kategoriId: item.kategoriId || null,
+        viktig: item.viktig || false, gjenta, fullfort: false,
+      });
+    }
+    item.gjenta = null;
+  }
+
   function toggleTodo(id) {
     const t = todos.find(t => t.id === id);
     if (t) {
       t.fullfort = !t.fullfort;
       t.fullfortDato = t.fullfort ? _lokalDatoStr() : null;
-      if (t.fullfort) _loggFullfort(t, 'todo');
+      if (t.fullfort) { _loggFullfort(t, 'todo'); _spawnGjentakelse(t, 'todo'); }
       lagre(); renderTodos();
     }
   }
@@ -4516,6 +4584,7 @@
       document.getElementById('todoFeltTittel').value = t.tittel;
       document.getElementById('todoFeltBesk').value   = t.beskrivelse || '';
       document.getElementById('todoFeltFrist').value  = t.frist || '';
+      document.getElementById('todoFeltGjenta').value = t.gjenta || '';
       todoKatSelect.value = t.kategoriId || '';
       _oppdaterTodoLevSelect(t.aktivitetId || '');  // filtrert på kategori
       _oppdaterTodoOppSelect(t.oppgaveId   || '');  // filtrert på leveranse
@@ -4526,6 +4595,7 @@
       document.getElementById('todoFeltTittel').value = '';
       document.getElementById('todoFeltBesk').value   = '';
       document.getElementById('todoFeltFrist').value  = '';
+      document.getElementById('todoFeltGjenta').value = '';
       slettKnapp.style.display = 'none';
 
       if (preOppgaveId) {
@@ -4557,7 +4627,7 @@
   function hurtigLeggTilTodo(tittel) {
     tittel = (tittel || '').trim();
     if (!tittel) return;
-    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, fullfort: false });
+    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, fullfort: false });
     lagre(); renderTodos();
     const inp = document.getElementById('hurtigTodoInput');
     if (inp) inp.focus();
@@ -4571,12 +4641,13 @@
     const aktivitetId = document.getElementById('todoFeltLeveranse').value || null;
     const oppgaveId   = document.getElementById('todoFeltOppgave').value || null;
     const kategoriId  = document.getElementById('todoFeltKategori').value || null;
+    const gjenta      = document.getElementById('todoFeltGjenta').value || null;
 
     if (redigTodoId) {
       const t = todos.find(t => t.id === redigTodoId);
-      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.aktivitetId = aktivitetId; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; }
+      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.aktivitetId = aktivitetId; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; t.gjenta = gjenta; }
     } else {
-      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, aktivitetId, oppgaveId, kategoriId, fullfort: false });
+      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, aktivitetId, oppgaveId, kategoriId, gjenta, fullfort: false });
     }
     lagre(); lukkModal('todoModal'); renderTodos();
   }
@@ -5385,7 +5456,7 @@
     if (o) {
       o.fullfort = !o.fullfort;
       o.fullfortDato = o.fullfort ? _lokalDatoStr() : null;
-      if (o.fullfort) _loggFullfort(o, 'oppgave');
+      if (o.fullfort) { _loggFullfort(o, 'oppgave'); _spawnGjentakelse(o, 'oppgave'); }
       lagre(); renderOppgaver(); renderTodos();
     }
   }
@@ -5871,6 +5942,7 @@
     oppFristEl.value = '';
     oppFristEl.style.display = 'none';
     document.getElementById('fristRelativInfo').style.display = 'none';
+    document.getElementById('oppFeltGjenta').value = '';
 
     if (id) {
       const o = oppgaver.find(o => o.id === id);
@@ -5878,6 +5950,7 @@
       document.getElementById('oppgaveModalTittel').textContent = 'Rediger oppgave';
       document.getElementById('oppFeltBesk').value  = o.beskrivelse;
       document.getElementById('oppFeltNotat').value = o.notat || '';
+      document.getElementById('oppFeltGjenta').value = o.gjenta || '';
       // Sett kategori FØR leveranse-fylling slik at filteret er riktig
       katSelect.value = o.kategoriId || '';
       if (o.aktivitetId && !o.kategoriId) {
@@ -5916,12 +5989,13 @@
     if (!besk) { alert('Tittel er påkrevd.'); return; }
 
     const frist = document.getElementById('oppFeltFrist').value || '';
+    const gjenta = document.getElementById('oppFeltGjenta').value || null;
 
     if (redigOppgaveId) {
       const o = oppgaver.find(o => o.id === redigOppgaveId);
-      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId });
+      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta });
     } else {
-      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, fullfort: false };
+      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, fullfort: false };
       oppgaver.push(nyOppgave);
     }
 
