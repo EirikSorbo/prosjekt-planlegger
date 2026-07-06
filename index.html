@@ -1789,7 +1789,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.44</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.45</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1943,6 +1943,10 @@
         <select id="todoFeltKategori">
           <option value="">— Ingen —</option>
         </select>
+      </div>
+      <div class="felt">
+        <label>Tagger</label>
+        <input type="text" id="todoFeltTagger" placeholder="#hjemme #haster" />
       </div>
     </div>
     <div class="modal-footer">
@@ -2099,6 +2103,10 @@
           <option value="ukentlig">Ukentlig</option>
           <option value="månedlig">Månedlig</option>
         </select>
+      </div>
+      <div class="felt">
+        <label>Tagger</label>
+        <input type="text" id="oppFeltTagger" placeholder="#hjemme #haster" />
       </div>
       <div class="felt">
         <label>Notater</label>
@@ -4160,30 +4168,33 @@
     const oppPasserer = o => matcherGlobalFilter(null, o.kategoriId, o.aktivitetId);
 
     // Todos uten frist (aktive) — vis kun hvis ingen periode-filter
-    const utenFrist = fTodos.filter(t => !t.fullfort && !t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && !harPeriodeFilter).sort(_viktigForst);
+    const utenFrist = fTodos.filter(t => !t.fullfort && !t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && !harPeriodeFilter && _tagPasserer(t)).sort(_viktigForst);
 
     // Todos med frist (aktive), sortert + periodefilter
-    const medFrist = fTodos.filter(t => !t.fullfort && t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && _todoPassererPeriode(t.frist))
+    const medFrist = fTodos.filter(t => !t.fullfort && t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && _todoPassererPeriode(t.frist) && _tagPasserer(t))
       .sort((a,b) => _viktigForst(a,b) || a.frist.localeCompare(b.frist));
 
     // Oppgaver med frist (ikke fullført) — bruk periodefiler eller 30-dagers default
     const oppgaverSnart = fOppgaver.filter(o => {
       if (o.fullfort || !o.frist) return false;
       if (!isMulti && globalKatFilter && !oppPasserer(o)) return false;
+      if (!_tagPasserer(o)) return false;
       if (harPeriodeFilter) return _todoPassererPeriode(o.frist);
       const d = new Date(o.frist + 'T00:00:00');
       return d <= om30;
     }).sort((a,b) => _viktigForst(a,b) || a.frist.localeCompare(b.frist));
 
     // Fullførte todos — skjul ved periodefilter
-    const fullforte = harPeriodeFilter ? [] : fTodos.filter(t => t.fullfort && (!globalKatFilter || isMulti || todoPasserer(t)));
+    const fullforte = harPeriodeFilter ? [] : fTodos.filter(t => t.fullfort && (!globalKatFilter || isMulti || todoPasserer(t)) && _tagPasserer(t));
+
+    if (_aktivTag) container.appendChild(_tagFilterBanner());
 
     const tomListe = utenFrist.length === 0 && medFrist.length === 0 &&
                      oppgaverSnart.length === 0 && fullforte.length === 0;
     if (tomListe) {
       const tom = document.createElement('div');
       tom.style.cssText = 'padding:24px;text-align:center;font-size:13px;color:var(--tekst-sek);';
-      tom.textContent = 'Ingen to do-elementer ennå.';
+      tom.textContent = _aktivTag ? 'Ingen elementer med denne taggen.' : 'Ingen to do-elementer ennå.';
       container.appendChild(tom);
       return;
     }
@@ -4231,11 +4242,13 @@
         const katT = getKat(t.kategoriId);
         if (katT) metaHtml += `<span class="tilknyttet-chip chip-${katT.id}">${escapeHtml(katT.label)}</span>`;
       }
+      metaHtml += _tagChipsHtml(t.tagger);
 
       const info = document.createElement('div');
       info.className = 'todo-info';
       info.innerHTML = `<div class="todo-tittel">${escapeHtml(t.tittel)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
+      _bindTagChips(info);
 
       kort.appendChild(cb);
       kort.appendChild(info);
@@ -4301,11 +4314,13 @@
         const katO = getKat(o.kategoriId);
         if (katO) metaHtml += `<span class="tilknyttet-chip chip-${katO.id}">${escapeHtml(katO.label)}</span>`;
       }
+      metaHtml += _tagChipsHtml(o.tagger);
 
       const info = document.createElement('div');
       info.className = 'todo-info';
       info.innerHTML = `<div class="todo-tittel">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
+      _bindTagChips(info);
 
       kort.appendChild(cb);
       kort.appendChild(info);
@@ -4415,16 +4430,81 @@
       todos.push({
         id: uid(), tittel: item.tittel, beskrivelse: item.beskrivelse || '',
         frist: nyFrist, aktivitetId: item.aktivitetId || null, oppgaveId: item.oppgaveId || null,
-        kategoriId: item.kategoriId || null, viktig: item.viktig || false, gjenta, fullfort: false,
+        kategoriId: item.kategoriId || null, viktig: item.viktig || false, gjenta,
+        tagger: (item.tagger || []).slice(), fullfort: false,
       });
     } else {
       oppgaver.push({
         id: uid(), beskrivelse: item.beskrivelse, notat: item.notat || '',
         frist: nyFrist, aktivitetId: item.aktivitetId || null, kategoriId: item.kategoriId || null,
-        viktig: item.viktig || false, gjenta, fullfort: false,
+        viktig: item.viktig || false, gjenta, tagger: (item.tagger || []).slice(), fullfort: false,
       });
     }
     item.gjenta = null;
+  }
+
+  // ── Frie tagger (på tvers av kategori) ──
+  // tagger: array av strenger (uten #). Aktiv tag-filtrering via klikk på chip.
+  let _aktivTag = null;
+
+  // Parse tag-input: split på mellomrom/komma, strip ledende #, dedup (case-insensitiv,
+  // beholder første skrivemåte).
+  function _parseTagger(str) {
+    if (!str) return [];
+    const seen = new Set(), out = [];
+    str.split(/[\s,]+/).forEach(raw => {
+      const t = raw.replace(/^#+/, '').trim();
+      if (!t) return;
+      const k = t.toLowerCase();
+      if (seen.has(k)) return;
+      seen.add(k); out.push(t);
+    });
+    return out;
+  }
+
+  // Sant hvis item passerer aktivt tag-filter (case-insensitiv).
+  function _tagPasserer(item) {
+    if (!_aktivTag) return true;
+    const mål = _aktivTag.toLowerCase();
+    return (item.tagger || []).some(t => t.toLowerCase() === mål);
+  }
+
+  // HTML for tag-chips i en meta-rad. Klikk bindes etterpå via _bindTagChips.
+  function _tagChipsHtml(tagger) {
+    if (!tagger || !tagger.length) return '';
+    return tagger.map(t =>
+      `<span class="tilknyttet-chip tag-chip" data-tag="${escapeHtml(t)}" style="border-color:var(--grønn);color:var(--grønn);cursor:pointer;">#${escapeHtml(t)}</span>`
+    ).join('');
+  }
+
+  // Bind klikk på tag-chips inne i et element (etter innerHTML er satt).
+  function _bindTagChips(el) {
+    el.querySelectorAll('.tag-chip').forEach(chip => {
+      chip.onclick = e => { e.stopPropagation(); filtrerPaaTag(chip.dataset.tag); };
+    });
+  }
+
+  // Sett/veksle aktivt tag-filter og oppdater begge lister.
+  function filtrerPaaTag(tag) {
+    _aktivTag = (tag && tag === _aktivTag) ? null : (tag || null);
+    renderTodos();
+    renderOppgaver();
+  }
+
+  // Liten banner øverst i lista når et tag-filter er aktivt (med nullstill-knapp).
+  function _tagFilterBanner() {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 4px;';
+    const lbl = document.createElement('span');
+    lbl.style.cssText = 'font-size:12px;color:var(--tekst-sek);';
+    lbl.textContent = 'Filtrert på tag:';
+    const pill = document.createElement('button');
+    pill.className = 'tilknyttet-chip';
+    pill.style.cssText = 'border-color:var(--grønn);color:var(--grønn);cursor:pointer;';
+    pill.textContent = '#' + _aktivTag + ' ✕';
+    pill.onclick = () => filtrerPaaTag(null);
+    div.appendChild(lbl); div.appendChild(pill);
+    return div;
   }
 
   function toggleTodo(id) {
@@ -4585,6 +4665,7 @@
       document.getElementById('todoFeltBesk').value   = t.beskrivelse || '';
       document.getElementById('todoFeltFrist').value  = t.frist || '';
       document.getElementById('todoFeltGjenta').value = t.gjenta || '';
+      document.getElementById('todoFeltTagger').value = (t.tagger || []).map(x => '#' + x).join(' ');
       todoKatSelect.value = t.kategoriId || '';
       _oppdaterTodoLevSelect(t.aktivitetId || '');  // filtrert på kategori
       _oppdaterTodoOppSelect(t.oppgaveId   || '');  // filtrert på leveranse
@@ -4596,6 +4677,7 @@
       document.getElementById('todoFeltBesk').value   = '';
       document.getElementById('todoFeltFrist').value  = '';
       document.getElementById('todoFeltGjenta').value = '';
+      document.getElementById('todoFeltTagger').value = '';
       slettKnapp.style.display = 'none';
 
       if (preOppgaveId) {
@@ -4627,7 +4709,7 @@
   function hurtigLeggTilTodo(tittel) {
     tittel = (tittel || '').trim();
     if (!tittel) return;
-    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, fullfort: false });
+    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, tagger: [], fullfort: false });
     lagre(); renderTodos();
     const inp = document.getElementById('hurtigTodoInput');
     if (inp) inp.focus();
@@ -4642,12 +4724,13 @@
     const oppgaveId   = document.getElementById('todoFeltOppgave').value || null;
     const kategoriId  = document.getElementById('todoFeltKategori').value || null;
     const gjenta      = document.getElementById('todoFeltGjenta').value || null;
+    const tagger      = _parseTagger(document.getElementById('todoFeltTagger').value);
 
     if (redigTodoId) {
       const t = todos.find(t => t.id === redigTodoId);
-      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.aktivitetId = aktivitetId; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; t.gjenta = gjenta; }
+      if (t) { t.tittel = tittel; t.beskrivelse = besk; t.frist = frist; t.aktivitetId = aktivitetId; t.oppgaveId = oppgaveId; t.kategoriId = kategoriId; t.gjenta = gjenta; t.tagger = tagger; }
     } else {
-      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, aktivitetId, oppgaveId, kategoriId, gjenta, fullfort: false });
+      todos.push({ id: uid(), tittel, beskrivelse: besk, frist, aktivitetId, oppgaveId, kategoriId, gjenta, tagger, fullfort: false });
     }
     lagre(); lukkModal('todoModal'); renderTodos();
   }
@@ -4685,7 +4768,12 @@
         <span class="type-badge ${katTI.id}">${katTI.label}</span>
       </div>`;
     }
-    if (!t.frist && !t.beskrivelse && !t.oppgaveId && !t.kategoriId) {
+    if (t.tagger && t.tagger.length) {
+      html += `<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+        ${t.tagger.map(x => `<span class="tilknyttet-chip" style="border-color:var(--grønn);color:var(--grønn);">#${escapeHtml(x)}</span>`).join('')}
+      </div>`;
+    }
+    if (!t.frist && !t.beskrivelse && !t.oppgaveId && !t.kategoriId && !(t.tagger && t.tagger.length)) {
       html = `<div style="font-size:13px;color:var(--tekst-sek);">Ingen tilleggsinformasjon.</div>`;
     }
 
@@ -5223,17 +5311,22 @@
       }
     }
 
+    if (_aktivTag) filtrert = filtrert.filter(_tagPasserer);
+
     filtrert.sort((a, b) =>
       (a.frist || '9999').localeCompare(b.frist || '9999')
     );
 
     if (filtrert.length === 0) {
-      container.innerHTML =
-        '<div class="tom-melding">Ingen oppgaver her ennå.</div>';
+      container.innerHTML = '';
+      if (_aktivTag) container.appendChild(_tagFilterBanner());
+      container.insertAdjacentHTML('beforeend',
+        `<div class="tom-melding">${_aktivTag ? 'Ingen oppgaver med denne taggen.' : 'Ingen oppgaver her ennå.'}</div>`);
       return;
     }
 
     container.innerHTML = '';
+    if (_aktivTag) container.appendChild(_tagFilterBanner());
 
     // Group by month (frist-based; no-frist goes last under "Ingen frist")
     const grupper = {};
@@ -5305,10 +5398,12 @@
         const fullf = oppTodos.filter(t => t.fullfort).length;
         metaHtml += `<span style="font-size:11px;color:var(--tekst-sek);white-space:nowrap;">${fullf}/${oppTodos.length} to-do</span>`;
       }
+      metaHtml += _tagChipsHtml(o.tagger);
 
       info.innerHTML = `
         <div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
+      _bindTagChips(info);
 
       kort.style.cursor = 'pointer';
       kort.onclick = () => {
@@ -5393,6 +5488,13 @@
       html += `<div style="margin-bottom:14px;">
         <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Notater</div>
         <div style="padding:12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);line-height:1.5;">${o.notat}</div>
+      </div>`;
+    }
+
+    // Tagger
+    if (o.tagger && o.tagger.length) {
+      html += `<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap;">
+        ${o.tagger.map(x => `<span class="tilknyttet-chip" style="border-color:var(--grønn);color:var(--grønn);">#${escapeHtml(x)}</span>`).join('')}
       </div>`;
     }
 
@@ -5943,6 +6045,7 @@
     oppFristEl.style.display = 'none';
     document.getElementById('fristRelativInfo').style.display = 'none';
     document.getElementById('oppFeltGjenta').value = '';
+    document.getElementById('oppFeltTagger').value = '';
 
     if (id) {
       const o = oppgaver.find(o => o.id === id);
@@ -5951,6 +6054,7 @@
       document.getElementById('oppFeltBesk').value  = o.beskrivelse;
       document.getElementById('oppFeltNotat').value = o.notat || '';
       document.getElementById('oppFeltGjenta').value = o.gjenta || '';
+      document.getElementById('oppFeltTagger').value = (o.tagger || []).map(x => '#' + x).join(' ');
       // Sett kategori FØR leveranse-fylling slik at filteret er riktig
       katSelect.value = o.kategoriId || '';
       if (o.aktivitetId && !o.kategoriId) {
@@ -5990,12 +6094,13 @@
 
     const frist = document.getElementById('oppFeltFrist').value || '';
     const gjenta = document.getElementById('oppFeltGjenta').value || null;
+    const tagger = _parseTagger(document.getElementById('oppFeltTagger').value);
 
     if (redigOppgaveId) {
       const o = oppgaver.find(o => o.id === redigOppgaveId);
-      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta });
+      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger });
     } else {
-      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, fullfort: false };
+      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, fullfort: false };
       oppgaver.push(nyOppgave);
     }
 
