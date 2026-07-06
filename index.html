@@ -1768,6 +1768,7 @@
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
       <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiv</button>
       <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗑 Papirkurv</button>
+      <button onclick="lukkModal('kategoriModal');åpneBackup()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">↺ Sikkerhetskopier</button>
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
     <div style="padding:14px 22px 8px;border-top:1px solid var(--kant);">
@@ -1790,7 +1791,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.46</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.47</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1811,6 +1812,25 @@
       <button class="knapp-fare" id="papirkurvTømKnapp" onclick="_papirkurvTøm()" style="display:none;">Tøm papirkurv</button>
       <div class="knapp-gruppe">
         <button class="knapp-sek" onclick="lukkModal('papirkurvModal')">Lukk</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Sikkerhetskopier (backup-rotasjon) -->
+<div class="modal-overlay" id="backupModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel">Sikkerhetskopier</div>
+      <button class="lukk-knapp" onclick="lukkModal('backupModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--tekst-sek);margin:0 0 12px;line-height:1.5;">Appen tar automatisk vare på de 5 siste ulike tilstandene ved oppstart. Gjenopprett hele appen til et tidligere punkt om noe skulle gå galt.</p>
+      <div id="backupListe"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('backupModal')">Lukk</button>
       </div>
     </div>
   </div>
@@ -7364,6 +7384,95 @@
     åpneKategoriModal();
   }
 
+  /* ──────────────────────────────
+     AUTOMATISK SIKKERHETSKOPI (backup-rotasjon)
+     Full app-state (alle lp_-nøkler unntatt selve backupene) lagres i 5
+     roterende slots lp_backup_0..4. Ny kopi lages ved app-last KUN når data
+     har endret seg siden nyeste kopi (dedup på innhold), så identiske laster
+     ikke spammer bort historikken.
+  ────────────────────────────── */
+  const BACKUP_SLOTS = 5;
+
+  function _samleAppState() {
+    const state = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('lp_') && !k.startsWith('lp_backup')) state[k] = localStorage.getItem(k);
+    }
+    return state;
+  }
+  function _stateFingeravtrykk(state) {
+    return JSON.stringify(Object.keys(state).sort().map(k => [k, state[k]]));
+  }
+  function _roterBackup() {
+    try {
+      const current = _samleAppState();
+      if (!Object.keys(current).length) return; // ingenting å sikre ennå
+      const nyeste = _parseSafe(localStorage.getItem('lp_backup_0'), null);
+      if (nyeste && nyeste.state && _stateFingeravtrykk(nyeste.state) === _stateFingeravtrykk(current)) return;
+      for (let i = BACKUP_SLOTS - 1; i > 0; i--) {
+        const forrige = localStorage.getItem('lp_backup_' + (i - 1));
+        if (forrige !== null) localStorage.setItem('lp_backup_' + i, forrige);
+      }
+      const entry = JSON.stringify({ ts: Date.now(), state: current });
+      try { localStorage.setItem('lp_backup_0', entry); }
+      catch (e) {
+        // Kvote sprengt: dropp eldste kopi og prøv én gang til
+        localStorage.removeItem('lp_backup_' + (BACKUP_SLOTS - 1));
+        try { localStorage.setItem('lp_backup_0', entry); } catch (e2) { /* gi opp stille */ }
+      }
+    } catch (e) { /* backup er best-effort, aldri kritisk */ }
+  }
+
+  function _backupTidStr(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return `${d.getDate()}. ${MAANEDER[d.getMonth()]} kl. ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function åpneBackup() { renderBackup(); document.getElementById('backupModal').classList.add('vis'); }
+
+  function renderBackup() {
+    const container = document.getElementById('backupListe');
+    if (!container) return;
+    container.innerHTML = '';
+    let antall = 0;
+    for (let i = 0; i < BACKUP_SLOTS; i++) {
+      const entry = _parseSafe(localStorage.getItem('lp_backup_' + i), null);
+      if (!entry || !entry.state) continue;
+      antall++;
+      const prosj = _parseSafe(entry.state['lp_prosjekter'], []) || [];
+      const rad = document.createElement('div');
+      rad.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--kant);';
+      rad.innerHTML = `<div style="flex:1;min-width:0;">
+          <div style="font-size:13px;color:var(--tekst);">${_backupTidStr(entry.ts)}${i === 0 ? ' <span style="color:var(--tekst-sek);font-size:11px;">(nyeste)</span>' : ''}</div>
+          <div style="font-size:11px;color:var(--tekst-sek);">${prosj.length} prosjekt${prosj.length === 1 ? '' : 'er'}</div>
+        </div>`;
+      const btn = document.createElement('button');
+      btn.className = 'knapp-sek'; btn.style.cssText = 'font-size:12px;padding:6px 12px;flex-shrink:0;';
+      btn.textContent = '↺ Gjenopprett';
+      btn.onclick = () => _gjenopprettBackup(i);
+      rad.appendChild(btn);
+      container.appendChild(rad);
+    }
+    if (!antall) container.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;color:var(--tekst-sek);">Ingen sikkerhetskopier ennå.</div>';
+  }
+
+  function _gjenopprettBackup(slot) {
+    const entry = _parseSafe(localStorage.getItem('lp_backup_' + slot), null);
+    if (!entry || !entry.state) return;
+    if (!confirm('Gjenopprett hele appen til sikkerhetskopien fra ' + _backupTidStr(entry.ts) + '?\n\nAll nåværende data erstattes. Nåværende tilstand sikkerhetskopieres først, så dette kan angres.')) return;
+    _roterBackup(); // sikre nåværende tilstand før overskriving (entry holdes i variabel, upåvirket av rotasjon)
+    const slett = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('lp_') && !k.startsWith('lp_backup')) slett.push(k);
+    }
+    slett.forEach(k => localStorage.removeItem(k));
+    Object.entries(entry.state).forEach(([k, v]) => localStorage.setItem(k, v));
+    location.reload();
+  }
+
   function init() {
     // Sett prosjektfarge og tittel
     const p = hentAktivtProsjekt();
@@ -7376,6 +7485,7 @@
     renderTodos();
     renderTidslinje();
     oppdaterForfaltBadge();
+    _roterBackup();
   }
 
   function beOmVarsel() {
