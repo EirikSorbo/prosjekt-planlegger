@@ -1050,6 +1050,12 @@
     .todo-tittel { font-size: 13px; font-weight: 600; color: var(--tekst); }
     .todo-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; align-items: center; }
 
+    /* Prioritet/viktig-stjerne på todo-/oppgave-kort */
+    .viktig-stjerne { background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; display: flex; align-items: center; }
+    .viktig-stjerne svg { fill: none; stroke: var(--kant); stroke-width: 1.6px; transition: .12s; }
+    .viktig-stjerne:hover svg { stroke: #e0a92b; }
+    .viktig-stjerne.aktiv svg { fill: #f0b429; stroke: #e0a92b; }
+
     /* ── Kategorioversikt-knapper ── */
     .kat-oversikt-rad {
       display: flex;
@@ -1783,7 +1789,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.42</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.43</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -4136,11 +4142,11 @@
     const oppPasserer = o => matcherGlobalFilter(null, o.kategoriId, o.aktivitetId);
 
     // Todos uten frist (aktive) — vis kun hvis ingen periode-filter
-    const utenFrist = fTodos.filter(t => !t.fullfort && !t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && !harPeriodeFilter);
+    const utenFrist = fTodos.filter(t => !t.fullfort && !t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && !harPeriodeFilter).sort(_viktigForst);
 
     // Todos med frist (aktive), sortert + periodefilter
     const medFrist = fTodos.filter(t => !t.fullfort && t.frist && (!globalKatFilter || isMulti || todoPasserer(t)) && _todoPassererPeriode(t.frist))
-      .sort((a,b) => a.frist.localeCompare(b.frist));
+      .sort((a,b) => _viktigForst(a,b) || a.frist.localeCompare(b.frist));
 
     // Oppgaver med frist (ikke fullført) — bruk periodefiler eller 30-dagers default
     const oppgaverSnart = fOppgaver.filter(o => {
@@ -4149,7 +4155,7 @@
       if (harPeriodeFilter) return _todoPassererPeriode(o.frist);
       const d = new Date(o.frist + 'T00:00:00');
       return d <= om30;
-    }).sort((a,b) => a.frist.localeCompare(b.frist));
+    }).sort((a,b) => _viktigForst(a,b) || a.frist.localeCompare(b.frist));
 
     // Fullførte todos — skjul ved periodefilter
     const fullforte = harPeriodeFilter ? [] : fTodos.filter(t => t.fullfort && (!globalKatFilter || isMulti || todoPasserer(t)));
@@ -4214,6 +4220,7 @@
 
       kort.appendChild(cb);
       kort.appendChild(info);
+      kort.appendChild(lagViktigStjerne(t, 'todo'));
       wrapper.appendChild(kort);
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
@@ -4282,6 +4289,7 @@
 
       kort.appendChild(cb);
       kort.appendChild(info);
+      kort.appendChild(lagViktigStjerne(o, 'oppgave'));
       wrapper.appendChild(kort);
       ytre.appendChild(slettBg);
       ytre.appendChild(wrapper);
@@ -4359,6 +4367,32 @@
       if (t.fullfort) _loggFullfort(t, 'todo');
       lagre(); renderTodos();
     }
+  }
+
+  // Prioritet/stjerne: viktige elementer sorteres øverst, uavhengig av frist.
+  // Manglende felt = ikke viktig (bakoverkompatibelt).
+  function _viktigForst(a, b) { return (b.viktig ? 1 : 0) - (a.viktig ? 1 : 0); }
+
+  function toggleViktig(type, id) {
+    const liste = type === 'todo' ? todos : oppgaver;
+    const item = liste.find(x => x.id === id);
+    if (!item) return;
+    item.viktig = !item.viktig;
+    lagre();
+    oppdaterAktivPanel();
+  }
+
+  function lagViktigStjerne(item, type) {
+    const b = document.createElement('button');
+    b.className = 'viktig-stjerne' + (item.viktig ? ' aktiv' : '');
+    b.title = item.viktig ? 'Fjern viktig-merking' : 'Merk som viktig';
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+    b.onclick = e => {
+      e.stopPropagation();
+      if (item._prosjektId && item._prosjektId !== aktivtProsjektId) byttProsjekt(item._prosjektId);
+      toggleViktig(type, item.id);
+    };
+    return b;
   }
 
   function settTodoFrist(dager) {
