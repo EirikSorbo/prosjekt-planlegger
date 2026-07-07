@@ -1783,14 +1783,6 @@
         </select>
       </label>
       <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-        <span style="font-size:12px;color:var(--tekst);font-weight:600;flex:1;">Tema</span>
-        <select id="temaSelect" onchange="settTema(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);cursor:pointer;">
-          <option value="system">System</option>
-          <option value="lys">Lys</option>
-          <option value="mørk">Mørk</option>
-        </select>
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
         <span style="font-size:12px;color:var(--tekst);font-weight:600;flex:1;">Påminnelse-tid (frister)</span>
         <input type="time" id="varselTidInput" onchange="settVarselTid(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);cursor:pointer;" />
       </label>
@@ -1840,7 +1832,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.75</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.76</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2422,59 +2414,19 @@
     return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
   }
 
-  // Palett avledes fra prosjektfargens hue/metning, med lyshet flippet i mørk
-  // modus. Setter inline CSS-variabler på :root (høyest spesifisitet), så dette
-  // er den faktiske temakilden — ikke en CSS-media-query.
+  // Palett avledes fra prosjektfargens hue/metning. Setter inline CSS-variabler
+  // på :root (høyest spesifisitet). Appen er alltid lys.
   function settProsjektFarger(hex) {
     const [h, s, l] = _hexToHsl(hex);
     const S = document.documentElement.style;
-    if (_erMørk()) {
-      S.setProperty('--grønn',       `hsl(${h}, ${Math.min(s, 70)}%, ${Math.max(l, 64)}%)`);
-      S.setProperty('--grønn-lys',   `hsl(${h}, ${Math.min(s, 45)}%, 22%)`);
-      S.setProperty('--grønn-mørk',  `hsl(${h}, ${Math.min(s, 40)}%, 80%)`);
-      S.setProperty('--grønn-mid',   `hsl(${h}, ${Math.min(s, 45)}%, 42%)`);
-      S.setProperty('--tekst',       `hsl(${h}, 18%, 90%)`);
-      S.setProperty('--tekst-sek',   `hsl(${h}, 16%, 62%)`);
-      S.setProperty('--kant',        `hsl(${h}, 22%, 30%)`);
-      S.setProperty('--bg',          `hsl(${h}, 24%, 11%)`);
-      S.setProperty('--hvit',        `hsl(${h}, 20%, 16%)`);
-    } else {
-      S.setProperty('--grønn',       `hsl(${h}, ${s}%, ${Math.min(l, 55)}%)`);
-      S.setProperty('--grønn-lys',   `hsl(${h}, ${Math.min(s, 60)}%, 95%)`);
-      S.setProperty('--grønn-mørk',  `hsl(${h}, ${Math.max(s-10, 20)}%, 22%)`);
-      S.setProperty('--grønn-mid',   `hsl(${h}, ${Math.min(s, 50)}%, 82%)`);
-      S.setProperty('--tekst',       `hsl(${h}, ${Math.max(s-10, 20)}%, 22%)`);
-      S.setProperty('--tekst-sek',   `hsl(${h}, ${Math.max(s-20, 15)}%, 48%)`);
-      S.setProperty('--kant',        `hsl(${h}, ${Math.min(s, 40)}%, 85%)`);
-      S.setProperty('--bg',          `hsl(${h}, ${Math.min(s, 30)}%, 96%)`);
-      S.setProperty('--hvit',        '#ffffff');
-    }
-  }
-
-  // ── Tema (lys / mørk / system) ──
-  function _erMørk() {
-    const t = localStorage.getItem('lp_tema') || 'system';
-    if (t === 'mørk') return true;
-    if (t === 'lys') return false;
-    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }
-  function _anvendTema() {
-    const mørk = _erMørk();
-    document.documentElement.dataset.tema = mørk ? 'mørk' : 'lys';
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', mørk ? '#141220' : '#2e2b45');
-    const p = hentAktivtProsjekt();
-    if (p) settProsjektFarger(p.farge);
-  }
-  function settTema(val) {
-    localStorage.setItem('lp_tema', val);
-    _anvendTema();
-  }
-  // Følg system-endring live når brukeren står på «System».
-  if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if ((localStorage.getItem('lp_tema') || 'system') === 'system') _anvendTema();
-    });
+    S.setProperty('--grønn',       `hsl(${h}, ${s}%, ${Math.min(l, 55)}%)`);
+    S.setProperty('--grønn-lys',   `hsl(${h}, ${Math.min(s, 60)}%, 95%)`);
+    S.setProperty('--grønn-mørk',  `hsl(${h}, ${Math.max(s-10, 20)}%, 22%)`);
+    S.setProperty('--grønn-mid',   `hsl(${h}, ${Math.min(s, 50)}%, 82%)`);
+    S.setProperty('--tekst',       `hsl(${h}, ${Math.max(s-10, 20)}%, 22%)`);
+    S.setProperty('--tekst-sek',   `hsl(${h}, ${Math.max(s-20, 15)}%, 48%)`);
+    S.setProperty('--kant',        `hsl(${h}, ${Math.min(s, 40)}%, 85%)`);
+    S.setProperty('--bg',          `hsl(${h}, ${Math.min(s, 30)}%, 96%)`);
   }
 
   function byttProsjekt(prosjektId) {
@@ -2646,7 +2598,7 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  // Nøytrale linje-ikoner som arver farge via currentColor (matcher tema/prosjekt).
+  // Nøytrale linje-ikoner som arver farge via currentColor (matcher prosjektfargen).
   const _IKON_PATH = {
     gjenta: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
     klokke: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
@@ -5506,8 +5458,6 @@
     if (diCb) diCb.checked = _visDagerIgjen;
     const rdSel = document.getElementById('ryddDagerSelect');
     if (rdSel) rdSel.value = localStorage.getItem('lp_ryddDager') || '3';
-    const tSel = document.getElementById('temaSelect');
-    if (tSel) tSel.value = localStorage.getItem('lp_tema') || 'system';
     const vtInp = document.getElementById('varselTidInput');
     if (vtInp) vtInp.value = _varselTid();
     const osToggle = document.getElementById('oppsummeringToggle');
@@ -8478,8 +8428,9 @@
   }
 
   function init() {
-    // Sett tema (lys/mørk) + prosjektfarge og tittel
-    _anvendTema();
+    // Sett prosjektfarge og tittel
+    const p = hentAktivtProsjekt();
+    settProsjektFarger(p.farge);
     oppdaterProsjektTittel();
     hent();
     ryddFullforte();
