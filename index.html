@@ -1807,7 +1807,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.55</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.56</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2661,6 +2661,34 @@
   }
   function settOppsummering(på) {
     localStorage.setItem('lp_oppsummering', på ? '1' : '0');
+  }
+
+  // Utsett (snooze) påminnelsen for ett element: undertrykk varsling til om
+  // `ms` millisekunder. Fjerner også fra dagens vist-set så den kan varsle på
+  // nytt når snoozen løper ut. Angre-toast lar deg ombestemme deg.
+  function _snoozVarsel(id, ms) {
+    const s = _parseSafe(localStorage.getItem('lp_varsel_snooze'), {}) || {};
+    s[id] = Date.now() + ms;
+    localStorage.setItem('lp_varsel_snooze', JSON.stringify(s));
+    const v = _varselVistHent();
+    v.ider = v.ider.filter(x => x !== id);
+    localStorage.setItem('lp_varsel_vist', JSON.stringify(v));
+    _planleggVarsler();
+    visAngreToast('Påminnelse utsatt', () => {
+      const s2 = _parseSafe(localStorage.getItem('lp_varsel_snooze'), {}) || {};
+      delete s2[id];
+      localStorage.setItem('lp_varsel_snooze', JSON.stringify(s2));
+      _planleggVarsler();
+    });
+  }
+  function _snoozeKnapperHtml(id) {
+    return `<div style="margin-top:14px;">
+      <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Utsett påminnelse</div>
+      <div style="display:flex;gap:8px;">
+        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 3600000)">⏰ 1 time</button>
+        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 86400000)">⏰ I morgen</button>
+      </div>
+    </div>`;
   }
 
   /* ──────────────────────────────
@@ -5207,6 +5235,7 @@
     if (!t.frist && !t.beskrivelse && !t.oppgaveId && !t.kategoriId && !(t.tagger && t.tagger.length)) {
       html = `<div style="font-size:13px;color:var(--tekst-sek);">Ingen tilleggsinformasjon.</div>`;
     }
+    if (t.frist && !t.fullfort) html += _snoozeKnapperHtml(id);
 
     document.getElementById('todoInfoModalBody').innerHTML = html;
     document.getElementById('todoInfoFullfortKnapp').textContent = t.fullfort ? '↩ Angre fullført' : '✓ Merk fullført';
@@ -6026,6 +6055,9 @@
         ${o.tagger.map(x => `<span class="tilknyttet-chip" style="border-color:var(--grønn);color:var(--grønn);">#${escapeHtml(x)}</span>`).join('')}
       </div>`;
     }
+
+    // Utsett påminnelse (kun for åpne oppgaver med frist)
+    if (o.frist && !o.fullfort) html += _snoozeKnapperHtml(id);
 
     // Tilknyttede to-do elementer
     const tilknyttedeTodos = todos.filter(t => t.oppgaveId === id);
