@@ -1811,7 +1811,10 @@
         <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Arkiv</button>
         <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Papirkurv</button>
       </div>
-      <button onclick="lukkModal('kategoriModal');åpneBackup()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sikkerhetskopier</button>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button onclick="lukkModal('kategoriModal');åpneHovedFilter()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Hovedfilter</button>
+        <button onclick="lukkModal('kategoriModal');åpneBackup()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sikkerhetskopier</button>
+      </div>
       <div style="display:flex;gap:8px;margin-top:8px;">
         <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="flex:1;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
         <button onclick="lukkModal('kategoriModal');åpnePrintTidslinje()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Print</button>
@@ -1825,8 +1828,8 @@
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
         <label style="font-size:11px;color:var(--tekst-sek);font-weight:600;white-space:nowrap;">Prosjektfarge</label>
         <input type="color" id="innstProsjektFarge" oninput="oppdaterProsjektFarge(this.value)" style="width:32px;height:32px;border:1px solid var(--kant);border-radius:var(--rs);cursor:pointer;padding:2px;" />
+        <button onclick="lukkModal('kategoriModal');visNyttProsjektDialog()" style="margin-left:auto;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:9px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;">+ Nytt prosjekt</button>
       </div>
-      <button onclick="lukkModal('kategoriModal');visNyttProsjektDialog()" style="width:100%;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">+ Nytt prosjekt</button>
       <div id="innstProsjektListe" style="margin-top:10px;"></div>
     </div>
     <div id="innstillingerBruker" style="display:none;padding:12px 22px 14px;border-top:1px solid var(--kant);align-items:center;gap:10px;">
@@ -1837,7 +1840,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.74</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.75</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1857,6 +1860,25 @@
     <div class="modal-footer">
       <div class="knapp-gruppe">
         <button class="knapp-sek" onclick="lukkModal('kategoriRedigerModal')">Lukk</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Hovedfilter (globalt kategori-filter) -->
+<div class="modal-overlay" id="hovedFilterModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel">Hovedfilter</div>
+      <button class="lukk-knapp" onclick="lukkModal('hovedFilterModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--tekst-sek);margin:0 0 12px;line-height:1.5;">Filtrer hele appen på kategori. «Alle» viser alt.</p>
+      <div id="hovedFilterKnapper" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('hovedFilterModal')">Lukk</button>
       </div>
     </div>
   </div>
@@ -5467,6 +5489,11 @@
   function åpneKategoriRediger() {
     renderKategoriModal();
     document.getElementById('kategoriRedigerModal').classList.add('vis');
+  }
+
+  function åpneHovedFilter() {
+    renderHovedFilter();
+    document.getElementById('hovedFilterModal').classList.add('vis');
   }
 
   function åpneKategoriModal() {
