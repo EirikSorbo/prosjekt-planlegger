@@ -1833,7 +1833,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.62</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.63</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1873,6 +1873,25 @@
     <div class="modal-footer">
       <div class="knapp-gruppe">
         <button class="knapp-sek" onclick="lukkModal('backupModal')">Lukk</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Dagsplan / i dag-fokus -->
+<div class="modal-overlay" id="fokusModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel">🎯 Dagsplan</div>
+      <button class="lukk-knapp" onclick="lukkModal('fokusModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--tekst-sek);margin:0 0 8px;line-height:1.5;">Forfalt og forfaller i dag i dette prosjektet. Huk av etter hvert som du blir ferdig.</p>
+      <div id="fokusListe"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('fokusModal')">Lukk</button>
       </div>
     </div>
   </div>
@@ -3940,6 +3959,46 @@
     el.ondblclick = e => { e.stopPropagation(); clearTimeout(t); _startInlineRedig(el, item, type); };
   }
 
+  // «I dag»-fokus / dagsplan: distraksjonsfri sjekkliste over forfalt + i dag
+  // i det aktive prosjektet. Huk av for å fullføre; lista re-rendres.
+  function åpneFokus() { renderFokus(); document.getElementById('fokusModal').classList.add('vis'); }
+  function renderFokus() {
+    const cont = document.getElementById('fokusListe');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const iDagStr = _lokalDatoStr();
+    const forfalt = [], idag = [];
+    todos.forEach(t => { if (t.fullfort || !t.frist) return; if (t.frist < iDagStr) forfalt.push({ item: t, type: 'todo' }); else if (t.frist === iDagStr) idag.push({ item: t, type: 'todo' }); });
+    oppgaver.forEach(o => { if (o.fullfort || !o.frist) return; if (o.frist < iDagStr) forfalt.push({ item: o, type: 'oppgave' }); else if (o.frist === iDagStr) idag.push({ item: o, type: 'oppgave' }); });
+    if (!forfalt.length && !idag.length) {
+      cont.innerHTML = '<div style="padding:32px;text-align:center;font-size:14px;color:var(--tekst-sek);">Ingenting forfaller i dag 🎉</div>';
+      return;
+    }
+    const lagRad = ({ item, type }) => {
+      const tit = type === 'todo' ? item.tittel : item.beskrivelse;
+      const rad = document.createElement('div');
+      rad.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--kant);';
+      const cb = document.createElement('div');
+      cb.style.cssText = 'width:22px;height:22px;border-radius:50%;border:2px solid var(--grønn);flex-shrink:0;cursor:pointer;';
+      cb.onclick = () => { (type === 'todo' ? toggleTodo : toggleOppgave)(item.id); renderFokus(); };
+      const tekst = document.createElement('span');
+      tekst.style.cssText = 'flex:1;font-size:14px;color:var(--tekst);';
+      tekst.textContent = tit;
+      rad.appendChild(cb); rad.appendChild(tekst);
+      return rad;
+    };
+    const seksjon = (tittel, arr, farge) => {
+      if (!arr.length) return;
+      const h = document.createElement('div');
+      h.style.cssText = `font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:${farge};margin:14px 0 4px;`;
+      h.textContent = `${tittel} (${arr.length})`;
+      cont.appendChild(h);
+      arr.forEach(x => cont.appendChild(lagRad(x)));
+    };
+    seksjon('Forfalt', forfalt, '#c0392b');
+    seksjon('I dag', idag, 'var(--grønn)');
+  }
+
   // Mandag-forankret uke-info for innsiktskort.
   function _ukeInfo() {
     const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
@@ -4114,6 +4173,12 @@
     const cont = document.getElementById('startInnhold');
     if (!cont) return;
     cont.innerHTML = '';
+
+    const fokusBtn = document.createElement('button');
+    fokusBtn.textContent = '🎯 Dagsplan';
+    fokusBtn.onclick = åpneFokus;
+    fokusBtn.style.cssText = "width:100%;margin-bottom:12px;padding:11px;border:1px solid var(--grønn-mid);border-radius:var(--r);background:var(--grønn-lys);color:var(--grønn);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.3px;cursor:pointer;";
+    cont.appendChild(fokusBtn);
 
     const denneUka = _lagDenneUkaKort();
     if (denneUka) cont.appendChild(denneUka);
