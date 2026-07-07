@@ -1813,8 +1813,8 @@
       </div>
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
       <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiv</button>
-      <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗑 Papirkurv</button>
-      <button onclick="lukkModal('kategoriModal');åpneBackup()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">↺ Sikkerhetskopier</button>
+      <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Papirkurv</button>
+      <button onclick="lukkModal('kategoriModal');åpneBackup()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sikkerhetskopier</button>
       <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
     </div>
     <div style="padding:14px 22px 8px;border-top:1px solid var(--kant);">
@@ -1837,7 +1837,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.64</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.65</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1877,25 +1877,6 @@
     <div class="modal-footer">
       <div class="knapp-gruppe">
         <button class="knapp-sek" onclick="lukkModal('backupModal')">Lukk</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Dagsplan / i dag-fokus -->
-<div class="modal-overlay" id="fokusModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-tittel">🎯 Dagsplan</div>
-      <button class="lukk-knapp" onclick="lukkModal('fokusModal')">×</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:12px;color:var(--tekst-sek);margin:0 0 8px;line-height:1.5;">Forfalt og forfaller i dag i dette prosjektet. Huk av etter hvert som du blir ferdig.</p>
-      <div id="fokusListe"></div>
-    </div>
-    <div class="modal-footer">
-      <div class="knapp-gruppe">
-        <button class="knapp-sek" onclick="lukkModal('fokusModal')">Lukk</button>
       </div>
     </div>
   </div>
@@ -2554,6 +2535,21 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  // Nøytrale linje-ikoner som arver farge via currentColor (matcher tema/prosjekt).
+  const _IKON_PATH = {
+    gjenta: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+    klokke: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    hake:   '<polyline points="20 6 9 17 4 12"/>',
+    lyn:    '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    lenke:  '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    soppel: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>',
+    roter:  '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>'
+  };
+  function _svgIkon(navn, sz) {
+    sz = sz || 12;
+    return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0;">${_IKON_PATH[navn] || ''}</svg>`;
+  }
+
   // Trygg JSON-parse: en korrupt localStorage-nøkkel skal degradere til et tomt
   // datasett, ikke krasje hele app-lasten.
   function _parseSafe(str, fallback) {
@@ -2790,8 +2786,8 @@
     return `<div style="margin-top:14px;">
       <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Utsett påminnelse</div>
       <div style="display:flex;gap:8px;">
-        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 3600000)">⏰ 1 time</button>
-        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 86400000)">⏰ I morgen</button>
+        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 3600000)">${_svgIkon('klokke', 12)} 1 time</button>
+        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 86400000)">${_svgIkon('klokke', 12)} I morgen</button>
       </div>
     </div>`;
   }
@@ -3151,7 +3147,8 @@
             bar.style.left = (offsetDager * pxPerDag) + 'px';
             bar.style.width = Math.max(8, (sluttDager - offsetDager) * pxPerDag) + 'px';
             bar.style.background = k.farge;
-            bar.textContent = (a.avhengigAv && a.avhengigAv.length ? '⛓ ' : '') + a.tittel;
+            if (a.avhengigAv && a.avhengigAv.length) bar.innerHTML = _svgIkon('lenke', 11) + ' ' + escapeHtml(a.tittel);
+            else bar.textContent = a.tittel;
             bar.title = a.tittel;
             if (a.avhengigAv && a.avhengigAv.length && _avhengigKonflikt(a).length) {
               bar.style.outline = '2px solid #c0392b';
@@ -3961,8 +3958,8 @@
   function _tidChipHtml(o) {
     if (!o || (!o.estimat && !o.faktisk)) return '';
     const deler = [];
-    if (o.estimat) deler.push('⏱ ' + _formatTid(o.estimat));
-    if (o.faktisk) deler.push('✓ ' + _formatTid(o.faktisk));
+    if (o.estimat) deler.push(_svgIkon('klokke', 11) + ' ' + _formatTid(o.estimat));
+    if (o.faktisk) deler.push(_svgIkon('hake', 11) + ' ' + _formatTid(o.faktisk));
     return `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${deler.join(' · ')}</span>`;
   }
 
@@ -4007,26 +4004,44 @@
 
   // «I dag»-fokus / dagsplan: distraksjonsfri sjekkliste over forfalt + i dag
   // i det aktive prosjektet. Huk av for å fullføre; lista re-rendres.
-  function åpneFokus() { renderFokus(); document.getElementById('fokusModal').classList.add('vis'); }
-  function renderFokus() {
-    const cont = document.getElementById('fokusListe');
-    if (!cont) return;
-    cont.innerHTML = '';
-    const iDagStr = _lokalDatoStr();
-    const forfalt = [], idag = [];
-    todos.forEach(t => { if (t.fullfort || !t.frist) return; if (t.frist < iDagStr) forfalt.push({ item: t, type: 'todo' }); else if (t.frist === iDagStr) idag.push({ item: t, type: 'todo' }); });
-    oppgaver.forEach(o => { if (o.fullfort || !o.frist) return; if (o.frist < iDagStr) forfalt.push({ item: o, type: 'oppgave' }); else if (o.frist === iDagStr) idag.push({ item: o, type: 'oppgave' }); });
-    if (!forfalt.length && !idag.length) {
-      cont.innerHTML = '<div style="padding:32px;text-align:center;font-size:14px;color:var(--tekst-sek);">Ingenting forfaller i dag 🎉</div>';
-      return;
+  // Dagsplan: kompakt liste over forfalt / i dag / i morgen i aktivt prosjekt,
+  // vist direkte på Start under søkefeltet. Huk av for å fullføre.
+  function _lagDagsplan() {
+    const kort = document.createElement('div');
+    kort.style.cssText = 'background:var(--hvit);border:1px solid var(--kant);border-radius:var(--r);padding:4px 14px 12px;margin-bottom:12px;';
+    const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
+    const iDagStr = _lokalDatoStr(iDag);
+    const imorgen = new Date(iDag); imorgen.setDate(iDag.getDate() + 1);
+    const imorgenStr = _lokalDatoStr(imorgen);
+    const forfalt = [], idag = [], imor = [];
+    const sorter = (item, type) => {
+      if (item.fullfort || !item.frist) return;
+      if (item.frist < iDagStr) forfalt.push({ item, type });
+      else if (item.frist === iDagStr) idag.push({ item, type });
+      else if (item.frist === imorgenStr) imor.push({ item, type });
+    };
+    todos.forEach(t => sorter(t, 'todo'));
+    oppgaver.forEach(o => sorter(o, 'oppgave'));
+
+    const tittelRad = document.createElement('div');
+    tittelRad.style.cssText = "font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);margin:10px 0 2px;";
+    tittelRad.textContent = 'Dagsplan';
+    kort.appendChild(tittelRad);
+
+    if (!forfalt.length && !idag.length && !imor.length) {
+      const tom = document.createElement('div');
+      tom.style.cssText = 'font-size:13px;color:var(--tekst-sek);padding:4px 0 4px;';
+      tom.textContent = 'Ingenting forfaller de nærmeste dagene.';
+      kort.appendChild(tom);
+      return kort;
     }
     const lagRad = ({ item, type }) => {
       const tit = type === 'todo' ? item.tittel : item.beskrivelse;
       const rad = document.createElement('div');
-      rad.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--kant);';
+      rad.style.cssText = 'display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--kant);';
       const cb = document.createElement('div');
-      cb.style.cssText = 'width:22px;height:22px;border-radius:50%;border:2px solid var(--grønn);flex-shrink:0;cursor:pointer;';
-      cb.onclick = () => { (type === 'todo' ? toggleTodo : toggleOppgave)(item.id); renderFokus(); };
+      cb.style.cssText = 'width:20px;height:20px;border-radius:50%;border:2px solid var(--grønn);flex-shrink:0;cursor:pointer;';
+      cb.onclick = () => { (type === 'todo' ? toggleTodo : toggleOppgave)(item.id); renderStartside(); };
       const tekst = document.createElement('span');
       tekst.style.cssText = 'flex:1;font-size:14px;color:var(--tekst);';
       tekst.textContent = tit;
@@ -4036,13 +4051,15 @@
     const seksjon = (tittel, arr, farge) => {
       if (!arr.length) return;
       const h = document.createElement('div');
-      h.style.cssText = `font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:${farge};margin:14px 0 4px;`;
+      h.style.cssText = `font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:${farge};margin:12px 0 2px;`;
       h.textContent = `${tittel} (${arr.length})`;
-      cont.appendChild(h);
-      arr.forEach(x => cont.appendChild(lagRad(x)));
+      kort.appendChild(h);
+      arr.forEach(x => kort.appendChild(lagRad(x)));
     };
     seksjon('Forfalt', forfalt, '#c0392b');
     seksjon('I dag', idag, 'var(--grønn)');
+    seksjon('I morgen', imor, 'var(--tekst-sek)');
+    return kort;
   }
 
   // Mandag-forankret uke-info for innsiktskort.
@@ -4120,7 +4137,7 @@
         <span style="font-size:13px;color:var(--tekst-sek);"><strong style="color:var(--tekst);font-size:18px;font-family:'Syne',sans-serif;">${total}</strong> fullført</span>
       </div>
       <div style="display:flex;gap:4px;align-items:flex-end;">${bars}</div>
-      ${streak >= 2 ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--kant);font-size:13px;color:var(--tekst);display:flex;align-items:center;gap:6px;">🔥 <strong style="font-family:'Syne',sans-serif;">${streak}</strong> dager på rad</div>` : ''}`;
+      ${streak >= 2 ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--kant);font-size:13px;color:var(--tekst);display:flex;align-items:center;gap:6px;"><span style="color:var(--grønn);display:inline-flex;">${_svgIkon('lyn', 15)}</span> <strong style="font-family:'Syne',sans-serif;">${streak}</strong> dager på rad</div>` : ''}`;
     return kort;
   }
 
@@ -4150,7 +4167,7 @@
     const kort = document.createElement('div');
     kort.style.cssText = 'background:var(--grønn-lys);border:1px solid var(--grønn-mid);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;';
     kort.innerHTML = `
-      <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);margin-bottom:8px;">⏳ Har stått stille (${stille.length})</div>
+      <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);margin-bottom:8px;display:flex;align-items:center;gap:5px;">${_svgIkon('klokke', 12)} Har stått stille (${stille.length})</div>
       ${vis}${flere}`;
     return kort;
   }
@@ -4220,11 +4237,7 @@
     if (!cont) return;
     cont.innerHTML = '';
 
-    const fokusBtn = document.createElement('button');
-    fokusBtn.textContent = '🎯 Dagsplan';
-    fokusBtn.onclick = åpneFokus;
-    fokusBtn.style.cssText = "width:100%;margin-bottom:12px;padding:11px;border:1px solid var(--grønn-mid);border-radius:var(--r);background:var(--grønn-lys);color:var(--grønn);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.3px;cursor:pointer;";
-    cont.appendChild(fokusBtn);
+    cont.appendChild(_lagDagsplan());
 
     const denneUka = _lagDenneUkaKort();
     if (denneUka) cont.appendChild(denneUka);
@@ -5090,7 +5103,7 @@
   // Liten chip som markerer at et element er gjentakende.
   function _gjentaChip(gjenta) {
     if (!gjenta || !GJENTA_LABEL[gjenta]) return '';
-    return `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">🔁 ${GJENTA_LABEL[gjenta]}</span>`;
+    return `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${_svgIkon('gjenta', 11)} ${GJENTA_LABEL[gjenta]}</span>`;
   }
 
   // Neste frist: gammel frist + ett intervall, hopper frem til første dato >= i dag
@@ -7051,8 +7064,10 @@
   // i skjemafelt, når en modal er åpen, eller med modifikatortaster.
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    const tag = (e.target.tagName || '').toUpperCase();
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+    // Hopp over hvis fokus er i et skjemafelt — sjekk BÅDE event-mål og faktisk
+    // fokusert element (datofelt kan sende keydown med annet mål).
+    const erFelt = el => el && ('INPUT' === el.tagName || 'TEXTAREA' === el.tagName || 'SELECT' === el.tagName || el.isContentEditable);
+    if (erFelt(e.target) || erFelt(document.activeElement)) return;
     if (document.querySelector('.modal-overlay.vis')) return;
     const faner = ['start', 'todo', 'oppgaver', 'liste', 'kalender'];
     if (e.key >= '1' && e.key <= '5') {
