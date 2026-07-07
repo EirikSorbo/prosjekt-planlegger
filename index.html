@@ -1838,7 +1838,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.70</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.71</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -4133,13 +4133,6 @@
     return kort;
   }
 
-  // Mandag-forankret uke-info for innsiktskort.
-  function _ukeInfo() {
-    const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
-    const dagIndex = (iDag.getDay() + 6) % 7; // 0 = mandag
-    const mandag = new Date(iDag); mandag.setDate(iDag.getDate() - dagIndex);
-    return { mandag, iDag, dagIndex };
-  }
   // Prosjekt-id-er som Start-siden viser (respekterer prosjektfilter).
   function _startProsjektIds() {
     const aktive = prosjekter.filter(p => !p.arkivert);
@@ -4147,71 +4140,6 @@
       return _startFilter.prosjekter.filter(id => aktive.some(p => p.id === id));
     return aktive.map(p => p.id);
   }
-  // Slå sammen fullført-loggene for gitte prosjekter.
-  function _samleFlog(pids) {
-    const alle = [];
-    pids.forEach(pid => {
-      const f = _parseSafe(localStorage.getItem('lp_' + pid + '_flog'), []) || [];
-      f.forEach(e => { if (e) alle.push(e); });
-    });
-    return alle;
-  }
-
-  // Fullførings-streak: antall sammenhengende dager (endende i dag eller i går
-  // som grace) med minst én fullføring. i går-grace = dagens ennå ikke gjort
-  // bryter ikke streaken.
-  function _beregnStreak(flog) {
-    const dager = new Set(flog.map(e => e.dato).filter(Boolean));
-    if (!dager.size) return 0;
-    const cur = new Date(); cur.setHours(0, 0, 0, 0);
-    if (!dager.has(_lokalDatoStr(cur))) {
-      cur.setDate(cur.getDate() - 1);
-      if (!dager.has(_lokalDatoStr(cur))) return 0;
-    }
-    let streak = 0;
-    while (dager.has(_lokalDatoStr(cur))) { streak++; cur.setDate(cur.getDate() - 1); }
-    return streak;
-  }
-
-  // «Denne uka»-kort: antall fullført denne uka + mini søylediagram per dag +
-  // fullførings-streak. Vises kun når det finnes fullført-historikk.
-  function _lagDenneUkaKort() {
-    const { mandag, dagIndex } = _ukeInfo();
-    const flog = _samleFlog(_startProsjektIds());
-    if (!flog.length) return null;
-    const streak = _beregnStreak(flog);
-    const ukedager = ['M', 'T', 'O', 'T', 'F', 'L', 'S'];
-    const perDag = [];
-    let total = 0;
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(mandag); d.setDate(mandag.getDate() + i);
-      const ds = _lokalDatoStr(d);
-      const n = flog.filter(e => e.dato === ds).length;
-      perDag.push(n); total += n;
-    }
-    const maks = Math.max(1, ...perDag);
-    const bars = perDag.map((n, i) => {
-      const h = Math.round((n / maks) * 30);
-      const erIdag = i === dagIndex;
-      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div style="width:100%;max-width:22px;height:30px;display:flex;align-items:flex-end;">
-          <div style="width:100%;height:${h}px;min-height:${n ? 3 : 0}px;background:${erIdag ? 'var(--grønn)' : 'var(--grønn-mid)'};border-radius:3px;"></div>
-        </div>
-        <div style="font-size:10px;color:${erIdag ? 'var(--grønn)' : 'var(--tekst-sek)'};font-weight:${erIdag ? 700 : 400};">${ukedager[i]}</div>
-      </div>`;
-    }).join('');
-    const kort = document.createElement('div');
-    kort.style.cssText = 'background:var(--hvit);border:1px solid var(--kant);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;';
-    kort.innerHTML = `
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);">Denne uka</span>
-        <span style="font-size:13px;color:var(--tekst-sek);"><strong style="color:var(--tekst);font-size:18px;font-family:'Syne',sans-serif;">${total}</strong> fullført</span>
-      </div>
-      <div style="display:flex;gap:4px;align-items:flex-end;">${bars}</div>
-      ${streak >= 2 ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--kant);font-size:13px;color:var(--tekst);display:flex;align-items:center;gap:6px;"><span style="color:var(--grønn);display:inline-flex;">${_svgIkon('lyn', 15)}</span> <strong style="font-family:'Syne',sans-serif;">${streak}</strong> dager på rad</div>` : ''}`;
-    return kort;
-  }
-
   // Stagnasjons-kort: åpne todos/oppgaver som ble opprettet for over 2 uker
   // siden og fortsatt ikke er fullført. Leser på tvers av Start-prosjektene.
   const STAGN_DAGER = 14;
@@ -4247,13 +4175,6 @@
     const cont = document.getElementById('startInnhold');
     if (!cont) return;
     cont.innerHTML = '';
-
-    cont.appendChild(_lagDagsplan());
-
-    const denneUka = _lagDenneUkaKort();
-    if (denneUka) cont.appendChild(denneUka);
-    const stagn = _lagStagnasjonKort();
-    if (stagn) cont.appendChild(stagn);
 
     const iDag = new Date(); iDag.setHours(0,0,0,0);
     const iDagStr = _lokalDatoStr(iDag);
@@ -4320,6 +4241,11 @@
       });
       cont.appendChild(dateRow);
     }
+
+    // Dagsplan + stagnasjon under filter-raden
+    cont.appendChild(_lagDagsplan());
+    const stagn = _lagStagnasjonKort();
+    if (stagn) cont.appendChild(stagn);
 
     // ── Beregn grensedato ──
     let grense;
