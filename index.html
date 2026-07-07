@@ -1769,6 +1769,10 @@
         <span style="font-size:12px;color:var(--tekst);font-weight:600;flex:1;">Påminnelse-tid (frister)</span>
         <input type="time" id="varselTidInput" onchange="settVarselTid(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);cursor:pointer;" />
       </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;">
+        <input type="checkbox" id="oppsummeringToggle" onchange="settOppsummering(this.checked)" style="width:16px;height:16px;accent-color:var(--grønn);cursor:pointer;" />
+        <span style="font-size:12px;color:var(--tekst);font-weight:600;">Daglig oppsummering</span>
+      </label>
     </div>
     <div style="padding:16px 22px 8px;">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Data</div>
@@ -1803,7 +1807,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.54</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.55</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2627,6 +2631,36 @@
         }, forsinkelse));
       }
     });
+    _visMorgenoppsummering();
+  }
+
+  // Daglig oppsummering: ett aggregert varsel første gang appen åpnes hver dag,
+  // med antall frister i dag + forfalte. Vises kun når noe faktisk forfaller,
+  // og maks én gang per dag (lp_oppsummering_sist). Kan slås av (lp_oppsummering='0').
+  function _visMorgenoppsummering() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (localStorage.getItem('lp_oppsummering') === '0') return;
+    const iDagStr = _lokalDatoStr();
+    if (localStorage.getItem('lp_oppsummering_sist') === iDagStr) return;
+    let idag = 0, forfalt = 0;
+    _startProsjektIds().forEach(pid => {
+      const o = _parseSafe(localStorage.getItem('lp_' + pid + '_o'), []) || [];
+      const t = _parseSafe(localStorage.getItem('lp_' + pid + '_t'), []) || [];
+      [...o, ...t].forEach(x => {
+        if (!x || x.fullfort || !x.frist) return;
+        if (x.frist === iDagStr) idag++;
+        else if (x.frist < iDagStr) forfalt++;
+      });
+    });
+    if (idag + forfalt === 0) return;
+    const deler = [];
+    if (idag) deler.push(idag + (idag === 1 ? ' frist' : ' frister') + ' i dag');
+    if (forfalt) deler.push(forfalt + ' forfalt');
+    if (_visVarsel('Dagens oversikt', deler.join(' · '), 'oppsummering'))
+      localStorage.setItem('lp_oppsummering_sist', iDagStr);
+  }
+  function settOppsummering(på) {
+    localStorage.setItem('lp_oppsummering', på ? '1' : '0');
   }
 
   /* ──────────────────────────────
@@ -5218,6 +5252,8 @@
     if (tSel) tSel.value = localStorage.getItem('lp_tema') || 'system';
     const vtInp = document.getElementById('varselTidInput');
     if (vtInp) vtInp.value = _varselTid();
+    const osToggle = document.getElementById('oppsummeringToggle');
+    if (osToggle) osToggle.checked = localStorage.getItem('lp_oppsummering') !== '0';
     // Fyll prosjekt-felter
     const p = hentAktivtProsjekt();
     document.getElementById('innstProsjektNavn').value = p.navn;
