@@ -1833,7 +1833,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.60</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.61</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2190,6 +2190,16 @@
       <div class="felt">
         <label>Tagger</label>
         <input type="text" id="oppFeltTagger" placeholder="#hjemme #haster" />
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div class="felt" style="flex:1;">
+          <label>Estimat</label>
+          <input type="text" id="oppFeltEstimat" placeholder="f.eks. 2t 30m" />
+        </div>
+        <div class="felt" style="flex:1;">
+          <label>Faktisk tid</label>
+          <input type="text" id="oppFeltFaktisk" placeholder="f.eks. 1t 45m" />
+        </div>
       </div>
       <div class="felt">
         <label>Notater</label>
@@ -3857,6 +3867,32 @@
     });
   }
 
+  // Tidsestimat/faktisk tid: lagres som minutter. Parser «2t 30m», «90m»,
+  // «1,5t»; bart tall tolkes som minutter. _formatTid gir «2t 30m» tilbake.
+  function _parseTid(str) {
+    if (str == null) return null;
+    str = String(str).toLowerCase().trim();
+    if (!str) return null;
+    let min = 0, traff = false;
+    const t = str.match(/(\d+(?:[.,]\d+)?)\s*t/); if (t) { min += parseFloat(t[1].replace(',', '.')) * 60; traff = true; }
+    const m = str.match(/(\d+)\s*m/);              if (m) { min += parseInt(m[1], 10); traff = true; }
+    if (!traff) { const n = parseFloat(str.replace(',', '.')); if (!isNaN(n)) { min = n; traff = true; } }
+    return traff ? Math.round(min) : null;
+  }
+  function _formatTid(min) {
+    if (min == null || isNaN(min) || min <= 0) return '';
+    const t = Math.floor(min / 60), m = Math.round(min % 60);
+    return [t ? t + 't' : '', m ? m + 'm' : ''].filter(Boolean).join(' ') || '0m';
+  }
+  // Chip som viser estimat (⏱) og/eller faktisk tid (✓) på en oppgave.
+  function _tidChipHtml(o) {
+    if (!o || (!o.estimat && !o.faktisk)) return '';
+    const deler = [];
+    if (o.estimat) deler.push('⏱ ' + _formatTid(o.estimat));
+    if (o.faktisk) deler.push('✓ ' + _formatTid(o.faktisk));
+    return `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${deler.join(' · ')}</span>`;
+  }
+
   // Inline-redigering av tittel: dobbeltklikk erstatter tittelen med et
   // tekstfelt; Enter/blur lagrer, Escape avbryter. Enkeltklikk på tittelen
   // åpner info-modalen (med liten forsinkelse så dobbeltklikk kan avbryte den).
@@ -4804,6 +4840,7 @@
       }
       metaHtml += fristSpan(o.frist, o.fullfort);
       metaHtml += _gjentaChip(o.gjenta);
+      metaHtml += _tidChipHtml(o);
       if (akt) {
         metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
       } else if (o.kategoriId) {
@@ -4970,7 +5007,8 @@
       oppgaver.push({
         id: uid(), beskrivelse: item.beskrivelse, notat: item.notat || '',
         frist: nyFrist, aktivitetId: item.aktivitetId || null, kategoriId: item.kategoriId || null,
-        viktig: item.viktig || false, gjenta, tagger: (item.tagger || []).slice(), opprettet: _lokalDatoStr(), fullfort: false,
+        viktig: item.viktig || false, gjenta, tagger: (item.tagger || []).slice(),
+        estimat: item.estimat || null, faktisk: null, opprettet: _lokalDatoStr(), fullfort: false,
       });
     }
     item.gjenta = null;
@@ -6031,6 +6069,7 @@
         metaHtml += `<span style="font-size:11px;color:var(--tekst-sek);white-space:nowrap;">${fullf}/${oppTodos.length} to-do</span>`;
       }
       metaHtml += _tagChipsHtml(o.tagger);
+      metaHtml += _tidChipHtml(o);
 
       info.innerHTML = `
         <div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
@@ -6134,6 +6173,14 @@
       html += `<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap;">
         ${o.tagger.map(x => `<span class="tilknyttet-chip" style="border-color:var(--grønn);color:var(--grønn);">#${escapeHtml(x)}</span>`).join('')}
       </div>`;
+    }
+
+    // Tidsestimat / faktisk tid
+    if (o.estimat || o.faktisk) {
+      const rader = [];
+      if (o.estimat) rader.push(`Estimat: <strong>${_formatTid(o.estimat)}</strong>`);
+      if (o.faktisk) rader.push(`Faktisk: <strong>${_formatTid(o.faktisk)}</strong>`);
+      html += `<div style="margin-bottom:14px;padding:10px 12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);display:flex;gap:16px;">${rader.join('')}</div>`;
     }
 
     // Utsett påminnelse (kun for åpne oppgaver med frist)
@@ -6691,6 +6738,8 @@
     document.getElementById('fristRelativInfo').style.display = 'none';
     document.getElementById('oppFeltGjenta').value = '';
     document.getElementById('oppFeltTagger').value = '';
+    document.getElementById('oppFeltEstimat').value = '';
+    document.getElementById('oppFeltFaktisk').value = '';
 
     if (id) {
       const o = oppgaver.find(o => o.id === id);
@@ -6700,6 +6749,8 @@
       document.getElementById('oppFeltNotat').value = o.notat || '';
       document.getElementById('oppFeltGjenta').value = o.gjenta || '';
       document.getElementById('oppFeltTagger').value = (o.tagger || []).map(x => '#' + x).join(' ');
+      document.getElementById('oppFeltEstimat').value = _formatTid(o.estimat);
+      document.getElementById('oppFeltFaktisk').value = _formatTid(o.faktisk);
       // Sett kategori FØR leveranse-fylling slik at filteret er riktig
       katSelect.value = o.kategoriId || '';
       if (o.aktivitetId && !o.kategoriId) {
@@ -6740,12 +6791,14 @@
     const frist = document.getElementById('oppFeltFrist').value || '';
     const gjenta = document.getElementById('oppFeltGjenta').value || null;
     const tagger = _parseTagger(document.getElementById('oppFeltTagger').value);
+    const estimat = _parseTid(document.getElementById('oppFeltEstimat').value);
+    const faktisk = _parseTid(document.getElementById('oppFeltFaktisk').value);
 
     if (redigOppgaveId) {
       const o = oppgaver.find(o => o.id === redigOppgaveId);
-      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger });
+      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, estimat, faktisk });
     } else {
-      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, opprettet: _lokalDatoStr(), fullfort: false };
+      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, estimat, faktisk, opprettet: _lokalDatoStr(), fullfort: false };
       oppgaver.push(nyOppgave);
     }
 
