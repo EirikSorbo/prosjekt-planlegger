@@ -1833,7 +1833,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.59</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.60</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3857,6 +3857,45 @@
     });
   }
 
+  // Inline-redigering av tittel: dobbeltklikk erstatter tittelen med et
+  // tekstfelt; Enter/blur lagrer, Escape avbryter. Enkeltklikk på tittelen
+  // åpner info-modalen (med liten forsinkelse så dobbeltklikk kan avbryte den).
+  function _startInlineRedig(el, item, type) {
+    const gammel = (type === 'todo' ? item.tittel : item.beskrivelse) || '';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = gammel;
+    inp.style.cssText = "width:100%;font:inherit;padding:2px 4px;border:1px solid var(--grønn);border-radius:4px;background:var(--hvit);color:var(--tekst);";
+    el.replaceWith(inp);
+    inp.focus(); inp.select();
+    let ferdig = false;
+    const commit = () => {
+      if (ferdig) return; ferdig = true;
+      const ny = inp.value.trim();
+      if (ny && ny !== gammel) {
+        if (item._prosjektId && item._prosjektId !== aktivtProsjektId) byttProsjekt(item._prosjektId);
+        const liste = type === 'todo' ? todos : oppgaver;
+        const it = liste.find(x => x.id === item.id);
+        if (it) { if (type === 'todo') it.tittel = ny; else it.beskrivelse = ny; lagre(); }
+      }
+      oppdaterAktivPanel();
+    };
+    inp.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      else if (e.key === 'Escape') { ferdig = true; oppdaterAktivPanel(); }
+    });
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('click', e => e.stopPropagation());
+  }
+  function _gjørTittelRedigerbar(el, item, type, åpneInfo) {
+    let t;
+    el.style.cursor = 'text';
+    el.title = 'Dobbeltklikk for å redigere';
+    el.onclick = e => { e.stopPropagation(); clearTimeout(t); t = setTimeout(åpneInfo, 230); };
+    el.ondblclick = e => { e.stopPropagation(); clearTimeout(t); _startInlineRedig(el, item, type); };
+  }
+
   // Mandag-forankret uke-info for innsiktskort.
   function _ukeInfo() {
     const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
@@ -4700,6 +4739,11 @@
       info.innerHTML = `<div class="todo-tittel">${escapeHtml(t.tittel)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
       _bindTagChips(info);
+      const tTit = info.querySelector('.todo-tittel');
+      if (tTit) _gjørTittelRedigerbar(tTit, t, 'todo', () => {
+        if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
+        åpneTodoInfo(t.id);
+      });
 
       kort.appendChild(cb);
       kort.appendChild(info);
@@ -4773,6 +4817,11 @@
       info.innerHTML = `<div class="todo-tittel">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
       _bindTagChips(info);
+      const oTit = info.querySelector('.todo-tittel');
+      if (oTit) _gjørTittelRedigerbar(oTit, o, 'oppgave', () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        åpneOppgaveInfo(o.id);
+      });
 
       kort.appendChild(cb);
       kort.appendChild(info);
@@ -5987,6 +6036,11 @@
         <div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
       _bindTagChips(info);
+      const obTit = info.querySelector('.oppgave-besk');
+      if (obTit) _gjørTittelRedigerbar(obTit, o, 'oppgave', () => {
+        if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
+        åpneOppgaveInfo(o.id);
+      });
 
       kort.style.cursor = 'pointer';
       kort.onclick = () => {
