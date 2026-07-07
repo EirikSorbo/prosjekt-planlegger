@@ -1838,7 +1838,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.69</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.70</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -7852,27 +7852,34 @@
     const tittel = data.length === 1 ? data[0].p.navn : data.length + ' prosjekter';
     const t0Full = tid(minD), t1Full = tid(maxD);
 
-    // ── Rader (delt på tvers av sider) ──
+    // ── Rader (delt på tvers av sider). Baner uten innhold i tidsrommet
+    //    utelates; kompakte høyder sentrert (skaleres ned hvis for mange). ──
+    const iRange = (d0v, d1v) => d0v <= maxD && d1v >= minD;
     const rows = [];
     data.forEach(({ p, akt, opp, kat }) => {
-      if (data.length > 1) rows.push({ kind: 'projhdr', navn: p.navn, farge: p.farge });
-      const mp = akt.filter(a => a.leveranseType === 'milepæl' && a.dato);
-      const ak = akt.filter(a => a.leveranseType !== 'milepæl' && a.dato);
-      if (dims.milepal && mp.length) rows.push({ kind: 'milestone', items: mp, farge: p.farge });
+      const projRows = [];
+      const mp = akt.filter(a => a.leveranseType === 'milepæl' && a.dato && a.dato >= minD && a.dato <= maxD);
+      const ak = akt.filter(a => a.leveranseType !== 'milepæl' && a.dato && iRange(a.dato, a.datoTil || a.dato));
+      if (dims.milepal && mp.length) projRows.push({ kind: 'milestone', items: mp, farge: p.farge });
       if (dims.aktivitet && ak.length) {
         const byKat = {};
         ak.forEach(a => { const k = a.type || '_'; (byKat[k] = byKat[k] || []).push(a); });
         Object.keys(byKat).forEach(katId => {
           const k = kat.find(x => x.id === katId);
-          rows.push({ kind: 'catlane', label: k ? k.label : 'Uten kategori', farge: k ? k.farge : '#9490d4', items: byKat[katId], opp });
+          projRows.push({ kind: 'catlane', label: k ? k.label : 'Uten kategori', farge: k ? k.farge : '#9490d4', items: byKat[katId], opp });
         });
       }
+      if (!projRows.length) return;               // hopp over prosjekt uten innhold
+      if (data.length > 1) rows.push({ kind: 'projhdr', navn: p.navn, farge: p.farge });
+      projRows.forEach(r => rows.push(r));
     });
     if (!rows.some(r => r.kind !== 'projhdr')) return null;
-    const totalW = rows.reduce((s, r) => s + (r.kind === 'projhdr' ? 0.55 : 1), 0);
-    const unit = Math.min(92, (plotBottom - plotTop) / totalW);
-    let yy = plotTop + Math.max(0, ((plotBottom - plotTop) - unit * totalW) / 2);
-    rows.forEach(r => { r.y = yy; r.h = (r.kind === 'projhdr' ? 0.55 : 1) * unit; yy += r.h; });
+    const natur = r => r.kind === 'projhdr' ? 30 : r.kind === 'milestone' ? 78 : 46;
+    const naturSum = rows.reduce((s, r) => s + natur(r), 0);
+    const skala = Math.min(1, (plotBottom - plotTop) / naturSum);
+    // Forankre nær toppen (liten luft), ikke midtstilt — unngår stor topp-marg.
+    let yy = plotTop + Math.min(40, Math.max(0, ((plotBottom - plotTop) - naturSum * skala) / 2));
+    rows.forEach(r => { r.y = yy; r.h = natur(r) * skala; yy += r.h; });
 
     // Render én side for et gitt datovindu [winMin, winMax].
     function renderSide(winMin, winMax, idx) {
@@ -7912,22 +7919,39 @@
           body += `<text x="${plotL + 10}" y="${(yc + 4).toFixed(1)}" font-family="Syne,sans-serif" font-weight="700" font-size="13" fill="#2e2b45">${esc(trunc(r.navn, 60))}</text>`;
         } else if (r.kind === 'milestone') {
           body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#9490d4">Milepæler</text>`;
-          r.items.forEach(a => {
-            if (!iVindu(a.dato)) return;
-            const x = xFor(a.dato), s = Math.min(r.h * 0.28, 9);
-            body += `<path d="M ${x.toFixed(1)} ${(yc - s).toFixed(1)} L ${(x + s).toFixed(1)} ${yc.toFixed(1)} L ${x.toFixed(1)} ${(yc + s).toFixed(1)} L ${(x - s).toFixed(1)} ${yc.toFixed(1)} Z" fill="${r.farge}"/>`;
-            body += `<text x="${x.toFixed(1)}" y="${(yc - s - 3).toFixed(1)}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">${esc(trunc(a.tittel, 26))}</text>`;
+          const dY = r.y + r.h - 11, s = 7, tierRight = [];
+          [...r.items].filter(a => iVindu(a.dato)).sort((a, b) => xFor(a.dato) - xFor(b.dato)).forEach(a => {
+            const x = xFor(a.dato), lbl = trunc(a.tittel, 24), w = lbl.length * 4.6 + 8;
+            let tier = 0;
+            while (tier < 4 && tierRight[tier] != null && tierRight[tier] > x - w / 2) tier++;
+            tierRight[tier] = x + w / 2;
+            const ly = dY - s - 6 - tier * 12;
+            body += `<line x1="${x.toFixed(1)}" y1="${(dY - s).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(ly + 2).toFixed(1)}" stroke="${r.farge}" stroke-width="0.6" opacity="0.5"/>`;
+            body += `<path d="M ${x.toFixed(1)} ${(dY - s).toFixed(1)} L ${(x + s).toFixed(1)} ${dY.toFixed(1)} L ${x.toFixed(1)} ${(dY + s).toFixed(1)} L ${(x - s).toFixed(1)} ${dY.toFixed(1)} Z" fill="${r.farge}"/>`;
+            body += `<text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">${esc(lbl)}</text>`;
           });
         } else {
           body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="${r.farge}">${esc(trunc(r.label, 22))}</text>`;
-          const barH = Math.min(r.h * 0.42, 16);
-          r.items.forEach(a => {
-            const slutt = a.datoTil || a.dato;
-            if (a.dato > winMax || slutt < winMin) return; // helt utenfor vinduet
-            const x1 = clx(xFor(a.dato)), x2 = clx(xFor(slutt)), w = Math.max(3, x2 - x1), by = yc - barH / 2;
+          const barH = Math.min(r.h * 0.5, 15);
+          const items = [...r.items].filter(a => !(a.dato > winMax || (a.datoTil || a.dato) < winMin)).sort((a, b) => xFor(a.dato) - xFor(b.dato));
+          items.forEach((a, i) => {
+            const x1 = clx(xFor(a.dato)), w = Math.max(6, clx(xFor(a.datoTil || a.dato)) - x1), by = yc - barH / 2;
             body += `<rect x="${x1.toFixed(1)}" y="${by.toFixed(1)}" width="${w.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${r.farge}" fill-opacity="${a.fullfort ? 0.4 : 0.85}"/>`;
-            body += `<text x="${(x1 + 4).toFixed(1)}" y="${(yc + 3).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#ffffff">${esc(trunc(a.tittel, Math.max(4, Math.floor(w / 6))))}</text>`;
-            aktPos[a.id] = { x1, x2, yc };
+            aktPos[a.id] = { x1, x2: x1 + w, yc };
+            const navn = a.tittel || '';
+            if (navn.length * 4.6 < w - 8) {
+              // Navnet får plass inni bjelken → hvit tekst.
+              body += `<text x="${(x1 + 4).toFixed(1)}" y="${(yc + 3).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#ffffff">${esc(navn)}</text>`;
+            } else {
+              // For smal → navn til høyre i mørk tekst, men bare hvis det er
+              // plass før neste element (unngår rot på tette baner).
+              const nextX = i + 1 < items.length ? clx(xFor(items[i + 1].dato)) : plotR;
+              const rom = nextX - (x1 + w) - 5;
+              if (rom > 14) {
+                const maxCh = Math.max(3, Math.floor(rom / 4.6));
+                body += `<text x="${(x1 + w + 3).toFixed(1)}" y="${(yc + 3).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">${esc(trunc(navn, maxCh))}</text>`;
+              }
+            }
             if (dims.oppgave) (r.opp || []).filter(o => o.aktivitetId === a.id && o.frist && iVindu(o.frist)).forEach(o => {
               body += `<circle cx="${xFor(o.frist).toFixed(1)}" cy="${(by + barH + 4).toFixed(1)}" r="2.2" fill="${o.fullfort ? '#bbb' : r.farge}"/>`;
             });
