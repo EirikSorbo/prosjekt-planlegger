@@ -1833,7 +1833,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.61</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.62</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2127,6 +2127,10 @@
           <label>Til kl.</label>
           <input type="time" id="feltTidTil" />
         </div>
+      </div>
+      <div class="felt">
+        <label>Avhenger av (må være ferdig først)</label>
+        <select id="feltAvhengig" multiple size="4" style="height:auto;padding:4px;"></select>
       </div>
       <div class="felt">
         <label>Beskrivelse</label>
@@ -3082,8 +3086,12 @@
             bar.style.left = (offsetDager * pxPerDag) + 'px';
             bar.style.width = Math.max(8, (sluttDager - offsetDager) * pxPerDag) + 'px';
             bar.style.background = k.farge;
-            bar.textContent = a.tittel;
+            bar.textContent = (a.avhengigAv && a.avhengigAv.length ? '⛓ ' : '') + a.tittel;
             bar.title = a.tittel;
+            if (a.avhengigAv && a.avhengigAv.length && _avhengigKonflikt(a).length) {
+              bar.style.outline = '2px solid #c0392b';
+              bar.title = a.tittel + ' — starter før en avhengighet er ferdig';
+            }
             bar.onclick = () => åpneAktivitetInfo(a.id);
             spor.appendChild(bar);
           });
@@ -6289,6 +6297,35 @@
 
     body.innerHTML = html;
 
+    // ── Avhengigheter (Gantt) ──
+    const avh = (a.avhengigAv || []).map(id => aktiviteter.find(x => x.id === id)).filter(Boolean);
+    const blokkerer = aktiviteter.filter(x => (x.avhengigAv || []).includes(a.id));
+    const konflikt = _avhengigKonflikt(a);
+    if (avh.length || blokkerer.length) {
+      const seksjon = document.createElement('div');
+      seksjon.style.cssText = 'margin-top:16px;';
+      const lagLenke = (x, sjekkKonflikt) => {
+        const iKonflikt = sjekkKonflikt && konflikt.some(p => p.id === x.id);
+        const el = document.createElement('div');
+        el.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 10px;background:${iKonflikt ? '#fdeaea' : 'var(--grønn-lys)'};border-radius:var(--rs);font-size:13px;color:var(--tekst);cursor:pointer;margin-bottom:4px;`;
+        el.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${x.leveranseType === 'milepæl' ? '◆ ' : ''}${escapeHtml(x.tittel)}</span>${iKonflikt ? '<span style="color:#c0392b;font-size:11px;margin-left:auto;white-space:nowrap;flex-shrink:0;">⚠ ikke ferdig i tide</span>' : ''}`;
+        el.onclick = () => { lukkModal('aktivitetInfoModal'); åpneAktivitetInfo(x.id); };
+        return el;
+      };
+      const overskrift = txt => {
+        const h = document.createElement('div');
+        h.style.cssText = 'font-size:11px;font-weight:700;font-family:"Syne",sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;';
+        h.textContent = txt;
+        return h;
+      };
+      if (avh.length) { seksjon.appendChild(overskrift('Avhenger av')); avh.forEach(x => seksjon.appendChild(lagLenke(x, true))); }
+      if (blokkerer.length) {
+        const h = overskrift('Blokkerer'); if (avh.length) h.style.marginTop = '10px';
+        seksjon.appendChild(h); blokkerer.forEach(x => seksjon.appendChild(lagLenke(x, false)));
+      }
+      body.appendChild(seksjon);
+    }
+
     // Render oppgaver as proper cards like calendar view
     const tilknyttede = oppgaver.filter(o => o.aktivitetId === a.id && !o.fullfort);
     if (tilknyttede.length > 0) {
@@ -6576,6 +6613,32 @@
     if (datoLabel) datoLabel.textContent = erMilepel ? 'Dato' : 'Fra dato';
   }
 
+  // Avhengigheter mellom leveranser (Gantt). avhengigAv = liste med leveranse-
+  // id-er som må være ferdig først. Konflikt = en forutsetning slutter etter at
+  // denne leveransen starter.
+  function _fyllAvhengigSelect(currentId, valgte) {
+    const sel = document.getElementById('feltAvhengig');
+    if (!sel) return;
+    sel.innerHTML = '';
+    valgte = valgte || [];
+    [...aktiviteter]
+      .filter(a => a.id !== currentId)
+      .sort((a, b) => (a.dato || '').localeCompare(b.dato || ''))
+      .forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel;
+        if (valgte.includes(a.id)) opt.selected = true;
+        sel.appendChild(opt);
+      });
+  }
+  function _avhengigKonflikt(a) {
+    if (!a || !a.avhengigAv || !a.avhengigAv.length) return [];
+    return a.avhengigAv
+      .map(id => aktiviteter.find(x => x.id === id))
+      .filter(p => p && (p.datoTil || p.dato) > a.dato);
+  }
+
   function åpneAktivitetModal(id = null, dato = null) {
     const feltType = document.getElementById('feltType');
     feltType.innerHTML = '';
@@ -6600,6 +6663,7 @@
       document.getElementById('feltTid').value     = a.tid    || '';
       document.getElementById('feltTidTil').value  = a.tidTil || '';
       document.getElementById('feltBesk').value   = a.beskrivelse || '';
+      _fyllAvhengigSelect(id, a.avhengigAv);
       slettKnapp.style.display = 'block';
     } else {
       redigAktivitetId = null;
@@ -6613,6 +6677,7 @@
       document.getElementById('feltTid').value     = '';
       document.getElementById('feltTidTil').value  = '';
       document.getElementById('feltBesk').value   = '';
+      _fyllAvhengigSelect(null, []);
       slettKnapp.style.display = 'none';
     }
     document.getElementById('aktivitetModal').classList.add('vis');
@@ -6655,6 +6720,7 @@
     document.getElementById('feltTid').value     = '';
     document.getElementById('feltTidTil').value  = '';
     document.getElementById('feltBesk').value   = '';
+    _fyllAvhengigSelect(null, []);
     document.getElementById('slettAktivitetKnapp').style.display = 'none';
     document.getElementById('aktivitetModal').classList.add('vis');
     setTimeout(() => document.getElementById('feltTittel').focus(), 100);
@@ -6670,15 +6736,16 @@
     const tid           = erMilepel ? '' : document.getElementById('feltTid').value;
     const tidTil        = erMilepel ? '' : document.getElementById('feltTidTil').value;
     const besk          = document.getElementById('feltBesk').value.trim();
+    const avhengigAv    = Array.from(document.getElementById('feltAvhengig').selectedOptions).map(o => o.value);
 
     if (!tittel) { alert('Tittel er påkrevd.'); return; }
     if (!dato)   { alert('Dato er påkrevd.'); return; }
 
     if (redigAktivitetId) {
       const a = aktiviteter.find(a => a.id === redigAktivitetId);
-      Object.assign(a, { tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk, leveranseType });
+      Object.assign(a, { tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk, leveranseType, avhengigAv });
     } else {
-      aktiviteter.push({ id: uid(), tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk, leveranseType });
+      aktiviteter.push({ id: uid(), tittel, type, dato, datoTil, tid, tidTil, beskrivelse: besk, leveranseType, avhengigAv });
     }
 
     lagre();
