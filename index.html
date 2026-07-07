@@ -1754,12 +1754,8 @@
       <div class="modal-tittel">Innstillinger</div>
       <button class="lukk-knapp" onclick="lukkModal('kategoriModal')">×</button>
     </div>
-    <div style="padding:12px 22px 4px;">
-      <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);">Kategorier</div>
-    </div>
-    <div class="modal-body" id="kategoriModalBody" style="padding-top:8px;"></div>
-    <div style="padding:10px 22px 16px;border-bottom:1px solid var(--kant);">
-      <button class="knapp-primær" onclick="leggTilKategori()" style="width:100%;">+ Legg til kategori</button>
+    <div style="padding:14px 22px 12px;border-bottom:1px solid var(--kant);">
+      <button onclick="lukkModal('kategoriModal');åpneKategoriRediger()" style="width:100%;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Kategorier</button>
     </div>
     <div style="padding:14px 22px 14px;border-bottom:1px solid var(--kant);">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;">Hovedfilter</div>
@@ -1815,11 +1811,15 @@
         <button class="knapp-sek" onclick="document.getElementById('mergeInput').click()" style="flex:1;font-size:12px;">⇅ Slå sammen</button>
       </div>
       <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
-      <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗂 Arkiv</button>
-      <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Papirkurv</button>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Arkiv</button>
+        <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Papirkurv</button>
+      </div>
       <button onclick="lukkModal('kategoriModal');åpneBackup()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sikkerhetskopier</button>
-      <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="width:100%;margin-top:8px;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
-      <button onclick="lukkModal('kategoriModal');åpnePrintTidslinje()" style="width:100%;margin-top:8px;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 14px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Print tidslinje</button>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="flex:1;font-size:12px;background:var(--grønn);color:white;border:none;border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
+        <button onclick="lukkModal('kategoriModal');åpnePrintTidslinje()" style="flex:1;font-size:12px;background:var(--hvit);color:var(--tekst);border:1px solid var(--kant);border-radius:var(--rs);padding:11px 8px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;letter-spacing:0.3px;">Print</button>
+      </div>
     </div>
     <div style="padding:14px 22px 8px;border-top:1px solid var(--kant);">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Prosjekt</div>
@@ -1841,8 +1841,27 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.72</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.73</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Rediger kategorier -->
+<div class="modal-overlay" id="kategoriRedigerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel">Kategorier</div>
+      <button class="lukk-knapp" onclick="lukkModal('kategoriRedigerModal')">×</button>
+    </div>
+    <div class="modal-body" id="kategoriModalBody" style="padding-top:8px;"></div>
+    <div style="padding:10px 22px 16px;">
+      <button class="knapp-primær" onclick="leggTilKategori()" style="width:100%;">+ Legg til kategori</button>
+    </div>
+    <div class="modal-footer">
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('kategoriRedigerModal')">Lukk</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5449,8 +5468,12 @@
     '#8e6bbf','#6aab7e','#4a9cc9','#c96a8e'
   ];
 
-  function åpneKategoriModal() {
+  function åpneKategoriRediger() {
     renderKategoriModal();
+    document.getElementById('kategoriRedigerModal').classList.add('vis');
+  }
+
+  function åpneKategoriModal() {
     // Fyll tidslinje-datoinputs
     const def = _tlDefault();
     document.getElementById('tidslinjeStartInput').value = tidslinjeStartGrense || def.start;
