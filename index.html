@@ -1837,7 +1837,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.65</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.66</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -4172,66 +4172,6 @@
     return kort;
   }
 
-  // Milepæl-burn-down: nærmeste kommende milepæl med tilknyttede oppgaver.
-  // Faktisk gjenstående-kurve rekonstrueres fra oppgavenes fullfortDato,
-  // sammenlignet med ideell lineær nedtrapping fra start (tidligste opprettet)
-  // til milepæl-dato.
-  function _lagBurnDownKort() {
-    const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
-    const iDagStr = _lokalDatoStr(iDag);
-    let best = null;
-    _startProsjektIds().forEach(pid => {
-      const akt = _parseSafe(localStorage.getItem('lp_' + pid + '_a'), []) || [];
-      const opp = _parseSafe(localStorage.getItem('lp_' + pid + '_o'), []) || [];
-      akt.forEach(a => {
-        if (a.leveranseType !== 'milepæl' || !a.dato || a.dato < iDagStr) return;
-        const tasks = opp.filter(o => o.aktivitetId === a.id);
-        if (tasks.length && (!best || a.dato < best.mp.dato)) best = { mp: a, tasks };
-      });
-    });
-    if (!best) return null;
-    const { mp, tasks } = best;
-    const total = tasks.length;
-    const fullfort = tasks.filter(t => t.fullfort).length;
-    const opprettetListe = tasks.map(t => t.opprettet).filter(Boolean).sort();
-    const start = (opprettetListe[0] && opprettetListe[0] < mp.dato) ? opprettetListe[0] : mp.dato;
-    const d0 = new Date(start + 'T00:00:00'), d1 = new Date(mp.dato + 'T00:00:00');
-    const totalDays = Math.max(1, Math.round((d1 - d0) / 86400000));
-    const dagerIgjen = Math.max(0, Math.round((d1 - iDag) / 86400000));
-    const todayIdx = Math.max(0, Math.min(totalDays, Math.round((iDag - d0) / 86400000)));
-    const fullfortInnen = ds => tasks.filter(t => t.fullfort && t.fullfortDato && t.fullfortDato <= ds).length;
-
-    const W = 268, H = 66, padL = 4, padR = 4, padT = 6, padB = 6;
-    const xw = W - padL - padR, yh = H - padT - padB;
-    const X = f => (padL + f * xw).toFixed(1);
-    const Y = v => (padT + (1 - v / total) * yh).toFixed(1);
-    // Faktisk gjenstående-linje fra start til i dag
-    const pkt = [];
-    for (let i = 0; i <= todayIdx; i++) {
-      const d = new Date(d0); d.setDate(d0.getDate() + i);
-      const rem = total - fullfortInnen(_lokalDatoStr(d));
-      pkt.push(`${X(i / totalDays)},${Y(rem)}`);
-    }
-    const idealRem = total * (1 - todayIdx / totalDays);
-    const remaining = total - fullfort;
-    const paaRute = remaining <= Math.ceil(idealRem);
-
-    const kort = document.createElement('div');
-    kort.style.cssText = 'background:var(--hvit);border:1px solid var(--kant);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;';
-    kort.innerHTML = `
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px;">
-        <span style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);">◆ Milepæl</span>
-        <span style="font-size:12px;color:${paaRute ? 'var(--grønn)' : '#e08a3c'};font-weight:700;">${paaRute ? 'På rute' : 'Bak skjema'}</span>
-      </div>
-      <div style="font-size:14px;font-weight:700;color:var(--tekst);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(mp.tittel || '')}</div>
-      <div style="font-size:12px;color:var(--tekst-sek);margin-bottom:8px;">${fullfort} av ${total} fullført · ${dagerIgjen} dager igjen</div>
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible;">
-        <line x1="${X(0)}" y1="${Y(total)}" x2="${X(1)}" y2="${Y(0)}" stroke="var(--grønn-mid)" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <polyline points="${pkt.join(' ')}" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>`;
-    return kort;
-  }
-
   function renderStartside() {
     const cont = document.getElementById('startInnhold');
     if (!cont) return;
@@ -4243,8 +4183,6 @@
     if (denneUka) cont.appendChild(denneUka);
     const stagn = _lagStagnasjonKort();
     if (stagn) cont.appendChild(stagn);
-    const burn = _lagBurnDownKort();
-    if (burn) cont.appendChild(burn);
 
     const iDag = new Date(); iDag.setHours(0,0,0,0);
     const iDagStr = _lokalDatoStr(iDag);
