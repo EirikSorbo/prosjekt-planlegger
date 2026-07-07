@@ -1582,6 +1582,11 @@
   <button class="fane" onclick="byttFane('kalender', this)">Oversikt</button>
 </nav>
 
+<div id="offlineIndikator" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:500;background:var(--tekst);color:var(--hvit);font-size:12px;font-family:'Nunito',sans-serif;padding:8px 14px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,0.2);align-items:center;gap:8px;">
+  <span style="width:8px;height:8px;border-radius:50%;background:#e08a3c;flex-shrink:0;"></span>
+  Frakoblet — lagres lokalt, synkes senere
+</div>
+
 <div id="varselBanner" style="display:none;background:var(--grønn-lys);border-bottom:1px solid var(--grønn-mid);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;">
   <span style="font-size:12px;color:var(--tekst);font-family:'Nunito',sans-serif;">🔔 Tillat varsler for å se forfalte oppgaver på ikonet</span>
   <div style="display:flex;gap:8px;flex-shrink:0;">
@@ -1807,7 +1812,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.56</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.57</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -6727,6 +6732,15 @@
     if (document.visibilityState === 'visible') _planleggVarsler();
   });
 
+  // Offline-indikator: liten pille når nettleseren er frakoblet. Data lagres
+  // uansett lokalt (+ Firestore offline-kø), så dette er kun informativt.
+  function _oppdaterOffline() {
+    const el = document.getElementById('offlineIndikator');
+    if (el) el.style.display = navigator.onLine ? 'none' : 'flex';
+  }
+  window.addEventListener('online', _oppdaterOffline);
+  window.addEventListener('offline', _oppdaterOffline);
+
   // Enter i tekstfelt lagrer
   document.getElementById('feltTittel').addEventListener('keydown', e => {
     if (e.key === 'Enter') lagreAktivitet();
@@ -7916,6 +7930,7 @@
     oppdaterForfaltBadge();
     _roterBackup();
     _planleggVarsler();
+    _oppdaterOffline();
   }
 
   function beOmVarsel() {
