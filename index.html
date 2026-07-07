@@ -1765,6 +1765,10 @@
           <option value="mørk">Mørk</option>
         </select>
       </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+        <span style="font-size:12px;color:var(--tekst);font-weight:600;flex:1;">Påminnelse-tid (frister)</span>
+        <input type="time" id="varselTidInput" onchange="settVarselTid(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);cursor:pointer;" />
+      </label>
     </div>
     <div style="padding:16px 22px 8px;">
       <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Data</div>
@@ -1799,7 +1803,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.53</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.54</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2492,6 +2496,7 @@
     // å hindre at en senere sky-henting overskriver usynkede endringer.
     localStorage.setItem(_pk('dirty'), Date.now().toString());
     oppdaterForfaltBadge();
+    _planleggVarsler();
     if (window._currentUid && window._lagreTilSky) {
       window._lagreTilSky(window._currentUid);
     }
@@ -2545,6 +2550,83 @@
     }
 
     // Badge i fane-knappen fjernet – kun app-badge brukes
+  }
+
+  /* ──────────────────────────────
+     FRIST-VARSLER (klokkeslett, ren klient)
+     Web-varsler kan bare fyres mens kode kjører. Derfor: planlegg setTimeout
+     for dagens påminnelser mens appen er åpen, OG hent inn («catch-up») dem
+     som allerede har passert når appen åpnes/kommer i forgrunn. Oppgaver/todos
+     har kun dato → påminnes på valgt tid (lp_varselTid, standard 09:00);
+     leveranser med klokkeslett påminnes på sitt eksakte tidspunkt.
+     Dedup per dag via lp_varsel_vist så samme element ikke varsles to ganger.
+  ────────────────────────────── */
+  let _varselTimers = [];
+  function _varselTid() { return localStorage.getItem('lp_varselTid') || '09:00'; }
+  function settVarselTid(val) {
+    localStorage.setItem('lp_varselTid', val || '09:00');
+    _planleggVarsler();
+  }
+
+  function _varselVistHent() {
+    const v = _parseSafe(localStorage.getItem('lp_varsel_vist'), null);
+    const iDagStr = _lokalDatoStr();
+    if (!v || v.dato !== iDagStr) return { dato: iDagStr, ider: [] };
+    return v;
+  }
+  function _varselMarkerVist(id) {
+    const v = _varselVistHent();
+    if (!v.ider.includes(id)) v.ider.push(id);
+    localStorage.setItem('lp_varsel_vist', JSON.stringify(v));
+  }
+
+  function _visVarsel(tittel, kropp, tag) {
+    try {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+      const ikon = document.getElementById('touchIconLink')?.href || undefined;
+      const n = new Notification(tittel, { body: kropp || '', tag, icon: ikon });
+      n.onclick = () => { try { window.focus(); } catch(e) {} n.close(); };
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // Samle dagens påminnelser på tvers av Start-prosjektene.
+  function _samleDagensVarsler() {
+    const iDagStr = _lokalDatoStr();
+    const [dh, dm] = _varselTid().split(':').map(Number);
+    const snoozet = _parseSafe(localStorage.getItem('lp_varsel_snooze'), {}) || {};
+    const naa = Date.now();
+    const ut = [];
+    _startProsjektIds().forEach(pid => {
+      const o = _parseSafe(localStorage.getItem('lp_' + pid + '_o'), []) || [];
+      const t = _parseSafe(localStorage.getItem('lp_' + pid + '_t'), []) || [];
+      const a = _parseSafe(localStorage.getItem('lp_' + pid + '_a'), []) || [];
+      o.forEach(x => { if (x && !x.fullfort && x.frist === iDagStr) ut.push({ id: x.id, h: dh, m: dm, tittel: 'Forfaller i dag', kropp: x.beskrivelse || '' }); });
+      t.forEach(x => { if (x && !x.fullfort && x.frist === iDagStr) ut.push({ id: x.id, h: dh, m: dm, tittel: 'Forfaller i dag', kropp: x.tittel || '' }); });
+      a.forEach(x => { if (x && x.dato === iDagStr && x.tid) { const [ah, am] = x.tid.split(':').map(Number); ut.push({ id: x.id, h: ah, m: am, tittel: x.tittel || 'Leveranse', kropp: 'kl. ' + x.tid }); } });
+    });
+    // Filtrer bort snoozede som ennå ikke er «modne»
+    return ut.filter(v => !(snoozet[v.id] && snoozet[v.id] > naa));
+  }
+
+  function _planleggVarsler() {
+    _varselTimers.forEach(t => clearTimeout(t));
+    _varselTimers = [];
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const vist = _varselVistHent();
+    const naa = new Date();
+    _samleDagensVarsler().forEach(v => {
+      if (vist.ider.includes(v.id)) return;
+      const naar = new Date(); naar.setHours(v.h, v.m, 0, 0);
+      const forsinkelse = naar - naa;
+      if (forsinkelse <= 0) {
+        if (_visVarsel(v.tittel, v.kropp, v.id)) _varselMarkerVist(v.id);
+      } else if (forsinkelse < 24 * 3600 * 1000) {
+        _varselTimers.push(setTimeout(() => {
+          if (_visVarsel(v.tittel, v.kropp, v.id)) _varselMarkerVist(v.id);
+        }, forsinkelse));
+      }
+    });
   }
 
   /* ──────────────────────────────
@@ -5134,6 +5216,8 @@
     if (rdSel) rdSel.value = localStorage.getItem('lp_ryddDager') || '3';
     const tSel = document.getElementById('temaSelect');
     if (tSel) tSel.value = localStorage.getItem('lp_tema') || 'system';
+    const vtInp = document.getElementById('varselTidInput');
+    if (vtInp) vtInp.value = _varselTid();
     // Fyll prosjekt-felter
     const p = hentAktivtProsjekt();
     document.getElementById('innstProsjektNavn').value = p.navn;
@@ -6569,6 +6653,12 @@
         .forEach(m => m.classList.remove('vis'));
   });
 
+  // Når appen kommer i forgrunn: re-planlegg + hent inn påminnelser som passerte
+  // mens den var i bakgrunn/lukket.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _planleggVarsler();
+  });
+
   // Enter i tekstfelt lagrer
   document.getElementById('feltTittel').addEventListener('keydown', e => {
     if (e.key === 'Enter') lagreAktivitet();
@@ -7757,6 +7847,7 @@
     renderTidslinje();
     oppdaterForfaltBadge();
     _roterBackup();
+    _planleggVarsler();
   }
 
   function beOmVarsel() {
@@ -7764,6 +7855,7 @@
     Notification.requestPermission().then(result => {
       if (result === 'granted') {
         oppdaterForfaltBadge();
+        _planleggVarsler();
       }
     });
   }
