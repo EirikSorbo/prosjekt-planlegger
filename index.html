@@ -1838,7 +1838,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.67</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.68</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -1909,12 +1909,21 @@
           </select>
         </div>
         <div class="felt">
-          <label>Tidsrom</label>
-          <select id="printTidsrom" onchange="_printTidsromEndret(this.value)">
-            <option value="auto">Hele prosjektet</option>
-            <option value="egendefinert">Egendefinert</option>
+          <label>Oppdeling</label>
+          <select id="printSider">
+            <option value="1">Én side (skaler til å passe)</option>
+            <option value="2">2 sider (teipes sammen)</option>
+            <option value="3">3 sider</option>
+            <option value="4">4 sider</option>
           </select>
         </div>
+      </div>
+      <div class="felt">
+        <label>Tidsrom</label>
+        <select id="printTidsrom" onchange="_printTidsromEndret(this.value)">
+          <option value="auto">Hele prosjektet</option>
+          <option value="egendefinert">Egendefinert</option>
+        </select>
       </div>
       <div class="felt-rad" id="printDatoRad" style="display:none;">
         <div class="felt"><label>Fra</label><input type="date" id="printFra" /></div>
@@ -2286,7 +2295,9 @@
   @media print {
     body > *:not(#printOmslag) { display: none !important; }
     #printOmslag { display: block !important; }
-    #printOmslag svg { width: 100%; height: auto; }
+    #printOmslag svg { width: 100%; height: auto; display: block; }
+    .printSide { page-break-after: always; break-after: page; }
+    .printSide:last-child { page-break-after: auto; break-after: auto; }
   }
 </style>
 
@@ -7777,6 +7788,7 @@
       dl.appendChild(lbl);
     });
     document.getElementById('printTidsrom').value = 'auto';
+    document.getElementById('printSider').value = '1';
     document.getElementById('printDatoRad').style.display = 'none';
     document.getElementById('printTidslinjeModal').classList.add('vis');
   }
@@ -7793,12 +7805,13 @@
     const dims = {};
     [...document.querySelectorAll('.printDimCb')].forEach(c => { dims[c.value] = c.checked; });
     const papir = document.getElementById('printPapir').value;
+    const sider = parseInt(document.getElementById('printSider').value, 10) || 1;
     let fra = null, til = null;
     if (document.getElementById('printTidsrom').value === 'egendefinert') {
       fra = document.getElementById('printFra').value || null;
       til = document.getElementById('printTil').value || null;
     }
-    const svg = _byggPrintTidslinjeSvg({ pids, dims, fra, til });
+    const svg = _byggPrintTidslinjeSvg({ pids, dims, fra, til, sider });
     if (!svg) { alert('Fant ingen datoer å vise for valgte prosjekter.'); return; }
     document.getElementById('printOmslag').innerHTML = svg;
     document.getElementById('printPageStyle').textContent = `@page { size: ${papir} landscape; margin: 8mm; }`;
@@ -7806,9 +7819,12 @@
     setTimeout(() => window.print(), 150);
   }
 
-  // Bygger en liggende vektor-tidslinje (√2-format, samme for A4/A3). Skalerer
-  // hele datospennet til sidebredden og fordeler radene på sidehøyden (én side).
-  function _byggPrintTidslinjeSvg({ pids, dims, fra, til }) {
+  // Bygger en liggende vektor-tidslinje (√2-format, samme for A4/A3). Radene
+  // (baner) er delt på tvers av alle sider; `sider` deler datospennet i like
+  // tidsvinduer (tiling) — hver side skaleres til sidebredden og kan teipes
+  // sammen til én lang stripe. sider=1 = alt på én side.
+  function _byggPrintTidslinjeSvg({ pids, dims, fra, til, sider }) {
+    sider = Math.max(1, Math.min(4, sider || 1));
     const data = pids.map(pid => ({
       p: prosjekter.find(x => x.id === pid) || { navn: '?', farge: '#9490d4' },
       akt: _parseSafe(localStorage.getItem('lp_' + pid + '_a'), []) || [],
@@ -7829,38 +7845,14 @@
     const W = 1400, H = 990, mL = 30, mR = 30, mT = 28, mB = 22;
     const plotL = mL, plotR = W - mR;
     const axisY = mT + 60, plotTop = axisY + 18, plotBottom = H - mB;
-    const t0 = new Date(minD + 'T00:00:00').getTime();
-    const t1 = new Date(maxD + 'T00:00:00').getTime();
-    const span = Math.max(86400000, t1 - t0);
-    const xFor = ds => plotL + ((new Date(ds + 'T00:00:00').getTime() - t0) / span) * (plotR - plotL);
     const esc = s => escapeHtml(s);
     const trunc = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
     const idag = _lokalDatoStr();
-    const d0 = new Date(minD + 'T00:00:00'), d1 = new Date(maxD + 'T00:00:00');
-
-    // ── Hode: tittel + gridlinjer + akse ──
-    let head = '';
+    const tid = ds => new Date(ds + 'T00:00:00').getTime();
     const tittel = data.length === 1 ? data[0].p.navn : data.length + ' prosjekter';
-    head += `<text x="${mL}" y="${mT}" font-family="Syne,sans-serif" font-weight="800" font-size="22" fill="#2e2b45">${esc(tittel)}</text>`;
-    head += `<text x="${mL}" y="${mT + 17}" font-family="Nunito,sans-serif" font-size="11" fill="#7b78b0">Generert ${_printDatoLang(idag)} · ${_printDatoLang(minD)} – ${_printDatoLang(maxD)}</text>`;
-    const kvartal = span / 86400000 > 500;
-    const grid = [];
-    let cur = new Date(d0.getFullYear(), d0.getMonth(), 1);
-    while (cur <= d1) {
-      if ((!kvartal || cur.getMonth() % 3 === 0) && cur >= d0) grid.push(new Date(cur));
-      cur.setMonth(cur.getMonth() + 1);
-    }
-    head += '<g stroke="#e6e5f2" stroke-width="1">';
-    grid.forEach(g => { const x = xFor(_lokalDatoStr(g)).toFixed(1); head += `<line x1="${x}" y1="${plotTop - 6}" x2="${x}" y2="${plotBottom}"/>`; });
-    head += '</g><g font-family="Nunito,sans-serif" font-size="10" fill="#7b78b0">';
-    grid.forEach((g, i) => {
-      const m = g.getMonth();
-      const lbl = (m === 0 || i === 0) ? MAANEDER[m].slice(0, 3) + ' ' + g.getFullYear() : MAANEDER[m].slice(0, 3);
-      head += `<text x="${(xFor(_lokalDatoStr(g)) + 3).toFixed(1)}" y="${axisY + 8}">${lbl}</text>`;
-    });
-    head += '</g>';
+    const t0Full = tid(minD), t1Full = tid(maxD);
 
-    // ── Rader (per prosjekt → milepæl-rad + kategori-baner) ──
+    // ── Rader (delt på tvers av sider) ──
     const rows = [];
     data.forEach(({ p, akt, opp, kat }) => {
       if (data.length > 1) rows.push({ kind: 'projhdr', navn: p.navn, farge: p.farge });
@@ -7878,65 +7870,103 @@
     });
     if (!rows.some(r => r.kind !== 'projhdr')) return null;
     const totalW = rows.reduce((s, r) => s + (r.kind === 'projhdr' ? 0.55 : 1), 0);
-    // Fyll høyden, men cap rad-høyden så få rader ikke blir absurd luftige.
     const unit = Math.min(92, (plotBottom - plotTop) / totalW);
     let yy = plotTop + Math.max(0, ((plotBottom - plotTop) - unit * totalW) / 2);
     rows.forEach(r => { r.y = yy; r.h = (r.kind === 'projhdr' ? 0.55 : 1) * unit; yy += r.h; });
 
-    const aktPos = {};
-    let body = '';
-    rows.forEach(r => {
-      const yc = r.y + r.h / 2;
-      if (r.kind === 'projhdr') {
-        body += `<rect x="${plotL}" y="${(r.y + r.h * 0.2).toFixed(1)}" width="4" height="${(r.h * 0.6).toFixed(1)}" fill="${r.farge}"/>`;
-        body += `<text x="${plotL + 10}" y="${(yc + 4).toFixed(1)}" font-family="Syne,sans-serif" font-weight="700" font-size="13" fill="#2e2b45">${esc(trunc(r.navn, 60))}</text>`;
-      } else if (r.kind === 'milestone') {
-        body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#9490d4">Milepæler</text>`;
-        r.items.forEach(a => {
-          const x = xFor(a.dato), s = Math.min(r.h * 0.28, 9);
-          body += `<path d="M ${x.toFixed(1)} ${(yc - s).toFixed(1)} L ${(x + s).toFixed(1)} ${yc.toFixed(1)} L ${x.toFixed(1)} ${(yc + s).toFixed(1)} L ${(x - s).toFixed(1)} ${yc.toFixed(1)} Z" fill="${r.farge}"/>`;
-          body += `<text x="${x.toFixed(1)}" y="${(yc - s - 3).toFixed(1)}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">${esc(trunc(a.tittel, 26))}</text>`;
-        });
-      } else {
-        body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="${r.farge}">${esc(trunc(r.label, 22))}</text>`;
-        const barH = Math.min(r.h * 0.42, 16);
-        r.items.forEach(a => {
-          const x1 = xFor(a.dato), x2 = xFor(a.datoTil || a.dato), w = Math.max(3, x2 - x1), by = yc - barH / 2;
-          body += `<rect x="${x1.toFixed(1)}" y="${by.toFixed(1)}" width="${w.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${r.farge}" fill-opacity="${a.fullfort ? 0.4 : 0.85}"/>`;
-          body += `<text x="${(x1 + 4).toFixed(1)}" y="${(yc + 3).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#ffffff">${esc(trunc(a.tittel, Math.max(4, Math.floor(w / 6))))}</text>`;
-          aktPos[a.id] = { x1, x2, yc };
-          if (dims.oppgave) (r.opp || []).filter(o => o.aktivitetId === a.id && o.frist).forEach(o => {
-            body += `<circle cx="${xFor(o.frist).toFixed(1)}" cy="${(by + barH + 4).toFixed(1)}" r="2.2" fill="${o.fullfort ? '#bbb' : r.farge}"/>`;
-          });
-        });
+    // Render én side for et gitt datovindu [winMin, winMax].
+    function renderSide(winMin, winMax, idx) {
+      const wt0 = tid(winMin), wspan = Math.max(86400000, tid(winMax) - wt0);
+      const xFor = ds => plotL + ((tid(ds) - wt0) / wspan) * (plotR - plotL);
+      const clx = x => Math.max(plotL, Math.min(plotR, x));
+      const iVindu = ds => ds >= winMin && ds <= winMax;
+
+      let head = '';
+      const sideMerke = sider > 1 ? `  (side ${idx + 1}/${sider})` : '';
+      head += `<text x="${mL}" y="${mT}" font-family="Syne,sans-serif" font-weight="800" font-size="22" fill="#2e2b45">${esc(tittel)}${sideMerke}</text>`;
+      head += `<text x="${mL}" y="${mT + 17}" font-family="Nunito,sans-serif" font-size="11" fill="#7b78b0">Generert ${_printDatoLang(idag)} · ${_printDatoLang(minD)} – ${_printDatoLang(maxD)}</text>`;
+      const kvartal = (t1Full - t0Full) / 86400000 / sider > 500;
+      const d0 = new Date(winMin + 'T00:00:00'), d1 = new Date(winMax + 'T00:00:00');
+      const grid = [];
+      let cur = new Date(d0.getFullYear(), d0.getMonth(), 1);
+      while (cur <= d1) {
+        if ((!kvartal || cur.getMonth() % 3 === 0) && cur >= d0) grid.push(new Date(cur));
+        cur.setMonth(cur.getMonth() + 1);
       }
-    });
-    if (dims.avhengig) {
-      body += '<g stroke="#c0392b" stroke-width="1" fill="none" stroke-dasharray="3 2" opacity="0.7">';
-      data.forEach(({ akt }) => akt.forEach(a => {
-        const to = aktPos[a.id];
-        if (!a.avhengigAv || !to) return;
-        a.avhengigAv.forEach(id => { const f = aktPos[id]; if (f) body += `<path d="M ${f.x2.toFixed(1)} ${f.yc.toFixed(1)} L ${to.x1.toFixed(1)} ${to.yc.toFixed(1)}"/>`; });
-      }));
-      body += '</g>';
+      head += '<g stroke="#e6e5f2" stroke-width="1">';
+      grid.forEach(g => { const x = xFor(_lokalDatoStr(g)).toFixed(1); head += `<line x1="${x}" y1="${plotTop - 6}" x2="${x}" y2="${plotBottom}"/>`; });
+      head += '</g><g font-family="Nunito,sans-serif" font-size="10" fill="#7b78b0">';
+      grid.forEach((g, i) => {
+        const m = g.getMonth();
+        const lbl = (m === 0 || i === 0) ? MAANEDER[m].slice(0, 3) + ' ' + g.getFullYear() : MAANEDER[m].slice(0, 3);
+        head += `<text x="${(xFor(_lokalDatoStr(g)) + 3).toFixed(1)}" y="${axisY + 8}">${lbl}</text>`;
+      });
+      head += '</g>';
+
+      const aktPos = {};
+      let body = '';
+      rows.forEach(r => {
+        const yc = r.y + r.h / 2;
+        if (r.kind === 'projhdr') {
+          body += `<rect x="${plotL}" y="${(r.y + r.h * 0.2).toFixed(1)}" width="4" height="${(r.h * 0.6).toFixed(1)}" fill="${r.farge}"/>`;
+          body += `<text x="${plotL + 10}" y="${(yc + 4).toFixed(1)}" font-family="Syne,sans-serif" font-weight="700" font-size="13" fill="#2e2b45">${esc(trunc(r.navn, 60))}</text>`;
+        } else if (r.kind === 'milestone') {
+          body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#9490d4">Milepæler</text>`;
+          r.items.forEach(a => {
+            if (!iVindu(a.dato)) return;
+            const x = xFor(a.dato), s = Math.min(r.h * 0.28, 9);
+            body += `<path d="M ${x.toFixed(1)} ${(yc - s).toFixed(1)} L ${(x + s).toFixed(1)} ${yc.toFixed(1)} L ${x.toFixed(1)} ${(yc + s).toFixed(1)} L ${(x - s).toFixed(1)} ${yc.toFixed(1)} Z" fill="${r.farge}"/>`;
+            body += `<text x="${x.toFixed(1)}" y="${(yc - s - 3).toFixed(1)}" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">${esc(trunc(a.tittel, 26))}</text>`;
+          });
+        } else {
+          body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="${r.farge}">${esc(trunc(r.label, 22))}</text>`;
+          const barH = Math.min(r.h * 0.42, 16);
+          r.items.forEach(a => {
+            const slutt = a.datoTil || a.dato;
+            if (a.dato > winMax || slutt < winMin) return; // helt utenfor vinduet
+            const x1 = clx(xFor(a.dato)), x2 = clx(xFor(slutt)), w = Math.max(3, x2 - x1), by = yc - barH / 2;
+            body += `<rect x="${x1.toFixed(1)}" y="${by.toFixed(1)}" width="${w.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${r.farge}" fill-opacity="${a.fullfort ? 0.4 : 0.85}"/>`;
+            body += `<text x="${(x1 + 4).toFixed(1)}" y="${(yc + 3).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#ffffff">${esc(trunc(a.tittel, Math.max(4, Math.floor(w / 6))))}</text>`;
+            aktPos[a.id] = { x1, x2, yc };
+            if (dims.oppgave) (r.opp || []).filter(o => o.aktivitetId === a.id && o.frist && iVindu(o.frist)).forEach(o => {
+              body += `<circle cx="${xFor(o.frist).toFixed(1)}" cy="${(by + barH + 4).toFixed(1)}" r="2.2" fill="${o.fullfort ? '#bbb' : r.farge}"/>`;
+            });
+          });
+        }
+      });
+      if (dims.avhengig) {
+        body += '<g stroke="#c0392b" stroke-width="1" fill="none" stroke-dasharray="3 2" opacity="0.7">';
+        data.forEach(({ akt }) => akt.forEach(a => {
+          const to = aktPos[a.id];
+          if (!a.avhengigAv || !to) return;
+          a.avhengigAv.forEach(id => { const f = aktPos[id]; if (f) body += `<path d="M ${f.x2.toFixed(1)} ${f.yc.toFixed(1)} L ${to.x1.toFixed(1)} ${to.yc.toFixed(1)}"/>`; });
+        }));
+        body += '</g>';
+      }
+      let over = '';
+      if (dims.idag && iVindu(idag)) {
+        const x = xFor(idag).toFixed(1);
+        over += `<line x1="${x}" y1="${plotTop - 6}" x2="${x}" y2="${plotBottom}" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="4 3"/>`;
+        over += `<text x="${(xFor(idag) + 3).toFixed(1)}" y="${plotTop - 8}" font-family="Nunito,sans-serif" font-size="9" fill="#c0392b">i dag</text>`;
+      }
+      if (dims.legende) {
+        const lx = plotR - 210, ly = mT - 4;
+        over += `<g font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">`;
+        over += `<path d="M ${lx} ${ly} L ${lx + 6} ${ly + 6} L ${lx} ${ly + 12} L ${lx - 6} ${ly + 6} Z" fill="#9490d4"/><text x="${lx + 12}" y="${ly + 9}">Milepæl</text>`;
+        over += `<rect x="${lx + 74}" y="${ly + 2}" width="16" height="9" rx="2" fill="#9490d4" fill-opacity="0.85"/><text x="${lx + 94}" y="${ly + 9}">Aktivitet</text>`;
+        over += `</g>`;
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#ffffff;display:block;">${head}${body}${over}</svg>`;
     }
 
-    // ── Overlay: i dag-linje + tegnforklaring ──
-    let over = '';
-    if (dims.idag && idag >= minD && idag <= maxD) {
-      const x = xFor(idag).toFixed(1);
-      over += `<line x1="${x}" y1="${plotTop - 6}" x2="${x}" y2="${plotBottom}" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="4 3"/>`;
-      over += `<text x="${(xFor(idag) + 3).toFixed(1)}" y="${plotTop - 8}" font-family="Nunito,sans-serif" font-size="9" fill="#c0392b">i dag</text>`;
+    // Del datospennet i `sider` like vinduer og bygg én .printSide per vindu.
+    const out = [];
+    for (let i = 0; i < sider; i++) {
+      const wMin = _lokalDatoStr(new Date(t0Full + (t1Full - t0Full) * i / sider));
+      const wMax = _lokalDatoStr(new Date(t0Full + (t1Full - t0Full) * (i + 1) / sider));
+      out.push(`<div class="printSide">${renderSide(wMin, wMax, i)}</div>`);
     }
-    if (dims.legende) {
-      const lx = plotR - 210, ly = mT - 4;
-      over += `<g font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">`;
-      over += `<path d="M ${lx} ${ly} L ${lx + 6} ${ly + 6} L ${lx} ${ly + 12} L ${lx - 6} ${ly + 6} Z" fill="#9490d4"/><text x="${lx + 12}" y="${ly + 9}">Milepæl</text>`;
-      over += `<rect x="${lx + 74}" y="${ly + 2}" width="16" height="9" rx="2" fill="#9490d4" fill-opacity="0.85"/><text x="${lx + 94}" y="${ly + 9}">Aktivitet</text>`;
-      over += `</g>`;
-    }
-
-    return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#ffffff;display:block;">${head}${body}${over}</svg>`;
+    return out.join('');
   }
 
   function åpneRapportVelger() {
