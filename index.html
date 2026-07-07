@@ -1833,7 +1833,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.58</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.59</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -6761,6 +6761,27 @@
   }
   window.addEventListener('online', _oppdaterOffline);
   window.addEventListener('offline', _oppdaterOffline);
+
+  // Tastatursnarveier: 1–5 bytter fane, n = nytt element i aktiv fane. Ignoreres
+  // i skjemafelt, når en modal er åpen, eller med modifikatortaster.
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = (e.target.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+    if (document.querySelector('.modal-overlay.vis')) return;
+    const faner = ['start', 'todo', 'oppgaver', 'liste', 'kalender'];
+    if (e.key >= '1' && e.key <= '5') {
+      const idx = +e.key - 1;
+      const el = document.querySelectorAll('.fane')[idx];
+      if (el) { byttFane(faner[idx], el); e.preventDefault(); }
+    } else if (e.key === 'n' || e.key === 'N') {
+      const panel = document.querySelector('.panel.aktiv')?.id || '';
+      if (panel === 'panel-oppgaver')     åpneOppgaveModal();
+      else if (panel === 'panel-liste')   åpneAktivitetModal();
+      else                                åpneTodoModal();
+      e.preventDefault();
+    }
+  });
 
   // Enter i tekstfelt lagrer
   document.getElementById('feltTittel').addEventListener('keydown', e => {
