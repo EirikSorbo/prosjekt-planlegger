@@ -1824,6 +1824,15 @@
       </div>
       <div id="innstProsjektListe" style="margin-top:10px;"></div>
     </div>
+    <div style="padding:14px 22px 8px;border-top:1px solid var(--kant);">
+      <div style="font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:10px;">Siri-fangst</div>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--tekst);font-weight:600;flex:1;">Fangstprosjekt</span>
+        <select id="fangstProsjektSelect" onchange="settFangstProsjekt(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--kant);border-radius:var(--rs);font-family:'Nunito',sans-serif;background:var(--hvit);color:var(--tekst);cursor:pointer;max-width:55%;"></select>
+      </label>
+      <div style="font-size:11px;color:var(--tekst-sek);line-height:1.5;margin-bottom:10px;">Alt du dikterer til Siri havner som to do her, uansett hvilken enhet du åpner appen fra.</div>
+      <button class="knapp-sek" onclick="kopierSiriNokkel()" style="width:100%;font-size:12px;">Kopier Siri-nøkkel</button>
+    </div>
     <div id="innstillingerBruker" style="display:none;padding:12px 22px 14px;border-top:1px solid var(--kant);align-items:center;gap:10px;">
       <div style="width:32px;height:32px;border-radius:50%;background:var(--grønn-lys);border:1px solid var(--grønn-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--grønn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1832,7 +1841,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.76</span>
+      <span style="font-size:11px;color:var(--kant);font-family:'Syne',sans-serif;letter-spacing:0.5px;margin-right:auto;">v.4.77</span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2789,6 +2798,39 @@
   }
   function settOppsummering(på) {
     localStorage.setItem('lp_oppsummering', på ? '1' : '0');
+  }
+
+  // Fangstprosjekt: hvor elementer fra Siri-innboksen havner. Lagres som pid,
+  // og synkes via brukerdokumentet så alle enheter er enige. Faller tilbake på
+  // navnetreff («UiA») og til slutt aktivt prosjekt, slik at en ny enhet lander
+  // riktig før noe er valgt.
+  function _fangstProsjektId() {
+    const valgt = localStorage.getItem('lp_fangstProsjekt');
+    if (valgt && prosjekter.find(p => p.id === valgt)) return valgt;
+    const navnTreff = prosjekter.find(p => !p.arkivert && /uia/i.test(p.navn || ''));
+    if (navnTreff) return navnTreff.id;
+    return aktivtProsjektId;
+  }
+  window._fangstProsjektId = _fangstProsjektId;
+
+  function settFangstProsjekt(pid) {
+    if (pid) localStorage.setItem('lp_fangstProsjekt', pid);
+    else localStorage.removeItem('lp_fangstProsjekt');
+    if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid);
+  }
+
+  // Siri-nøkkel: uid + refresh-token som snarveien trenger for å skrive til
+  // innboksen. Tokenet gir full tilgang til dataene, derfor advarselen.
+  async function kopierSiriNokkel() {
+    const n = window._fbSiriNokkel && window._fbSiriNokkel();
+    if (!n) { alert('Du må være logget inn for å hente Siri-nøkkelen.'); return; }
+    const tekst = 'uid: ' + n.uid + '\napiKey: ' + n.apiKey + '\nrefreshToken: ' + n.refreshToken;
+    try {
+      await navigator.clipboard.writeText(tekst);
+      alert('Siri-nøkkel kopiert.\n\nLim den inn i snarveien. Den gir full tilgang til dataene dine — ikke del den.');
+    } catch (e) {
+      prompt('Kopier denne teksten til snarveien:', tekst);
+    }
   }
 
   // Rask-fangst: hvis appen åpnes med ?fangst=/?text=/?title= (f.eks. via
@@ -5467,6 +5509,19 @@
     document.getElementById('innstProsjektNavn').value = p.navn;
     document.getElementById('innstProsjektFarge').value = p.farge;
     renderInnstProsjektListe();
+    // Fangstprosjekt-velger (bygges med createElement — prosjektnavn er
+    // brukerdata og skal ikke innom innerHTML)
+    const fpSel = document.getElementById('fangstProsjektSelect');
+    if (fpSel) {
+      fpSel.innerHTML = '';
+      prosjekter.filter(x => !x.arkivert).forEach(x => {
+        const o = document.createElement('option');
+        o.value = x.id;
+        o.textContent = x.navn;
+        fpSel.appendChild(o);
+      });
+      fpSel.value = _fangstProsjektId();
+    }
     document.getElementById('kategoriModal').classList.add('vis');
   }
 
@@ -8468,7 +8523,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc }
+  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc, collection, getDocs }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -8510,6 +8565,14 @@
     await signOut(auth);
   };
 
+  // Nøkkelen Siri-snarveien trenger: uid peker på datatreet, refresh-tokenet
+  // byttes mot et ferskt id-token av snarveien selv (securetoken-endepunktet).
+  window._fbSiriNokkel = () => {
+    const u = auth.currentUser;
+    if (!u) return null;
+    return { uid: u.uid, refreshToken: u.refreshToken, apiKey: firebaseConfig.apiKey, projectId: firebaseConfig.projectId };
+  };
+
   // ── Synk-status-indikator ──
   function visSynkStatus(tekst, farge, ms) {
     let el = document.getElementById('synkStatus');
@@ -8532,7 +8595,7 @@
     // pid kan sendes eksplisitt (f.eks. ved kryss-prosjekt-avhuking fra
     // startsiden) — ellers synkes det aktive prosjektet.
     if (!pid) pid = window._getAktivtProsjektId();
-    if (!pid) return;
+    if (!pid) return false;
     const pk = s => 'lp_' + pid + '_' + s;
     const dirtyToken = localStorage.getItem(pk('dirty'));
     try {
@@ -8541,8 +8604,10 @@
       // Hent eksisterende prosjektliste fra sky for å merge
       const lokaleProsjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
       let mergedProsjekter = [...lokaleProsjekter];
+      let skyFangst = null;
       try {
         const brukerSnap = await getDoc(doc(db, 'brukere', userId));
+        if (brukerSnap.exists() && brukerSnap.data().fangstProsjekt) skyFangst = brukerSnap.data().fangstProsjekt;
         if (brukerSnap.exists() && brukerSnap.data().prosjekter) {
           const skyProsjekter = brukerSnap.data().prosjekter;
           // Legg til sky-prosjekter som ikke finnes lokalt
@@ -8563,6 +8628,9 @@
       await setDoc(doc(db, 'brukere', userId), {
         prosjekter: mergedProsjekter,
         aktivtProsjekt: window._getAktivtProsjektId() || pid,
+        // Fangstprosjektet deles mellom enhetene. Skrivet er uten merge, så
+        // sky-verdien må bæres videre når denne enheten ikke har satt noe selv.
+        fangstProsjekt: localStorage.getItem('lp_fangstProsjekt') || skyFangst || null,
         oppdatert: new Date().toISOString()
       });
 
@@ -8594,9 +8662,11 @@
       // så neste lagre() re-synker).
       if (localStorage.getItem(pk('dirty')) === dirtyToken) localStorage.removeItem(pk('dirty'));
       visSynkStatus('✓ Synkronisert', '#27ae60');
+      return true;
     } catch(e) {
       visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
       console.error('[SYNK] Sky-lagring feilet:', e.code, e.message, e);
+      return false;
     }
   }
 
@@ -8697,6 +8767,121 @@
     });
   }
 
+  // ── Siri-innboks ──────────────────────────────────────────────────────────
+  // Snarveien på iPhone skriver ETT dokument per fangst i brukere/<uid>/innboks
+  // (dekket av de eksisterende reglene via {document=**}). Appen tømmer den inn
+  // i fangstprosjektets to do-liste.
+  //
+  // Hvorfor eget dokument og ikke direkte i todos-arrayet: lagreTilSky() skriver
+  // HELE prosjektdokumentet fra localStorage. En enhet med utdatert lokal kopi
+  // ville da tørket vekk en fangst som ble lagt rett i sky-arrayet. Et eget
+  // dokument kan ingen overskrive, og det slettes først når todoen er bekreftet
+  // skrevet.
+  let _tommerInnboks = false;
+  let _innboksPaNytt = false;
+
+  async function _tommInnboks(userId) {
+    if (!userId) return;
+    if (_tommerInnboks) { _innboksPaNytt = true; return; }   // kø, ikke mist fangster
+    const pid = window._fangstProsjektId && window._fangstProsjektId();
+    if (!pid) return;
+    _tommerInnboks = true;
+    try {
+      let innboks;
+      try {
+        innboks = await getDocs(collection(db, 'brukere', userId, 'innboks'));
+      } catch (e) {
+        console.warn('[INNBOKS] Lesing feilet:', e.code || e.message);
+        return;
+      }
+      if (innboks.empty) return;
+
+      const pk = s => 'lp_' + pid + '_' + s;
+
+      // Usynkede lokale endringer i fangstprosjektet må opp FØR vi leser sky —
+      // ellers appenderer vi til en liste som straks blir overskrevet av dem.
+      if (localStorage.getItem(pk('dirty'))) {
+        const ok = await lagreTilSky(userId, pid);
+        if (!ok) { console.warn('[INNBOKS] Utsatt: fikk ikke synket lokale endringer først'); return; }
+      }
+
+      // Les fersk liste fra sky, ikke fra localStorage: fangstprosjektet er ofte
+      // ikke det aktive, og da kan den lokale kopien være gammel.
+      let pSnap = null;
+      try {
+        pSnap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', pid));
+      } catch (e) {
+        try { pSnap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', pid)); }
+        catch (e2) { console.warn('[INNBOKS] Fikk ikke lest fangstprosjektet:', e2.code || e2.message); return; }
+      }
+      // Finnes ikke dokumentet ennå (prosjekt aldri synket): bruk lokal liste
+      // som utgangspunkt, ellers ville vi opprettet det med bare fangstene.
+      const liste = (pSnap && pSnap.exists())
+        ? ((pSnap.data().todos) || [])
+        : JSON.parse(localStorage.getItem(pk('t')) || '[]');
+
+      const iDag = window._lokalDatoStr ? window._lokalDatoStr() : new Date().toISOString().slice(0, 10);
+      const behandlet = [];
+      let lagtTil = 0;
+
+      innboks.forEach(d => {
+        behandlet.push(d.id);
+        const data = d.data() || {};
+        const tekst = String(data.tekst || data.text || '').trim();
+        if (!tekst) return;                        // tomt dokument: slettes uten todo
+        const tid = 'inn_' + d.id;                 // avledet id ⇒ idempotent
+        if (liste.some(t => t && t.id === tid)) return;
+        liste.push({
+          id: tid,
+          tittel: tekst.slice(0, 200),
+          beskrivelse: String(data.url || '').slice(0, 500),
+          frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null,
+          gjenta: null, tagger: [], opprettet: iDag, fullfort: false
+        });
+        lagtTil++;
+      });
+
+      if (lagtTil > 0) {
+        // Kun todos-feltet (merge) — vi har ikke lest de andre feltene og skal
+        // ikke skrive dem tilbake fra en muligens utdatert localStorage.
+        try {
+          await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid),
+            { todos: liste, oppdatert: new Date().toISOString() }, { merge: true });
+        } catch (e) {
+          console.error('[INNBOKS] Skriving feilet, beholder innboksen:', e.code || e.message);
+          return;                                  // innboksen står, nytt forsøk senere
+        }
+        localStorage.setItem(pk('t'), JSON.stringify(liste));
+      }
+
+      // Slett først NÅ, når fangsten er bekreftet i sky.
+      for (const id of behandlet) {
+        try { await deleteDoc(doc(db, 'brukere', userId, 'innboks', id)); }
+        catch (e) { /* står igjen, ryddes ved neste tømming (id-en er idempotent) */ }
+      }
+
+      if (lagtTil > 0) {
+        _oppdaterAppFraSky();
+        if (typeof renderStartside === 'function') renderStartside();
+        visSynkStatus('↓ ' + lagtTil + (lagtTil === 1 ? ' fanget' : ' fangster') + ' fra Siri', '#3498db');
+      }
+    } finally {
+      _tommerInnboks = false;
+      if (_innboksPaNytt) { _innboksPaNytt = false; setTimeout(() => _tommInnboks(userId), 500); }
+    }
+  }
+
+  // Lytter: fanger opp elementer som kommer mens appen står åpen.
+  function _startInnboksLytter(userId) {
+    if (window._unsubInnboks) window._unsubInnboks();
+    let firstSnapshot = true;
+    window._unsubInnboks = onSnapshot(collection(db, 'brukere', userId, 'innboks'), snap => {
+      if (firstSnapshot) { firstSnapshot = false; return; }  // startinnholdet tas av _tommInnboks()
+      if (snap.empty) return;                                // egne slettinger
+      _tommInnboks(userId);
+    }, e => console.warn('[INNBOKS] Lytter feilet:', e.code || e.message));
+  }
+
   // ── Bytt sky-prosjekt (kalles fra byttProsjekt()) ──
   window._byttSkyProsjekt = async function() {
     const uid = window._currentUid;
@@ -8734,6 +8919,10 @@
       // Sjekk om vi trenger migrering fra gammel flat struktur
       if (brukerSnap && brukerSnap.exists()) {
         const brukerData = brukerSnap.data();
+        // Fangstprosjektet er delt mellom enheter. Sky er master ved oppstart:
+        // hver lokal endring pushes umiddelbart, så sky-verdien er alltid den
+        // nyeste, og enhetene konvergerer.
+        if (brukerData.fangstProsjekt) localStorage.setItem('lp_fangstProsjekt', brukerData.fangstProsjekt);
         if (brukerData.aktiviteter && !brukerData.prosjekter) {
           // Gammel flat struktur i sky – migrer til subcollection
           // Bruk lokalt prosjekt-ID som kilde til sannhet
@@ -8831,6 +9020,11 @@
       // Start lytter for aktivt prosjekt
       if (pid) _startProsjektLytter(bruker.uid, pid);
 
+      // Tøm Siri-innboksen. Må skje ETTER at skydata er lastet, aldri før:
+      // ellers appenderes fangsten til en utdatert liste.
+      await _tommInnboks(bruker.uid);
+      _startInnboksLytter(bruker.uid);
+
       // Lytt på endringer i prosjektlisten fra andre enheter
       let firstBrukerSnap = true;
       window._unsubBruker = onSnapshot(doc(db, 'brukere', bruker.uid), snap => {
@@ -8853,6 +9047,7 @@
       // Ikke logget inn
       if (window._unsub) window._unsub();
       if (window._unsubBruker) window._unsubBruker();
+      if (window._unsubInnboks) window._unsubInnboks();
       loginOverlay.style.display = 'flex';
       const innstBruker = document.getElementById('innstillingerBruker');
       if (innstBruker) innstBruker.style.display = 'none';

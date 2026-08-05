@@ -8,8 +8,10 @@ rules_version = '2';
 // det som faktisk er publisert.
 //
 // Datamodell: hver bruker eier hele treet under brukere/<uid>:
-//   brukere/<uid>                      (prosjektliste + aktivt prosjekt)
+//   brukere/<uid>                      (prosjektliste + aktivt + fangstprosjekt)
 //   brukere/<uid>/prosjekter/<pid>     (aktiviteter, oppgaver, todos, …)
+//   brukere/<uid>/innboks/<id>         (Siri-fangst: ett dokument per element,
+//                                       tømmes inn i fangstprosjektet av appen)
 // ---------------------------------------------------------------------------
 
 service cloud.firestore {
