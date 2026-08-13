@@ -1,6 +1,6 @@
 # Oppsett: Claude-kobling for Prosjekt-planlegger
 
-Kobler Prosjekt-planlegger-dataene (appen i wp4-repoet, Firestore-prosjektet
+Kobler Prosjekt-planlegger-dataene (Firestore-prosjektet
 `mishmash-wp4`; den ID-en er permanent og kan ikke døpes om) til Claude og
 Obsidian-vaulten «Jobb-hjernen»:
 
@@ -35,7 +35,7 @@ Obsidian-vaulten «Jobb-hjernen»:
 ### 3. Lag nøkkelfila
 
 ```bash
-cp "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/nokkel.eksempel.json" "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/nokkel.json"
+cp "/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/nokkel.eksempel.json" "/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/nokkel.json"
 ```
 
 Fyll inn `eierUid` (din uid), `epost` og `passord` (Claude-brukerens).
@@ -45,7 +45,7 @@ innbokstilgang, og drepes med kill switchen over.
 ### 4. Installer launchd-jobben (autosynk hvert kvarter)
 
 ```bash
-cp "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/no.eiriksorbo.prosjekt-planlegger-synk.plist" ~/Library/LaunchAgents/
+cp "/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/no.eiriksorbo.prosjekt-planlegger-synk.plist" ~/Library/LaunchAgents/
 ```
 
 ```bash
@@ -54,20 +54,18 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.prosjekt-p
 
 Logg havner i `~/Library/Logs/prosjekt-planlegger-synk.log`. Jobben er ufarlig
 å installere før steg 1 til 3 er gjort: uten nøkkelfil gjør den ingenting.
-Merk: plist-en peker på skriptet med absolutt sti inn i wp4-repoet; døpes
-repo-mappa om senere, må plist-en oppdateres og installeres på nytt.
 
 ### 5. Test
 
 ```bash
-node "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/vault-synk.mjs"
+node "/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/vault-synk.mjs"
 ```
 
 Sjekk at `Jobb-hjernen/projects/project-app/prosjekt-planlegger/` fikk
 `oversikt.md` og ett notat per prosjekt.
 
 ```bash
-node "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/fangst.mjs" "Test fra oppsettet"
+node "/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/fangst.mjs" "Test fra oppsettet"
 ```
 
 Åpne appen og se at testen dukker opp i fangstprosjektet.
