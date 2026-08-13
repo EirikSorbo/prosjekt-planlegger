@@ -146,6 +146,8 @@
       transition: all .15s;
     }
     .header-knapp:hover { background: var(--grønn-lys); color: var(--grønn); border-color: var(--grønn-mid); }
+    .header-knapp.snurrer svg { animation: snurr 0.9s linear infinite; }
+    @keyframes snurr { to { transform: rotate(360deg); } }
 
     .logo {
       font-family: 'Syne', sans-serif;
@@ -1594,6 +1596,9 @@
   <div class="header-handlinger">
     <span id="dagerIgjenBadge" style="display:none;font-family:'Syne',sans-serif;font-weight:600;font-size:11px;color:var(--tekst-sek);letter-spacing:0.3px;white-space:nowrap;opacity:0.7;"></span>
     <span id="filterBadge" style="display:none;font-family:'Syne',sans-serif;font-weight:700;font-size:10px;color:white;padding:3px 8px;border-radius:10px;letter-spacing:0.3px;cursor:pointer;text-transform:uppercase;" onclick="åpneKategoriModal()"></span>
+    <button class="header-knapp" id="oppdaterKnapp" onclick="window._hentFerskt && window._hentFerskt(true)" title="Oppdater fra sky">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
     <button class="header-knapp" onclick="åpneKategoriModal()" title="Innstillinger">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -8891,6 +8896,66 @@
     _oppdaterAppFraSky();
     _startProsjektLytter(uid, pid);
   };
+
+  // ── Ferskhenting (forgrunn + oppdater-knapp) ─────────────────────────────
+  // iOS fryser hjemmeskjerm-appen i bakgrunnen: sanntidslytterne mister
+  // forbindelsen, og skjermen kan bli stående med gammelt innhold en stund
+  // etter gjenåpning. Derfor hentes data eksplisitt fra server hver gang appen
+  // kommer i forgrunnen, og ved trykk på oppdater-knappen i toppfeltet.
+  // Serverkallene vekker samtidig transporten, så lytterne kommer i gang igjen.
+  let _henterFerskt = false;
+  let _sistFerskhentet = 0;
+
+  async function _hentFerskt(manuell) {
+    const uid = window._currentUid;
+    if (!uid || _henterFerskt) return;
+    // Rask app-veksling skal ikke utløse ny runde — men knappen virker alltid.
+    if (!manuell && Date.now() - _sistFerskhentet < 10000) return;
+    _henterFerskt = true;
+    const knapp = document.getElementById('oppdaterKnapp');
+    if (knapp) knapp.classList.add('snurrer');
+    try {
+      // Prosjektliste + fangstprosjekt: tvunget fra server, samme håndtering
+      // som bruker-lytteren.
+      try {
+        const snap = await getDocFromServer(doc(db, 'brukere', uid));
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.fangstProsjekt) localStorage.setItem('lp_fangstProsjekt', data.fangstProsjekt);
+          if (data.prosjekter && JSON.stringify(data.prosjekter) !== JSON.stringify(window._getProsjekter() || [])) {
+            window._settProsjektFraSky(data.prosjekter, null);
+            if (typeof oppdaterProsjektTittel === 'function') oppdaterProsjektTittel();
+          }
+        }
+      } catch(e) { /* offline: lokale data blir stående */ }
+
+      // Aktivt prosjekt: _lastProsjektFraSky har dirty-vernet, så usynkede
+      // lokale endringer pushes i stedet for å bli overskrevet.
+      const pid = window._getAktivtProsjektId();
+      if (pid) await _lastProsjektFraSky(uid, pid);
+      _oppdaterAppFraSky();
+      if (typeof renderStartside === 'function') renderStartside();
+
+      // Fangster som kom mens appen sov.
+      await _tommInnboks(uid);
+
+      _sistFerskhentet = Date.now();
+      if (manuell) {
+        if (navigator.onLine) visSynkStatus('✓ Oppdatert fra sky', '#27ae60');
+        else visSynkStatus('Frakoblet — viser lokale data', '#e08a3c');
+      }
+    } finally {
+      _henterFerskt = false;
+      if (knapp) knapp.classList.remove('snurrer');
+    }
+  }
+  window._hentFerskt = _hentFerskt;
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _hentFerskt(false);
+  });
+  // Safari kan gjenopplive siden fra bfcache uten visibilitychange.
+  window.addEventListener('pageshow', e => { if (e.persisted) _hentFerskt(false); });
 
   // ── Auth-tilstand ──
   onAuthStateChanged(auth, async bruker => {
