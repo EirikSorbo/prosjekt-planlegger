@@ -24,7 +24,7 @@ service cloud.firestore {
     // publisering; deaktiver brukeren i konsollen for å drepe tilgangen.
     // Se tools/SETUP-CLAUDE.md.
     function erClaude() {
-      return request.auth != null && request.auth.uid == 'LIM-INN-CLAUDE-UID-HER';
+      return request.auth != null && request.auth.uid == 'bnIeNXditITsWNdkreJa0dUBiPl2';
     }
 
     // Kun den innloggede eieren får lese/skrive sitt eget tre. Den nestede
