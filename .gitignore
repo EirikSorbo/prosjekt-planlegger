@@ -1,0 +1,4 @@
+# Claude-brukerens innloggingsnøkkel: skal ALDRI committes.
+tools/nokkel.json
+.claude/
+.DS_Store

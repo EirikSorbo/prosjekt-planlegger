@@ -1,0 +1,8 @@
+{
+  "_forklaring": "Kopier denne fila til nokkel.json (samme mappe, gitignored) og fyll inn de tre siste feltene. apiKey er den offentlige web-nøkkelen fra appen og er ikke hemmelig; passordet er det. Se SETUP-CLAUDE.md.",
+  "apiKey": "AIzaSyC_6N483KSKRNQaQZ-Jsxh01fWR5cT5iLA",
+  "projectId": "mishmash-wp4",
+  "eierUid": "LIM-INN-DIN-EGEN-UID-HER",
+  "epost": "LIM-INN-CLAUDE-BRUKERENS-EPOST",
+  "passord": "LIM-INN-CLAUDE-BRUKERENS-PASSORD"
+}

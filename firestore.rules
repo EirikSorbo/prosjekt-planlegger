@@ -17,14 +17,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Claude-brukeren: en dedikert e-post/passord-bruker i Authentication
+    // som Claude-verktøyene (tools/vault-synk.mjs og tools/fangst.mjs)
+    // logger inn som. Den får LESE hele treet og OPPRETTE i innboksen,
+    // men kan aldri endre eller slette noe. Lim inn brukerens uid her før
+    // publisering; deaktiver brukeren i konsollen for å drepe tilgangen.
+    // Se tools/SETUP-CLAUDE.md.
+    function erClaude() {
+      return request.auth != null && request.auth.uid == 'LIM-INN-CLAUDE-UID-HER';
+    }
+
     // Kun den innloggede eieren får lese/skrive sitt eget tre. Den nestede
     // match-en dekker både selve brukerdokumentet OG alle underdokumenter
     // (prosjekter/<pid>) på alle nivåer.
     match /brukere/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if erClaude();
 
       match /{document=**} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read: if erClaude();
+      }
+
+      // Skrivekanalen: Claude kan KUN opprette nye fangster i innboksen,
+      // som appen tømmer inn i fangstprosjektet (samme flyt som Siri).
+      // Reglene er additive, så eierens fulle tilgang over gjelder fortsatt.
+      match /innboks/{fangstId} {
+        allow create: if erClaude();
       }
     }
 

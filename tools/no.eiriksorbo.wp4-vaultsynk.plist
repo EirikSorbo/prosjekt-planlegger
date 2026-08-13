@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Speiler wp4-data til Obsidian-vaulten hvert kvarter. Installeres med:
+       cp no.eiriksorbo.wp4-vaultsynk.plist ~/Library/LaunchAgents/
+       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.wp4-vaultsynk.plist
+       Uten tools/nokkel.json avslutter skriptet stille, så jobben er ufarlig
+       før oppsettet er fullført. -->
+  <key>Label</key>
+  <string>no.eiriksorbo.wp4-vaultsynk</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/node</string>
+    <string>/Users/eiriks05/Documents/Eiriks Script/wp4/tools/vault-synk.mjs</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>900</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/eiriks05/Library/Logs/wp4-vaultsynk.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/eiriks05/Library/Logs/wp4-vaultsynk.log</string>
+</dict>
+</plist>
