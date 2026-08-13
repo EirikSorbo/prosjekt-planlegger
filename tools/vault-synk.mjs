@@ -163,8 +163,7 @@ function prosjektNotat(p, data, created) {
     + ADVARSEL + '\n'
     + seksjon('To do (' + apneT.length + ' åpne)', todos.filter(Boolean).map(radTodo))
     + seksjon('Oppgaver (' + apneO.length + ' åpne)', oppgaver.filter(Boolean).map(radOppgave))
-    + seksjon('Aktiviteter', aktiv.filter(Boolean).map(radAktivitet))
-    + '\nSist synket: ' + naa() + '\n';
+    + seksjon('Aktiviteter', aktiv.filter(Boolean).map(radAktivitet));
 }
 
 function oversiktNotat(prosjekter, dataPerPid, innboksAntall, created) {

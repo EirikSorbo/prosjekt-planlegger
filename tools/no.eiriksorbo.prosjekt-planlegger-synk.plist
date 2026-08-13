@@ -3,18 +3,18 @@
 <plist version="1.0">
 <dict>
   <!-- Speiler Prosjekt-planlegger-data til Obsidian-vaulten hvert kvarter.
-       Installeres med:
-       cp no.eiriksorbo.prosjekt-planlegger-synk.plist ~/Library/LaunchAgents/
-       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.prosjekt-planlegger-synk.plist
-       Stien under peker på repomappa prosjekt-planlegger.
-       Uten tools/nokkel.json avslutter skriptet stille, så jobben er ufarlig
-       før oppsettet er fullført. -->
+       VIKTIG: jobben kjører en KOPI av skript + nøkkel fra
+       ~/Library/Application Support/prosjekt-planlegger-synk/ — ikke fra
+       repoet. Grunn: ~/Documents er TCC-beskyttet i macOS, og launchd-jobber
+       nektes å lese der (EPERM). Installering/oppdatering (kopierer filene og
+       (re)starter jobben) står i SETUP-CLAUDE.md under «Installer/oppdater
+       autosynken». -->
   <key>Label</key>
   <string>no.eiriksorbo.prosjekt-planlegger-synk</string>
   <key>ProgramArguments</key>
   <array>
     <string>/usr/local/bin/node</string>
-    <string>/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/vault-synk.mjs</string>
+    <string>/Users/eiriks05/Library/Application Support/prosjekt-planlegger-synk/vault-synk.mjs</string>
   </array>
   <key>StartInterval</key>
   <integer>900</integer>

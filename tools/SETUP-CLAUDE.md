@@ -42,14 +42,16 @@ Fyll inn `eierUid` (din uid), `epost` og `passord` (Claude-brukerens).
 Fila er gitignored og skal aldri committes. Den gir kun lese- og
 innbokstilgang, og drepes med kill switchen over.
 
-### 4. Installer launchd-jobben (autosynk hvert kvarter)
+### 4. Installer/oppdater autosynken (hvert kvarter)
+
+macOS nekter bakgrunnsjobber å lese `~/Documents` (TCC-personvernlaget), så
+launchd-jobben kjører en KOPI av skript + nøkkel fra
+`~/Library/Application Support/prosjekt-planlegger-synk/`. Denne blokka
+installerer kopien, plist-en og (re)starter jobben. Kjør den både første gang
+og etter endringer i `vault-synk.mjs` eller `nokkel.json`:
 
 ```bash
-cp "/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/no.eiriksorbo.prosjekt-planlegger-synk.plist" ~/Library/LaunchAgents/
-```
-
-```bash
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.prosjekt-planlegger-synk.plist
+KILDE="/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools" && MAAL="$HOME/Library/Application Support/prosjekt-planlegger-synk" && mkdir -p "$MAAL" && cp "$KILDE/vault-synk.mjs" "$KILDE/nokkel.json" "$MAAL/" && chmod 600 "$MAAL/nokkel.json" && cp "$KILDE/no.eiriksorbo.prosjekt-planlegger-synk.plist" "$HOME/Library/LaunchAgents/" && { launchctl bootout "gui/$(id -u)/no.eiriksorbo.prosjekt-planlegger-synk" 2>/dev/null || true; } && launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/no.eiriksorbo.prosjekt-planlegger-synk.plist" && launchctl kickstart -k "gui/$(id -u)/no.eiriksorbo.prosjekt-planlegger-synk" && echo "Autosynk installert og startet."
 ```
 
 Logg havner i `~/Library/Logs/prosjekt-planlegger-synk.log`. Jobben er ufarlig
