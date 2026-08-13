@@ -1,10 +1,13 @@
-# Oppsett: Claude-kobling for wp4
+# Oppsett: Claude-kobling for Prosjekt-planlegger
 
-Kobler wp4-dataene til Claude og Obsidian-vaulten «Jobb-hjernen»:
+Kobler Prosjekt-planlegger-dataene (appen i wp4-repoet, Firestore-prosjektet
+`mishmash-wp4`; den ID-en er permanent og kan ikke døpes om) til Claude og
+Obsidian-vaulten «Jobb-hjernen»:
 
 - **Lesing:** `vault-synk.mjs` speiler alle prosjekter fra Firestore til
-  `Jobb-hjernen/projects/project-app/wp4/` som markdown (én vei, sky → filer),
-  automatisk hvert kvarter via launchd, og på forespørsel når Claude jobber.
+  `Jobb-hjernen/projects/project-app/prosjekt-planlegger/` som markdown
+  (én vei, sky → filer), automatisk hvert kvarter via launchd, og på
+  forespørsel når Claude jobber.
 - **Skriving:** `fangst.mjs` legger gjøremål i Siri-innboksen, som appen selv
   tømmer inn i fangstprosjektet. Reglene gir Claude-brukeren kun `create` der:
   ingenting eksisterende kan endres eller slettes, uansett.
@@ -19,7 +22,7 @@ Kobler wp4-dataene til Claude og Obsidian-vaulten «Jobb-hjernen»:
 2. **Authentication → Sign-in method**: aktiver leverandøren **E-post/passord**
    (bare «Email/Password», ikke «Email link»).
 3. **Authentication → Users → Add user**: valgfri e-post (f.eks.
-   `claude-wp4@eiriksorbo.no`, den trenger ikke å eksistere) og et langt,
+   `claude-planlegger@eiriksorbo.no`, den trenger ikke å eksistere) og et langt,
    generert passord. Trykk **Add user** og **kopier uid-en** til den nye brukeren.
 4. Noter samtidig **din egen uid** fra samme liste (Google-brukeren din).
 
@@ -42,15 +45,17 @@ innbokstilgang, og drepes med kill switchen over.
 ### 4. Installer launchd-jobben (autosynk hvert kvarter)
 
 ```bash
-cp "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/no.eiriksorbo.wp4-vaultsynk.plist" ~/Library/LaunchAgents/
+cp "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/no.eiriksorbo.prosjekt-planlegger-synk.plist" ~/Library/LaunchAgents/
 ```
 
 ```bash
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.wp4-vaultsynk.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.prosjekt-planlegger-synk.plist
 ```
 
-Logg havner i `~/Library/Logs/wp4-vaultsynk.log`. Jobben er ufarlig å
-installere før steg 1 til 3 er gjort: uten nøkkelfil gjør den ingenting.
+Logg havner i `~/Library/Logs/prosjekt-planlegger-synk.log`. Jobben er ufarlig
+å installere før steg 1 til 3 er gjort: uten nøkkelfil gjør den ingenting.
+Merk: plist-en peker på skriptet med absolutt sti inn i wp4-repoet; døpes
+repo-mappa om senere, må plist-en oppdateres og installeres på nytt.
 
 ### 5. Test
 
@@ -58,21 +63,21 @@ installere før steg 1 til 3 er gjort: uten nøkkelfil gjør den ingenting.
 node "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/vault-synk.mjs"
 ```
 
-Sjekk at `Jobb-hjernen/projects/project-app/wp4/` fikk `oversikt.md` og ett
-notat per prosjekt.
+Sjekk at `Jobb-hjernen/projects/project-app/prosjekt-planlegger/` fikk
+`oversikt.md` og ett notat per prosjekt.
 
 ```bash
 node "/Users/eiriks05/Documents/Eiriks Script/wp4/tools/fangst.mjs" "Test fra oppsettet"
 ```
 
-Åpne wp4-appen og se at testen dukker opp i fangstprosjektet.
+Åpne appen og se at testen dukker opp i fangstprosjektet.
 
 ## Drift
 
-- **Stoppe autosynken:** `launchctl bootout gui/$(id -u)/no.eiriksorbo.wp4-vaultsynk`
-- **Kjøre synken nå:** `launchctl kickstart -k gui/$(id -u)/no.eiriksorbo.wp4-vaultsynk`
-- **Bytte passord:** endre i konsollen (Users → ⋮ → Reset password fungerer ikke
-  for konsollbrukere; slett og opprett heller på nytt, oppdater regler + nøkkelfil).
+- **Stoppe autosynken:** `launchctl bootout gui/$(id -u)/no.eiriksorbo.prosjekt-planlegger-synk`
+- **Kjøre synken nå:** `launchctl kickstart -k gui/$(id -u)/no.eiriksorbo.prosjekt-planlegger-synk`
+- **Bytte passord:** slett Claude-brukeren i konsollen og opprett en ny,
+  oppdater så uid i reglene (publiser på nytt) og nøkkelfila.
 - Speilfilene er generert: rediger dem aldri for hånd, de overskrives.
-  Slettes et prosjekt i wp4, får notatet `status: stale` men beholdes (vaultens
-  «slett aldri»-regel).
+  Slettes et prosjekt i appen, får notatet `status: stale` men beholdes
+  (vaultens «slett aldri»-regel).

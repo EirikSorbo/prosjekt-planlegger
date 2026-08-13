@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-// Speiler wp4-data fra Firestore til Obsidian-vaulten «Jobb-hjernen».
+// Speiler Prosjekt-planlegger-dataene (appen i wp4-repoet) fra Firestore til
+// Obsidian-vaulten «Jobb-hjernen».
 // ÉN VEI: sky → filer. Filene er lesekopier for Obsidian/Claude og skrives
 // aldri tilbake til Firestore (skriving til appen skjer via fangst.mjs, som
 // bruker innboks-kanalen appen selv tømmer).
 //
-// Kjøres av launchd hvert kvarter (se no.eiriksorbo.wp4-vaultsynk.plist)
+// Kjøres av launchd hvert kvarter (se no.eiriksorbo.prosjekt-planlegger-synk.plist)
 // og manuelt/av Claude ved behov. Uten nokkel.json avslutter den stille
 // med kode 0, så launchd-jobben er ufarlig før oppsettet er fullført.
 //
 // Bruk:
 //   node vault-synk.mjs            skriv/oppdater filene i vaulten
 //   node vault-synk.mjs --json     skriv rådata til stdout i stedet (for Claude)
-//   node vault-synk.mjs --demo     testdata, skrives til $TMPDIR/wp4-demo
+//   node vault-synk.mjs --demo     testdata, skrives til $TMPDIR/prosjekt-planlegger-demo
 //   node vault-synk.mjs --maal DIR overstyr målmappe
 //
 // Vault-konvensjoner som følges (se vaultens AGENTS.md): frontmatter med
@@ -25,13 +26,13 @@ import { fileURLToPath } from 'node:url';
 
 const HER = dirname(fileURLToPath(import.meta.url));
 const NOKKEL_STI = join(HER, 'nokkel.json');
-const STANDARD_MAAL = '/Users/eiriks05/Library/Mobile Documents/iCloud~md~obsidian/Documents/Jobb-hjernen/projects/project-app/wp4';
+const STANDARD_MAAL = '/Users/eiriks05/Library/Mobile Documents/iCloud~md~obsidian/Documents/Jobb-hjernen/projects/project-app/prosjekt-planlegger';
 
 const arg = process.argv.slice(2);
 const SOM_JSON = arg.includes('--json');
 const DEMO = arg.includes('--demo');
 const MAAL = arg.includes('--maal') ? arg[arg.indexOf('--maal') + 1]
-           : DEMO ? join(process.env.TMPDIR || '/tmp', 'wp4-demo')
+           : DEMO ? join(process.env.TMPDIR || '/tmp', 'prosjekt-planlegger-demo')
            : STANDARD_MAAL;
 
 // ── Firestore-hjelpere ──────────────────────────────────────────────────────
@@ -118,7 +119,7 @@ function skrivNotat(sti, lagInnhold) {
   return true;
 }
 
-const ADVARSEL = '> Generert automatisk fra wp4-appen. Ikke rediger her: endringer synkes ikke tilbake og overskrives ved neste kjøring.';
+const ADVARSEL = '> Generert automatisk fra Prosjekt-planlegger-appen. Ikke rediger her: endringer synkes ikke tilbake og overskrives ved neste kjøring.';
 
 function frontmatter(tittel, created, status) {
   return ['---',
@@ -127,7 +128,7 @@ function frontmatter(tittel, created, status) {
     'updated: ' + iDag(),
     'tags: [teknologi, personlig-utvikling]',
     'status: ' + status,
-    'source: wp4-appen (Firestore-prosjektet mishmash-wp4)',
+    'source: Prosjekt-planlegger-appen (Firestore-prosjektet mishmash-wp4)',
     '---'].join('\n');
 }
 
@@ -158,7 +159,7 @@ function prosjektNotat(p, data, created) {
   const aktiv    = data.aktiviteter || [];
   const apneT = todos.filter(t => t && !t.fullfort);
   const apneO = oppgaver.filter(o => o && !o.fullfort);
-  return frontmatter(p.navn + ' (wp4)', created, 'active') + '\n\n'
+  return frontmatter(p.navn + ' (Prosjekt-planlegger)', created, 'active') + '\n\n'
     + ADVARSEL + '\n'
     + seksjon('To do (' + apneT.length + ' åpne)', todos.filter(Boolean).map(radTodo))
     + seksjon('Oppgaver (' + apneO.length + ' åpne)', oppgaver.filter(Boolean).map(radOppgave))
@@ -173,7 +174,7 @@ function oversiktNotat(prosjekter, dataPerPid, innboksAntall, created) {
                + (d.oppgaver || []).filter(o => o && !o.fullfort).length;
     return '- [' + p.navn + '](' + slug(p.navn) + '.md): ' + apne + ' åpne punkter';
   });
-  return frontmatter('wp4-oversikt', created, 'active') + '\n\n'
+  return frontmatter('Oversikt over Prosjekt-planlegger', created, 'active') + '\n\n'
     + ADVARSEL + '\n\n'
     + '## Prosjekter\n\n' + (rader.join('\n') || '- (ingen prosjekter)') + '\n\n'
     + '## Status\n\n'
@@ -181,7 +182,7 @@ function oversiktNotat(prosjekter, dataPerPid, innboksAntall, created) {
     + '- Siri-innboks: ' + innboksAntall + (innboksAntall === 1 ? ' fangst' : ' fangster') + ' venter på at appen åpnes\n';
 }
 
-// Foreldreløse notater (prosjekt slettet i wp4): aldri slett i vaulten,
+// Foreldreløse notater (prosjekt slettet i appen): aldri slett i vaulten,
 // merk dem som stale i stedet.
 function merkForeldrelose(maal, gyldigeSlugs) {
   if (!existsSync(maal)) return;
@@ -193,7 +194,7 @@ function merkForeldrelose(maal, gyldigeSlugs) {
     if (/^status: stale$/m.test(innhold)) continue;
     writeFileSync(sti, innhold
       .replace(/^status: .+$/m, 'status: stale')
-      .replace(ADVARSEL, ADVARSEL + '\n\n> Prosjektet finnes ikke lenger i wp4. Notatet beholdes som historikk.'));
+      .replace(ADVARSEL, ADVARSEL + '\n\n> Prosjektet finnes ikke lenger i Prosjekt-planlegger. Notatet beholdes som historikk.'));
     console.log('merket stale:', fil);
   }
 }
@@ -251,7 +252,7 @@ for (const p of prosjekter) {
   }
 }
 skrivNotat(join(MAAL, 'oversikt.md'), created => oversiktNotat(prosjekter, dataPerPid, innboks.length, created));
-writeFileSync(join(MAAL, 'wp4-data.json'),
+writeFileSync(join(MAAL, 'prosjekt-planlegger-data.json'),
   JSON.stringify({ hentet: new Date().toISOString(), prosjekter, dataPerPid, innboks }, null, 2));
 merkForeldrelose(MAAL, slugs);
 console.log(naa() + ': synket ' + prosjekter.length + ' prosjekter til ' + MAAL + ' (' + endret + ' endret)');

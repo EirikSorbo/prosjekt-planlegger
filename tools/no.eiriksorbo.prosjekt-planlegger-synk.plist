@@ -2,13 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <!-- Speiler wp4-data til Obsidian-vaulten hvert kvarter. Installeres med:
-       cp no.eiriksorbo.wp4-vaultsynk.plist ~/Library/LaunchAgents/
-       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.wp4-vaultsynk.plist
+  <!-- Speiler Prosjekt-planlegger-data til Obsidian-vaulten hvert kvarter.
+       Installeres med:
+       cp no.eiriksorbo.prosjekt-planlegger-synk.plist ~/Library/LaunchAgents/
+       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.eiriksorbo.prosjekt-planlegger-synk.plist
+       Stien under peker på wp4-repoet (repo/mappe heter fortsatt wp4).
        Uten tools/nokkel.json avslutter skriptet stille, så jobben er ufarlig
        før oppsettet er fullført. -->
   <key>Label</key>
-  <string>no.eiriksorbo.wp4-vaultsynk</string>
+  <string>no.eiriksorbo.prosjekt-planlegger-synk</string>
   <key>ProgramArguments</key>
   <array>
     <string>/usr/local/bin/node</string>
@@ -19,8 +21,8 @@
   <key>RunAtLoad</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>/Users/eiriks05/Library/Logs/wp4-vaultsynk.log</string>
+  <string>/Users/eiriks05/Library/Logs/prosjekt-planlegger-synk.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/eiriks05/Library/Logs/wp4-vaultsynk.log</string>
+  <string>/Users/eiriks05/Library/Logs/prosjekt-planlegger-synk.log</string>
 </dict>
 </plist>

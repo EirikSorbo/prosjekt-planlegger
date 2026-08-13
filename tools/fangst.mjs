@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Legger et gjøremål i wp4s Siri-innboks (brukere/<eier>/innboks) som
+// Legger et gjøremål i Prosjekt-planleggerens Siri-innboks (brukere/<eier>/innboks) som
 // Claude-brukeren. Appen tømmer innboksen inn i fangstprosjektet med samme
 // flyt som Siri-fangsten, så dette er den trygge skrivekanalen: reglene gir
 // Claude-brukeren KUN create her, aldri endring eller sletting av noe annet.
