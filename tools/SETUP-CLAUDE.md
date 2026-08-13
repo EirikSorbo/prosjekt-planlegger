@@ -8,9 +8,18 @@ Obsidian-vaulten «Jobb-hjernen»:
   `Jobb-hjernen/projects/project-app/prosjekt-planlegger/` som markdown
   (én vei, sky → filer), automatisk hvert kvarter via launchd, og på
   forespørsel når Claude jobber.
-- **Skriving:** `fangst.mjs` legger gjøremål i Siri-innboksen, som appen selv
-  tømmer inn i fangstprosjektet. Reglene gir Claude-brukeren kun `create` der:
-  ingenting eksisterende kan endres eller slettes, uansett.
+- **Skriving:** `fangst.mjs` legger forespørsler i innbokskøen, som appen
+  (eneste skriver til prosjektdokumentene) utfører trygt neste gang den er
+  åpen: nye to-dos og oppgaver i hvilket som helst prosjekt, med valgfri
+  frist, og fullføring av eksisterende elementer. Reglene gir Claude-brukeren
+  kun `create` i køen: ingenting eksisterende kan endres eller slettes direkte.
+
+  ```bash
+  node tools/fangst.mjs "Ringe tannlegen"                            # todo i fangstprosjektet
+  node tools/fangst.mjs "Skrive utkast" --prosjekt "UiA"             # todo i navngitt prosjekt
+  node tools/fangst.mjs "Rapport" --oppgave --prosjekt UiA --frist 2026-09-01
+  node tools/fangst.mjs --fullfor "Send epost" --prosjekt "MishMash WP4"
+  ```
 - **Kill switch:** deaktiver Claude-brukeren i Firebase-konsollen
   (Authentication → Users → ⋮ → Disable account), så er all tilgang død.
 
