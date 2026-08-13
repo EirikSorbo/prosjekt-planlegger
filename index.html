@@ -2665,16 +2665,6 @@
     aktivitetFilterState = lastFilterState(_pk('fa'));
     oppgaveFilterState   = lastFilterState(_pk('fo'));
     _migrerFlogEid(aktivtProsjektId);
-    // Bakfyll opprettet-dato på items uten (kan ikke kjenne ekte dato, bruk i
-    // dag — som ryddFullforte gjør med fullfortDato). Grunnlag for stagnasjon.
-    const iDagStr = _lokalDatoStr();
-    let _oppEndret = false;
-    todos.forEach(t    => { if (t && !t.opprettet) { t.opprettet = iDagStr; _oppEndret = true; } });
-    oppgaver.forEach(o => { if (o && !o.opprettet) { o.opprettet = iDagStr; _oppEndret = true; } });
-    if (_oppEndret) {
-      localStorage.setItem(_pk('t'), JSON.stringify(todos));
-      localStorage.setItem(_pk('o'), JSON.stringify(oppgaver));
-    }
     oppdaterDagerIgjen();
   }
 
@@ -4179,37 +4169,6 @@
       return _startFilter.prosjekter.filter(id => aktive.some(p => p.id === id));
     return aktive.map(p => p.id);
   }
-  // Stagnasjons-kort: åpne todos/oppgaver som ble opprettet for over 2 uker
-  // siden og fortsatt ikke er fullført. Leser på tvers av Start-prosjektene.
-  const STAGN_DAGER = 14;
-  function _lagStagnasjonKort() {
-    const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
-    const grense = new Date(iDag); grense.setDate(iDag.getDate() - STAGN_DAGER);
-    const grenseStr = _lokalDatoStr(grense);
-    const stille = [];
-    _startProsjektIds().forEach(pid => {
-      const t = _parseSafe(localStorage.getItem('lp_' + pid + '_t'), []) || [];
-      const o = _parseSafe(localStorage.getItem('lp_' + pid + '_o'), []) || [];
-      t.forEach(x => { if (x && !x.fullfort && x.opprettet && x.opprettet <= grenseStr) stille.push({ tittel: x.tittel || '', opprettet: x.opprettet }); });
-      o.forEach(x => { if (x && !x.fullfort && x.opprettet && x.opprettet <= grenseStr) stille.push({ tittel: x.beskrivelse || '', opprettet: x.opprettet }); });
-    });
-    if (!stille.length) return null;
-    stille.sort((a, b) => a.opprettet.localeCompare(b.opprettet)); // eldste først
-    const alder = ds => Math.round((iDag - new Date(ds + 'T00:00:00')) / 86400000);
-    const vis = stille.slice(0, 3).map(s =>
-      `<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--tekst);padding:3px 0;">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(s.tittel)}</span>
-        <span style="color:var(--tekst-sek);white-space:nowrap;flex-shrink:0;">${alder(s.opprettet)} dager</span>
-      </div>`).join('');
-    const flere = stille.length > 3 ? `<div style="font-size:12px;color:var(--tekst-sek);margin-top:4px;">+ ${stille.length - 3} flere</div>` : '';
-    const kort = document.createElement('div');
-    kort.style.cssText = 'background:var(--grønn-lys);border:1px solid var(--grønn-mid);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;';
-    kort.innerHTML = `
-      <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);margin-bottom:8px;display:flex;align-items:center;gap:5px;">${_svgIkon('klokke', 12)} Har stått stille (${stille.length})</div>
-      ${vis}${flere}`;
-    return kort;
-  }
-
   function renderStartside() {
     const cont = document.getElementById('startInnhold');
     if (!cont) return;
@@ -4281,10 +4240,8 @@
       cont.appendChild(dateRow);
     }
 
-    // Dagsplan + stagnasjon under filter-raden
+    // Dagsplan under filter-raden
     cont.appendChild(_lagDagsplan());
-    const stagn = _lagStagnasjonKort();
-    if (stagn) cont.appendChild(stagn);
 
     // ── Beregn grensedato ──
     let grense;
