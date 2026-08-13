@@ -232,10 +232,10 @@ async function hentAlt() {
   return { prosjekter, dataPerPid, innboks, fangstProsjekt: bruker.fangstProsjekt || null };
 }
 
-const { prosjekter, dataPerPid, innboks } = await hentAlt();
+const { prosjekter, dataPerPid, innboks, fangstProsjekt } = await hentAlt();
 
 if (SOM_JSON) {
-  console.log(JSON.stringify({ hentet: new Date().toISOString(), prosjekter, dataPerPid, innboks }, null, 2));
+  console.log(JSON.stringify({ hentet: new Date().toISOString(), prosjekter, dataPerPid, innboks, fangstProsjekt }, null, 2));
   process.exit(0);
 }
 
