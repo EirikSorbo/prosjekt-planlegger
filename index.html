@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.82</div>
+<div class="versjon">Prosjekt-planlegger v4.83</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2636,19 +2636,47 @@
     try { return JSON.parse(str); } catch { return fallback; }
   }
 
-  function lagre() {
+  // stille = ren lokal opprydding som alle enheter gjør likt (auto-rydding av
+  // gamle fullførte). Da skal prosjektet IKKE merkes som usynket og ikke pushes:
+  // ellers hevder enheten å ha nyere data enn skyen ved neste oppstart, og
+  // overskriver det som ble gjort på en annen enhet.
+  function lagre(stille) {
     localStorage.setItem(_pk('a'), JSON.stringify(aktiviteter));
     localStorage.setItem(_pk('o'), JSON.stringify(oppgaver));
     localStorage.setItem(_pk('t'), JSON.stringify(todos));
     localStorage.setItem(_pk('k'), JSON.stringify(kategorier));
     // Marker prosjektet som «endret lokalt, ikke bekreftet synket» — brukes til
     // å hindre at en senere sky-henting overskriver usynkede endringer.
-    localStorage.setItem(_pk('dirty'), Date.now().toString());
+    if (!stille) localStorage.setItem(_pk('dirty'), Date.now().toString());
     oppdaterForfaltBadge();
     _planleggVarsler();
-    if (window._currentUid && window._lagreTilSky) {
+    planleggReRender();
+    if (!stille && window._currentUid && window._lagreTilSky) {
       window._lagreTilSky(window._currentUid);
     }
+  }
+
+  // ── Én felles oppfriskning av alle lister ─────────────────────────────────
+  // Start-fanen og To do-fanen viser de samme elementene, og begge kan endres
+  // fra den andre (og fra kalenderen, oppgavelista, info-modalene og skyen).
+  // Før valgte hvert endringssted selv hvilke paneler det tegnet på nytt, så et
+  // element man huket av i én fane ble stående igjen i den andre. Nå friskes
+  // alle lister opp én gang etter hver lagring. Utsatt til etter at klikket er
+  // ferdig, så pågående interaksjon (inline redigering, sveip) ikke brytes.
+  let _reRenderPlanlagt = false;
+  function planleggReRender() {
+    if (_reRenderPlanlagt) return;
+    _reRenderPlanlagt = true;
+    setTimeout(() => { _reRenderPlanlagt = false; renderAlleLister(); }, 0);
+  }
+  function renderAlleLister() {
+    renderStartside();
+    if (_startSok) _sokStartside(_startSok);
+    renderTodos();
+    const aktiv = document.querySelector('.panel.aktiv')?.id;
+    if (aktiv === 'panel-oppgaver') renderOppgaver();
+    if (aktiv === 'panel-liste')    renderListe();
+    if (aktiv === 'panel-kalender' && kalVisning === 'maaned' && valgtDato) renderValgtDag(valgtDato);
   }
 
   function hent() {
@@ -2904,6 +2932,7 @@
     document.getElementById('panel-' + id).classList.add('aktiv');
     el.classList.add('aktiv');
     if (id === 'start')    renderStartside();
+    if (id === 'todo')     renderTodos();
     if (id === 'kalender') {
       if (kalVisning === 'tidslinje') renderTidslinje();
       else if (kalVisning === 'uke')  renderUke();
@@ -4369,18 +4398,29 @@
     } else {
       const pk = s => 'lp_' + prosjektId + '_' + s;
       const nøkkel = erTodo ? pk('t') : pk('o');
-      const liste = JSON.parse(localStorage.getItem(nøkkel) || '[]');
+      const liste = _parseSafe(localStorage.getItem(nøkkel), []) || [];
       const item = liste.find(x => x.id === itemId);
       if (!item) return;
+      const varSkitten = !!localStorage.getItem(pk('dirty'));
       item.fullfort = !item.fullfort;
       item.fullfortDato = item.fullfort ? idag : null;
       localStorage.setItem(nøkkel, JSON.stringify(liste));
       localStorage.setItem(pk('dirty'), Date.now().toString());
-      // Send prosjektId eksplisitt — ellers synker lagreTilSky det AKTIVE
-      // prosjektet i stedet, og denne avhukningen når aldri sky.
-      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid, prosjektId);
+      if (window._currentUid) {
+        // Bare det AKTIVE prosjektet har sanntidslytter, så den lokale kopien av
+        // et annet prosjekt kan være gammel. Et helt-dokument-skriv herfra ville
+        // gjenopplivet alt som er slettet/fullført på en annen enhet — derfor et
+        // målrettet skriv som kun endrer dette ene elementet i sky. Hadde
+        // prosjektet allerede usynkede endringer, må hele dokumentet opp uansett.
+        if (!varSkitten && window._fullforIAnnetProsjekt)
+          window._fullforIAnnetProsjekt(window._currentUid, prosjektId, itemId, erTodo, item.fullfort, item.fullfortDato);
+        else if (window._lagreTilSky)
+          // Send prosjektId eksplisitt — ellers synker lagreTilSky det AKTIVE
+          // prosjektet i stedet, og denne avhukningen når aldri sky.
+          window._lagreTilSky(window._currentUid, prosjektId);
+      }
     }
-    renderStartside();
+    renderAlleLister();
   }
 
   function _visStartProsjektFilter(anchorBtn) {
@@ -6975,6 +7015,7 @@
   function oppdaterAktivPanel() {
     renderHovedFilter();
     const aktiv = document.querySelector('.panel.aktiv')?.id;
+    if (aktiv === 'panel-start')    renderStartside();
     if (aktiv === 'panel-todo')     renderTodos();
     if (aktiv === 'panel-kalender') {
       if (kalVisning === 'uke') renderUke();
@@ -8179,7 +8220,7 @@
     // 'aldri' = behold alt, ellers antall dager. Fullført-loggen (flog) bevarer
     // historikk uansett; dette styrer bare hvor lenge de vises i selve listen.
     const ryddDager = localStorage.getItem('lp_ryddDager') || '3';
-    if (ryddDager === 'aldri') { if (endret) lagre(); return; }
+    if (ryddDager === 'aldri') { if (endret) lagre(true); return; }
     const dager = parseInt(ryddDager, 10) || 3;
     const grense = new Date(iDag); grense.setDate(iDag.getDate() - dager);
     const g3 = _lokalDatoStr(grense);
@@ -8187,7 +8228,7 @@
     const forTod = todos.length;
     oppgaver = oppgaver.filter(o => !(o.fullfort && o.fullfortDato && o.fullfortDato < g3));
     todos    = todos.filter(t => !(t.fullfort && t.fullfortDato && t.fullfortDato < g3));
-    if (endret || oppgaver.length !== forOpp || todos.length !== forTod) lagre();
+    if (endret || oppgaver.length !== forOpp || todos.length !== forTod) lagre(true);
   }
 
   function renderHovedFilter() {
@@ -8637,6 +8678,56 @@
 
   window._lagreTilSky = lagreTilSky;
 
+  // Avhuking fra Start av et element i et prosjekt som ikke er det aktive.
+  // Leser ferskt fra server, endrer KUN dette elementet og skriver tilbake med
+  // merge — samme mønster som innboks-køen. Alternativet (full push av den
+  // lokale kopien) ville gjenopplivet alt som er slettet eller fullført på en
+  // annen enhet siden dette prosjektet sist var aktivt her.
+  window._fullforIAnnetProsjekt = async function(userId, pid, itemId, erTodo, fullfort, dato) {
+    const pk = s => 'lp_' + pid + '_' + s;
+    const felt = erTodo ? 'todos' : 'oppgaver';
+    const dirtyToken = localStorage.getItem(pk('dirty'));
+    try {
+      visSynkStatus('Synkroniserer…', '#f39c12');
+      let snap;
+      try { snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', pid)); }
+      catch (e) { snap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', pid)); }
+      // Aldri synket, eller elementet finnes ikke i sky: fall tilbake til full push.
+      if (!snap || !snap.exists()) return await lagreTilSky(userId, pid);
+      const liste = snap.data()[felt] || [];
+      const item = liste.find(x => x && x.id === itemId);
+      if (!item) return await lagreTilSky(userId, pid);
+      item.fullfort = !!fullfort;
+      item.fullfortDato = fullfort ? dato : null;
+      await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid),
+        { [felt]: liste, oppdatert: new Date().toISOString() }, { merge: true });
+      // Sky er nå fasit for denne lista — speil den lokalt, slik at Start viser
+      // det samme som de andre enhetene.
+      localStorage.setItem(pk(erTodo ? 't' : 'o'), JSON.stringify(liste));
+      if (localStorage.getItem(pk('dirty')) === dirtyToken) localStorage.removeItem(pk('dirty'));
+      visSynkStatus('✓ Synkronisert', '#27ae60');
+      if (typeof renderAlleLister === 'function') renderAlleLister();
+      return true;
+    } catch (e) {
+      console.error('[SYNK] Kryss-prosjekt-avhuking feilet:', e.code, e.message);
+      visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
+      return false;   // dirty står igjen: endringen pushes når prosjektet blir aktivt
+    }
+  };
+
+  // Start-fanen viser elementer fra ALLE prosjekter, men bare det aktive har
+  // sanntidslytter. Uten denne blir de andre prosjektenes lister stående som de
+  // var sist de var aktive her — gamle elementer «dukker opp igjen» på Start.
+  // Samme dirty-vern som for det aktive prosjektet.
+  async function _lastAndreProsjekterFraSky(userId, aktivPid) {
+    const andre = (window._getProsjekter && window._getProsjekter() || [])
+      .filter(p => p && p.id && !p.arkivert && p.id !== aktivPid);
+    for (const p of andre) {
+      try { await _lastProsjektFraSky(userId, p.id); }
+      catch (e) { console.warn('[SYNK] Kunne ikke hente prosjekt', p.id, ':', e.code || e.message); }
+    }
+  }
+
   window._slettProsjektFraSky = async function(userId, prosjektId) {
     if (!userId) return;
     try {
@@ -8653,7 +8744,8 @@
     if (typeof ryddFullforte === 'function') ryddFullforte();
     if (typeof renderHovedFilter === 'function') renderHovedFilter();
     if (typeof oppdaterAktivPanel === 'function') oppdaterAktivPanel();
-    if (typeof renderTodos === 'function') renderTodos();
+    if (typeof renderAlleLister === 'function') renderAlleLister();
+    else if (typeof renderTodos === 'function') renderTodos();
     if (typeof renderTidslinje === 'function' && typeof kalVisning !== 'undefined' && kalVisning === 'tidslinje') renderTidslinje();
     if (typeof oppdaterForfaltBadge === 'function') oppdaterForfaltBadge();
   }
@@ -8679,6 +8771,15 @@
       try { snap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', prosjektId)); } catch(e2) { return; }
     }
     if (snap && snap.exists()) {
+      // Rakk brukeren å endre noe mens server-svaret var underveis? Da er
+      // snapshotet eldre enn siste handling. Uten denne sjekken rulles f.eks. en
+      // avhuking rett etter prosjektbytte tilbake av svaret på hentingen som ble
+      // startet like før klikket.
+      if (localStorage.getItem(pk('dirty'))) {
+        console.warn('[SYNK] Lokal endring kom mens sky-henting pågikk for', prosjektId, '— beholder lokalt');
+        try { await lagreTilSky(userId, prosjektId); } catch(e) { /* la dirty stå */ }
+        return;
+      }
       const data = snap.data();
       localStorage.setItem(pk('a'), JSON.stringify(data.aktiviteter || []));
       localStorage.setItem(pk('o'), JSON.stringify(data.oppgaver    || []));
@@ -8975,6 +9076,10 @@
       if (pid) await _lastProsjektFraSky(uid, pid);
       _oppdaterAppFraSky();
       if (typeof renderStartside === 'function') renderStartside();
+      // De øvrige prosjektene vises også på Start. Hentes etter det aktive, så
+      // visningen ikke venter på dem, og lister friskes opp når de er inne.
+      await _lastAndreProsjekterFraSky(uid, pid);
+      if (typeof renderAlleLister === 'function') renderAlleLister();
 
       // Fangster som kom mens appen sov.
       await _tommInnboks(uid);
@@ -9124,6 +9229,10 @@
 
       // Start lytter for aktivt prosjekt
       if (pid) _startProsjektLytter(bruker.uid, pid);
+
+      // De øvrige prosjektene har ingen lytter, men vises på Start.
+      await _lastAndreProsjekterFraSky(bruker.uid, pid);
+      if (typeof renderAlleLister === 'function') renderAlleLister();
 
       // Tøm Siri-innboksen. Må skje ETTER at skydata er lastet, aldri før:
       // ellers appenderes fangsten til en utdatert liste.
