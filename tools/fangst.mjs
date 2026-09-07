@@ -11,11 +11,13 @@
 //   node fangst.mjs "Purre svar" --frist 2026-08-20            med frist (YYYY-MM-DD)
 //   node fangst.mjs "Les kap. 3" --prosjekt UiA --kategori Musikkhistorie
 //   node fangst.mjs "Les denne" --url "https://..."            lenke i beskrivelsen
-//   node fangst.mjs "Alle workshops gjennomført" --milepael --dato 2026-11-30 --prosjekt UiA
+//   node fangst.mjs "Ferdige ressurser publisert" --resultat --dato 2027-05-31 --prosjekt UiA
 //   node fangst.mjs "Workshop 2" --aktivitet --dato 2026-10-06 --datoTil 2026-10-06 --prosjekt UiA
-//   node fangst.mjs "Book reiser" --oppgave --prosjekt UiA --under "Alle workshops gjennomført"
+//   node fangst.mjs "Lærere rekruttert" --milepael --frist 2026-09-30 --prosjekt UiA
+//   node fangst.mjs "Book reiser" --under "Lærere rekruttert" --prosjekt UiA   (to-do under milepæl)
 //   node fangst.mjs --fullfor "Send epost" --prosjekt UiA      fullfør todo (unik tittelmatch)
-//   node fangst.mjs --fullfor "Rapport" --oppgave --prosjekt UiA  fullfør oppgave
+//   node fangst.mjs --fullfor "Rapport" --milepael --prosjekt UiA  fullfør milepæl
+//   node fangst.mjs --migrer plan.json                         engangs strukturflytting
 //
 // Bruk (mange element i én omgang, én innlogging):
 //   node fangst.mjs --fil plan.json
@@ -39,8 +41,8 @@ const NOKKEL_STI = join(HER, 'nokkel.json');
 // ── Argumenter ──────────────────────────────────────────────────────────────
 const arg = process.argv.slice(2);
 let tittel = '', prosjektNavn = '', frist = '', url = '', fullforTittel = '', kategori = '';
-let under = '', notat = '', dato = '', datoTil = '', fil = '';
-let somOppgave = false, somMilepael = false, somAktivitet = false;
+let under = '', notat = '', dato = '', datoTil = '', fil = '', migrerFil = '';
+let somMilepael = false, somAktivitet = false, somResultat = false;
 for (let i = 0; i < arg.length; i++) {
   if (arg[i] === '--prosjekt') prosjektNavn = arg[++i] || '';
   else if (arg[i] === '--frist') frist = arg[++i] || '';
@@ -52,26 +54,27 @@ for (let i = 0; i < arg.length; i++) {
   else if (arg[i] === '--dato') dato = arg[++i] || '';
   else if (arg[i] === '--datoTil') datoTil = arg[++i] || '';
   else if (arg[i] === '--fil') fil = arg[++i] || '';
-  else if (arg[i] === '--oppgave') somOppgave = true;
-  else if (arg[i] === '--milepael') somMilepael = true;
+  else if (arg[i] === '--migrer') migrerFil = arg[++i] || '';
+  else if (arg[i] === '--milepael' || arg[i] === '--oppgave') somMilepael = true;  // --oppgave = eldre alias
   else if (arg[i] === '--aktivitet') somAktivitet = true;
+  else if (arg[i] === '--resultat') somResultat = true;
   else if (!tittel) tittel = arg[i];
 }
 
 const gyldigDato = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
 
-if (!fil && !fullforTittel && (!tittel || !tittel.trim())) {
-  console.error('Bruk: node fangst.mjs "tekst" [--prosjekt N] [--kategori K] [--oppgave] [--frist YYYY-MM-DD] [--under L] [--url U]');
-  console.error('      node fangst.mjs "tittel" --milepael|--aktivitet --dato YYYY-MM-DD [--datoTil D] [--prosjekt N]');
-  console.error('      node fangst.mjs --fullfor "tittel" [--oppgave] [--prosjekt N]');
-  console.error('      node fangst.mjs --fil plan.json');
+if (!fil && !migrerFil && !fullforTittel && (!tittel || !tittel.trim())) {
+  console.error('Bruk: node fangst.mjs "tekst" [--prosjekt N] [--kategori K] [--milepael] [--frist YYYY-MM-DD] [--under L] [--url U]');
+  console.error('      node fangst.mjs "tittel" --aktivitet|--resultat --dato YYYY-MM-DD [--datoTil D] [--prosjekt N]');
+  console.error('      node fangst.mjs --fullfor "tittel" [--milepael] [--prosjekt N]');
+  console.error('      node fangst.mjs --fil plan.json   |   --migrer migrasjon.json');
   process.exit(1);
 }
 for (const [navn, verdi] of [['--frist', frist], ['--dato', dato], ['--datoTil', datoTil]]) {
   if (verdi && !gyldigDato(verdi)) { console.error('Ugyldig ' + navn + ' (bruk YYYY-MM-DD):', verdi); process.exit(1); }
 }
-if ((somMilepael || somAktivitet) && !dato) {
-  console.error('En leveranse trenger --dato YYYY-MM-DD.');
+if ((somAktivitet || somResultat) && !dato) {
+  console.error('En leveranse (--aktivitet/--resultat) trenger --dato YYYY-MM-DD.');
   process.exit(1);
 }
 if (!existsSync(NOKKEL_STI)) {
@@ -125,8 +128,15 @@ function finnUnik(kandidater, sokeNavn, hva) {
   process.exit(1);
 }
 
+// Nivåene i appen (fra v4.88):
+//   to-do        (arbeid å gjøre)                  el.type 'todo'
+//   milepæl      (tilstand å nå, midtnivå)         el.type 'milepal' (alias 'oppgave')
+//   leveranse    (aktivitet ELLER resultat)        el.type 'aktivitet' | 'resultat'
+// 'milepæl' som el.type-verdi = eldre alias for resultat-leveranse; unngå.
+const LEVERANSE_TYPER = new Set(['aktivitet', 'resultat', 'milepæl']);
+const MIDT_TYPER = new Set(['milepal', 'oppgave']);
+
 // Bygger Firestore-feltene for ett element. `pid` er alt oppslått prosjekt-id.
-// Typene speiler køen i appen: leveranse (milepæl/aktivitet), oppgave, todo.
 function byggFelter(el, pid) {
   const felter = {
     kilde: { stringValue: 'claude' },
@@ -134,23 +144,24 @@ function byggFelter(el, pid) {
   };
   if (pid) felter.prosjektId = { stringValue: pid };
   const tit = String(el.tittel || '').trim().slice(0, 500);
-  const erLeveranse = el.type === 'milepael' || el.type === 'milepæl' || el.type === 'aktivitet';
 
-  if (erLeveranse) {
+  if (LEVERANSE_TYPER.has(el.type)) {
     felter.type = { stringValue: 'leveranse' };
-    felter.leveranseType = { stringValue: el.type === 'aktivitet' ? 'aktivitet' : 'milepæl' };
+    felter.leveranseType = { stringValue: el.type === 'aktivitet' ? 'aktivitet' : 'resultat' };
     felter.tittel = { stringValue: tit };
     felter.dato = { stringValue: el.dato };
     if (el.datoTil) felter.datoTil = { stringValue: el.datoTil };
     if (el.beskrivelse) felter.beskrivelse = { stringValue: String(el.beskrivelse).slice(0, 500) };
   } else {
-    felter.type = { stringValue: el.type === 'oppgave' ? 'oppgave' : 'todo' };
+    // Midtnivå (milepæl) eller to-do. Begge bruker tittel-feltet.
+    felter.type = { stringValue: MIDT_TYPER.has(el.type) ? 'milepal' : 'todo' };
     felter.tittel = { stringValue: tit };
     if (el.frist) felter.frist = { stringValue: el.frist };
     if (el.url) felter.url = { stringValue: String(el.url).slice(0, 500) };
     if (el.notat) felter.notat = { stringValue: String(el.notat).slice(0, 500) };
-    // Leveransen oppgis ved TITTEL; appen kobler den i målprosjektet og lar
-    // koblingen stå tom hvis navnet er ukjent eller flertydig der.
+    // `under` oppgis ved TITTEL; appen kobler i målprosjektet (til leveranse
+    // for en milepæl, eller til milepæl for en to-do) og lar koblingen stå
+    // tom hvis navnet er ukjent eller flertydig der.
     if (el.under) felter.under = { stringValue: String(el.under).slice(0, 200) };
   }
   // Kategorien sendes ved NAVN; appen slår den opp i målprosjektet og lar
@@ -160,9 +171,9 @@ function byggFelter(el, pid) {
 }
 
 function beskriv(el) {
-  const hva = (el.type === 'milepael' || el.type === 'milepæl') ? 'Milepæl'
-            : el.type === 'aktivitet' ? 'Aktivitet'
-            : el.type === 'oppgave' ? 'Oppgave' : 'To-do';
+  const hva = el.type === 'aktivitet' ? 'Aktivitet'
+            : (el.type === 'resultat' || el.type === 'milepæl') ? 'Resultat'
+            : MIDT_TYPER.has(el.type) ? 'Milepæl' : 'To-do';
   return hva + ' «' + String(el.tittel || '').trim() + '»'
     + (el.dato ? ' (' + el.dato + (el.datoTil && el.datoTil !== el.dato ? ' til ' + el.datoTil : '') + ')' : '')
     + (el.frist ? ' (frist ' + el.frist + ')' : '')
@@ -200,8 +211,7 @@ if (fil) {
     const nr = '#' + (i + 1);
     if (!el || !String(el.tittel || '').trim()) { console.error(nr + ' mangler tittel.'); process.exit(1); }
     if (el.type === 'fullfor') { console.error(nr + ': fullfor støttes bare med --fullfor, ikke i fil.'); process.exit(1); }
-    const erLeveranse = el.type === 'milepael' || el.type === 'milepæl' || el.type === 'aktivitet';
-    if (erLeveranse && !gyldigDato(el.dato)) { console.error(nr + ' («' + el.tittel + '») trenger gyldig dato.'); process.exit(1); }
+    if (LEVERANSE_TYPER.has(el.type) && !gyldigDato(el.dato)) { console.error(nr + ' («' + el.tittel + '») trenger gyldig dato.'); process.exit(1); }
     for (const felt of ['frist', 'dato', 'datoTil']) {
       if (el[felt] && !gyldigDato(el[felt])) { console.error(nr + ' har ugyldig ' + felt + ': ' + el[felt]); process.exit(1); }
     }
@@ -225,6 +235,29 @@ if (fil) {
   process.exit(ok === elementer.length ? 0 : 1);
 }
 
+// ── Migrering fra fil ─────────────────────────────────────────────────────
+if (migrerFil) {
+  if (!existsSync(migrerFil)) { console.error('Fant ikke fila:', migrerFil); process.exit(1); }
+  const spec = JSON.parse(readFileSync(migrerFil, 'utf8'));
+  const pNavn = spec.prosjekt;
+  if (!pNavn) { console.error('Migrasjonsfila mangler «prosjekt».'); process.exit(1); }
+  const mpid = await prosjektIdFor(pNavn);
+  const plan = { leveranser: spec.leveranser || {}, oppgaver: spec.oppgaver || {} };
+  const felter = {
+    kilde: { stringValue: 'claude' },
+    opprettet: { stringValue: new Date().toISOString() },
+    type: { stringValue: 'migrer' },
+    prosjektId: { stringValue: mpid },
+    plan: { stringValue: JSON.stringify(plan) }
+  };
+  try {
+    await sendForespørsel(token, felter);
+  } catch (e) { console.error('Migrering feilet:', e.message); process.exit(1); }
+  const nl = Object.keys(plan.leveranser).length, no = Object.keys(plan.oppgaver).length;
+  console.log('Migrasjon lagt i køen for ' + pNavn + ' (' + nl + ' leveranser + ' + no + ' oppgaver flyttes), utføres når appen er åpen.');
+  process.exit(0);
+}
+
 // ── Ett element ─────────────────────────────────────────────────────────────
 const pid = prosjektNavn ? await prosjektIdFor(prosjektNavn) : null;
 if (fullforTittel && !pid) {
@@ -235,24 +268,26 @@ if (fullforTittel && !pid) {
 let felter, beskrivelseAvHandling;
 if (fullforTittel) {
   // Slå opp elementet i ferske prosjektdata og send målrettet fullfør-forespørsel.
+  // --milepael fullfører et midtnivå-element (lagret i oppgaver-arrayet),
+  // ellers en to-do. Leveranse-resultater fullføres i appen, ikke herfra.
   const data = await hentDok(token, 'brukere/' + n.eierUid + '/prosjekter/' + pid) || {};
-  const apne = (somOppgave ? (data.oppgaver || []) : (data.todos || []))
+  const apne = (somMilepael ? (data.oppgaver || []) : (data.todos || []))
     .filter(x => x && !x.fullfort)
-    .map(x => ({ id: x.id, navn: somOppgave ? (x.beskrivelse || '') : (x.tittel || '') }));
-  const mal = finnUnik(apne, fullforTittel, somOppgave ? 'åpne oppgaver' : 'åpne to-dos');
+    .map(x => ({ id: x.id, navn: somMilepael ? (x.beskrivelse || '') : (x.tittel || '') }));
+  const mal = finnUnik(apne, fullforTittel, somMilepael ? 'åpne milepæler' : 'åpne to-dos');
   felter = {
     kilde: { stringValue: 'claude' },
     opprettet: { stringValue: new Date().toISOString() },
     type: { stringValue: 'fullfor' },
     malId: { stringValue: mal.id },
-    malType: { stringValue: somOppgave ? 'oppgave' : 'todo' },
+    malType: { stringValue: somMilepael ? 'oppgave' : 'todo' },  // 'oppgave' = midtnivå-arrayet internt
     prosjektId: { stringValue: pid }
   };
-  beskrivelseAvHandling = 'Fullfør ' + (somOppgave ? 'oppgave' : 'todo') + ' «' + mal.navn + '»';
-} else if (pid || somOppgave || somMilepael || somAktivitet || frist || kategori || under) {
+  beskrivelseAvHandling = 'Fullfør ' + (somMilepael ? 'milepæl' : 'to-do') + ' «' + mal.navn + '»';
+} else if (pid || somMilepael || somAktivitet || somResultat || frist || kategori || under) {
   // Typet forespørsel: bruker tittel-feltet (gamle app-versjoner ignorerer
   // dokumenter uten tekst-felt, så en utdatert enhet feilplasserer aldri noe).
-  const el = { type: somMilepael ? 'milepael' : somAktivitet ? 'aktivitet' : somOppgave ? 'oppgave' : 'todo',
+  const el = { type: somAktivitet ? 'aktivitet' : somResultat ? 'resultat' : somMilepael ? 'milepal' : 'todo',
                tittel, frist, dato, datoTil, kategori, under, notat, url, beskrivelse: notat };
   felter = byggFelter(el, pid);
   beskrivelseAvHandling = beskriv(el);
