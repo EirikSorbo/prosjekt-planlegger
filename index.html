@@ -1610,7 +1610,7 @@
 <nav class="faner">
   <button class="fane aktiv" onclick="byttFane('start', this)">Start</button>
   <button class="fane" onclick="byttFane('todo', this)">To do</button>
-  <button class="fane" onclick="byttFane('oppgaver', this)">Oppgaver</button>
+  <button class="fane" onclick="byttFane('oppgaver', this)">Milepæler</button>
   <button class="fane" onclick="byttFane('liste', this)">Leveranser</button>
   <button class="fane" onclick="byttFane('kalender', this)">Oversikt</button>
 </nav>
@@ -1621,7 +1621,7 @@
 </div>
 
 <div id="varselBanner" style="display:none;background:var(--grønn-lys);border-bottom:1px solid var(--grønn-mid);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;">
-  <span style="font-size:12px;color:var(--tekst);font-family:'Nunito',sans-serif;">🔔 Tillat varsler for å se forfalte oppgaver på ikonet</span>
+  <span style="font-size:12px;color:var(--tekst);font-family:'Nunito',sans-serif;">🔔 Tillat varsler for å se forfalte gjøremål på ikonet</span>
   <div style="display:flex;gap:8px;flex-shrink:0;">
     <button onclick="avvisVarsel()" style="background:none;border:1px solid var(--grønn-mid);border-radius:6px;padding:5px 10px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:var(--tekst-sek);cursor:pointer;">Ikke nå</button>
     <button onclick="beOmVarsel()" style="background:var(--grønn);border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;color:white;cursor:pointer;">Tillat</button>
@@ -1643,7 +1643,7 @@
   <div id="panel-todo" class="panel">
     <div class="todo-hurtigknapper">
       <button class="todo-hurtig-knapp" onclick="åpneTodoModal()">+ To do</button>
-      <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Oppgave</button>
+      <button class="todo-hurtig-knapp" onclick="åpneOppgaveModal()">+ Milepæl</button>
       <button class="todo-hurtig-knapp" onclick="visLeveranseTypeValg(this)" style="position:relative;">+ Leveranse</button>
       <button class="todo-filter-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)" title="Filter" style="position:relative;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -1711,7 +1711,7 @@
       <div class="seksjon-tittel">Alle leveranser</div>
       <div style="display:flex;gap:6px;align-items:stretch;">
         <button class="legg-til-knapp" onclick="åpneAktivitetModal()">+ Aktivitet</button>
-        <button class="legg-til-knapp" onclick="åpneMilepelModal()">+ Milepæl</button>
+        <button class="legg-til-knapp" onclick="åpneMilepelModal()">+ Resultat</button>
         <button class="todo-filter-knapp" id="leveranseFilterKnapp" onclick="visProsjektFilterPopup(this,'leveranse')" title="Filter" style="position:relative;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         </button>
@@ -1724,9 +1724,9 @@
   <!-- Oppgaver -->
   <div id="panel-oppgaver" class="panel">
     <div class="seksjon-header">
-      <div class="seksjon-tittel">Oppgaver</div>
+      <div class="seksjon-tittel">Milepæler</div>
       <div style="display:flex;gap:6px;align-items:stretch;">
-        <button class="legg-til-knapp" onclick="åpneOppgaveModal()">+ Legg til oppgave</button>
+        <button class="legg-til-knapp" onclick="åpneOppgaveModal()">+ Legg til milepæl</button>
         <button class="todo-filter-knapp" id="oppgaveFilterKnapp" onclick="visProsjektFilterPopup(this,'oppgave')" title="Filter" style="position:relative;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         </button>
@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.87</div>
+<div class="versjon">Prosjekt-planlegger v4.88</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2129,7 +2129,7 @@
         </select>
       </div>
       <div class="felt">
-        <label>Koble til oppgave</label>
+        <label>Koble til milepæl</label>
         <select id="todoFeltOppgave">
           <option value="">— Ingen —</option>
         </select>
@@ -2182,7 +2182,7 @@
   </div>
 </div>
 
-<!-- Modal: Leveranse info (aktivitet/milepæl) -->
+<!-- Modal: Leveranse info (aktivitet/resultat) -->
 <div class="modal-overlay" id="aktivitetInfoModal">
   <div class="modal">
     <div class="modal-header">
@@ -2195,7 +2195,7 @@
       <button class="knapp-sek" id="infoModalFullfortKnapp" style="display:none;"></button>
       <div class="knapp-gruppe" style="align-items:center;">
         <button class="knapp-sek" id="infoModalLeggTilTodoKnapp">+ To do</button>
-        <button class="knapp-sek" id="infoModalLeggTilOppgaveKnapp">+ Oppgave</button>
+        <button class="knapp-sek" id="infoModalLeggTilOppgaveKnapp">+ Milepæl</button>
         <button class="info-ikon-knapp" id="infoModalRedigKnapp" title="Rediger">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -2207,7 +2207,7 @@
   </div>
 </div>
 
-<!-- Modal: Leveranse (aktivitet / milepæl) -->
+<!-- Modal: Leveranse (aktivitet / resultat) -->
 <div class="modal-overlay" id="aktivitetModal">
   <div class="modal">
     <div class="modal-header">
@@ -2267,13 +2267,13 @@
 <div class="modal-overlay" id="oppgaveModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-tittel" id="oppgaveModalTittel">Ny oppgave</div>
+      <div class="modal-tittel" id="oppgaveModalTittel">Ny milepæl</div>
       <button class="lukk-knapp" onclick="lukkModal('oppgaveModal')">×</button>
     </div>
     <div class="modal-body">
       <div class="felt">
         <label>Tittel</label>
-        <input type="text" id="oppFeltBesk" />
+        <input type="text" id="oppFeltBesk" placeholder="En tilstand å nå, f.eks. «Lærere rekruttert»" />
       </div>
       <div class="felt">
         <label>Koble til leveranse</label>
@@ -2310,16 +2310,6 @@
       <div class="felt">
         <label>Tagger</label>
         <input type="text" id="oppFeltTagger" placeholder="#hjemme #haster" />
-      </div>
-      <div style="display:flex;gap:10px;">
-        <div class="felt" style="flex:1;">
-          <label>Estimat</label>
-          <input type="text" id="oppFeltEstimat" placeholder="f.eks. 2t 30m" />
-        </div>
-        <div class="felt" style="flex:1;">
-          <label>Faktisk tid</label>
-          <input type="text" id="oppFeltFaktisk" placeholder="f.eks. 1t 45m" />
-        </div>
       </div>
       <div class="felt">
         <label>Notater</label>
@@ -2879,7 +2869,7 @@
 
   // Del ut: bruk native delingsark hvis tilgjengelig, ellers utklippstavle.
   async function _delElement(tittel, tekst) {
-    const data = { title: tittel || 'Prosjekter', text: [tittel, tekst].filter(Boolean).join('\n') };
+    const data = { title: tittel || 'Prosjekt-planlegger', text: [tittel, tekst].filter(Boolean).join('\n') };
     if (navigator.share) {
       try { await navigator.share(data); return; }
       catch (e) { if (e && e.name === 'AbortError') return; } // bruker avbrøt
@@ -2926,6 +2916,12 @@
   /* ──────────────────────────────
      FANER
   ────────────────────────────── */
+  // Resultat-leveranser het «milepæl» fram til v4.88; gamle enheter kan
+  // fortsatt skrive den verdien tilbake, så begge leses som resultat.
+  function erResultatType(a) {
+    return !!a && (a.leveranseType === 'resultat' || a.leveranseType === 'milepæl');
+  }
+
   function byttFane(id, el) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('aktiv'));
     document.querySelectorAll('.fane').forEach(f => f.classList.remove('aktiv'));
@@ -3231,7 +3227,7 @@
     if (grupperKats.length === 0) {
       const tom = document.createElement('div');
       tom.style.cssText = 'padding:32px;text-align:center;color:var(--tekst-sek);font-size:13px;';
-      tom.textContent = 'Legg til kategorier og oppgaver for å se tidslinjen.';
+      tom.textContent = 'Legg til kategorier og leveranser for å se tidslinjen.';
       grid.appendChild(tom);
     } else {
       grupperKats.forEach(k => {
@@ -3241,8 +3237,8 @@
           const d2 = new Date((a.datoTil || a.dato) + 'T00:00:00');
           return !(d2 < start || d1 >= slutt);
         });
-        const katAkt = katAktAlle.filter(a => a.leveranseType !== 'milepæl');
-        const katMilepeler = katAktAlle.filter(a => a.leveranseType === 'milepæl');
+        const katAkt = katAktAlle.filter(a => !erResultatType(a));
+        const katMilepeler = katAktAlle.filter(a => erResultatType(a));
         const katOpp = oppgaver.filter(o => {
           if (!o.frist) return false;
           const akt = o.aktivitetId ? aktiviteter.find(a => a.id === o.aktivitetId) : null;
@@ -3472,13 +3468,13 @@
       header.appendChild(prikker);
       dagEl.appendChild(header);
 
-      // Vis leveranser (aktiviteter + milepæler)
+      // Vis leveranser (aktiviteter + resultater)
       dagAkt.forEach(a => {
         const el = document.createElement('div');
         el.className = 'uke-hendelse';
         el.style.borderLeftColor = getKat(a.type)?.farge || '#ccc';
         el.style.background = (getKat(a.type)?.farge || '#ccc') + '18';
-        const erMilepel = a.leveranseType === 'milepæl';
+        const erMilepel = erResultatType(a);
         const tid = (!erMilepel && a.tid) ? ' · ' + a.tid : '';
         el.textContent = (erMilepel ? '◆ ' : '') + a.tittel + tid;
         if (erMilepel) el.style.fontWeight = '700';
@@ -3583,7 +3579,7 @@
         const p = document.createElement('div');
         p.className = 'prikk';
         p.style.background = getKat(a.type)?.farge || '#999';
-        if (a.leveranseType === 'milepæl') {
+        if (erResultatType(a)) {
           p.style.borderRadius = '1px';
           p.style.transform = 'rotate(45deg)';
         }
@@ -3593,7 +3589,7 @@
         const p = document.createElement('div');
         p.className = 'prikk';
         p.style.background = '#7b78b0';
-        p.title = dagOpp.length + ' oppgave(r) med frist';
+        p.title = dagOpp.length + ' milepæl(er) med frist';
         rad.appendChild(p);
       }
       celle.appendChild(rad);
@@ -3651,12 +3647,12 @@
       dagAkt.forEach(a => listEl.appendChild(lagAktivitetKort(a, true)));
     }
 
-    listEl.appendChild(lagDagSeksjon('Oppgaver', () => åpneOppgaveModal()));
+    listEl.appendChild(lagDagSeksjon('Milepæler', () => åpneOppgaveModal()));
     if (dagOpp.length === 0) {
       const tom = document.createElement('div');
       tom.className = 'tom-melding';
       tom.style.cssText = 'padding:14px 20px;font-size:13px;';
-      tom.textContent = 'Ingen oppgaver.';
+      tom.textContent = 'Ingen milepæler.';
       listEl.appendChild(tom);
     } else {
       dagOpp.forEach(o => {
@@ -3786,8 +3782,8 @@
 
     const iDagStr = _lokalDatoStr();
     let filtrert = [...fAktiviteter].filter(a => {
-      if (a.leveranseType === 'milepæl' && a.fullfort) return false; // fullfort milepæl → arkiv
-      if (a.leveranseType !== 'milepæl' && (a.datoTil || a.dato) < iDagStr) return false; // fortid → arkiv
+      if (erResultatType(a) && a.fullfort) return false; // fullfort milepæl → arkiv
+      if (!erResultatType(a) && (a.datoTil || a.dato) < iDagStr) return false; // fortid → arkiv
       return true;
     });
     if (!isMulti && globalKatFilter) filtrert = filtrert.filter(a => a.type === globalKatFilter);
@@ -3874,7 +3870,7 @@
 
     // Helper: render en leveranse med oppgaver og todos
     function renderAktMedOppgaver(a, seksjon) {
-        const erMilepel = a.leveranseType === 'milepæl';
+        const erMilepel = erResultatType(a);
         const d = new Date(a.dato + 'T00:00:00');
         let datoStr = d.getDate() + '. ' + MAANEDER[d.getMonth()];
         if (!erMilepel && a.datoTil && a.datoTil !== a.dato) {
@@ -3941,7 +3937,7 @@
       seksjon.className = 'kat-oversikt-seksjon';
       const tittel = document.createElement('div');
       tittel.className = 'kat-oversikt-seksjon-tittel';
-      tittel.textContent = 'Øvrige oppgaver';
+      tittel.textContent = 'Øvrige milepæler';
       seksjon.appendChild(tittel);
       frittstOpp.forEach(o => {
         const oppEl = document.createElement('div');
@@ -4054,7 +4050,7 @@
     }
     treff.forEach(({ type, item, p }) => {
       const tittel = type === 'oppgave' ? item.beskrivelse : item.tittel;
-      const typeLabel = type === 'todo' ? 'To do' : type === 'oppgave' ? 'Oppgave' : 'Leveranse';
+      const typeLabel = type === 'todo' ? 'To do' : type === 'oppgave' ? 'Milepæl' : 'Leveranse';
       const rad = document.createElement('div');
       rad.className = 'sok-treff';
       rad.innerHTML = `<div class="sok-treff-tittel${item.fullfort ? ' fullfort' : ''}">${escapeHtml(tittel || '(uten tittel)')}</div>
@@ -5256,7 +5252,7 @@
         const kat = getKat(a.type);
         const opt = document.createElement('option');
         opt.value = a.id;
-        opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel
+        opt.textContent = (erResultatType(a) ? '◆ ' : '') + a.tittel
           + (!katId && kat ? ` [${kat.label}]` : '');
         levSel.appendChild(opt);
       });
@@ -5311,7 +5307,7 @@
         const kat = getKat(a.type);
         const opt = document.createElement('option');
         opt.value = a.id;
-        opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel
+        opt.textContent = (erResultatType(a) ? '◆ ' : '') + a.tittel
           + `  (${d.getDate()}. ${MAANEDER[d.getMonth()]})`
           + (!katId && kat ? ` [${kat.label}]` : '');
         sel.appendChild(opt);
@@ -5436,7 +5432,7 @@
     }
     if (t.oppgaveId) {
       const opp = oppgaver.find(o => o.id === t.oppgaveId);
-      if (opp) html += `<div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet oppgave</div>
+      if (opp) html += `<div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet milepæl</div>
         <div style="padding:10px 12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);cursor:pointer;" onclick="lukkModal('todoInfoModal');åpneOppgaveInfo('${opp.id}')">${opp.beskrivelse}</div>`;
     }
     if (t.kategoriId) {
@@ -5772,7 +5768,7 @@
   // Slettede elementer havner i lp_<pid>_trash (LOKAL, ikke synket) og kan
   // gjenopprettes. Auto-tømmes etter 30 dager; maks 200 oppføringer.
   const PAPIRKURV_DAGER = 30, PAPIRKURV_MAKS = 200;
-  const _papirkurvNavn = { todo: 'To do', oppgave: 'Oppgave', aktivitet: 'Leveranse' };
+  const _papirkurvNavn = { todo: 'To do', oppgave: 'Milepæl', aktivitet: 'Leveranse' };
 
   function _papirkurvHent() { return _parseSafe(localStorage.getItem(_pk('trash')), []) || []; }
   function _papirkurvLagre(liste) { localStorage.setItem(_pk('trash'), JSON.stringify(liste)); }
@@ -5989,7 +5985,7 @@
         const ob = document.createElement('span');
         ob.className = 'oppgave-badge badge-' + a.type;
         ob.textContent = '!';
-        ob.title = antallUferdige + ' oppgave(r) knyttet til denne leveransen';
+        ob.title = antallUferdige + ' milepæl(er) knyttet til denne leveransen';
         ob.onclick = e => {
           e.stopPropagation();
           åpneAktivitetInfo(a.id);
@@ -6117,7 +6113,7 @@
       container.innerHTML = '';
       if (_aktivTag) container.appendChild(_tagFilterBanner());
       container.insertAdjacentHTML('beforeend',
-        `<div class="tom-melding">${_aktivTag ? 'Ingen oppgaver med denne taggen.' : 'Ingen oppgaver her ennå.'}</div>`);
+        `<div class="tom-melding">${_aktivTag ? 'Ingen milepæler med denne taggen.' : 'Ingen milepæler her ennå. En milepæl er en tilstand du vil nå innen en dato, f.eks. «Lærere rekruttert».'}</div>`);
       return;
     }
 
@@ -6189,10 +6185,15 @@
         const katM = getKat(o.kategoriId);
         if (katM) metaHtml += `<span class="tilknyttet-chip chip-${katM.id}">${escapeHtml(katM.label)}</span>`;
       }
+      // Fremdrift: milepælen er en tilstand, to-dos er veien dit.
       const oppTodos = todos.filter(t => t.oppgaveId === o.id);
       if (oppTodos.length > 0) {
         const fullf = oppTodos.filter(t => t.fullfort).length;
-        metaHtml += `<span style="font-size:11px;color:var(--tekst-sek);white-space:nowrap;">${fullf}/${oppTodos.length} to-do</span>`;
+        const pst = Math.round(fullf / oppTodos.length * 100);
+        metaHtml += `<span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">`
+          + `<span style="width:44px;height:5px;border-radius:3px;background:var(--grønn-lys);overflow:hidden;display:inline-block;">`
+          + `<span style="display:block;height:100%;width:${pst}%;background:var(--grønn);border-radius:3px;"></span></span>`
+          + `<span style="font-size:11px;color:var(--tekst-sek);">${fullf}/${oppTodos.length} to-do</span></span>`;
       }
       metaHtml += _tagChipsHtml(o.tagger);
       metaHtml += _tidChipHtml(o);
@@ -6350,7 +6351,7 @@
       åpneOppgaveModal(id);
     };
     document.getElementById('oppInfoSlettKnapp').onclick = () => {
-      if (!confirm('Slett denne oppgaven?')) return;
+      if (!confirm('Slett denne milepælen?')) return;
       _papirkurvLegg('oppgave', oppgaver.find(x => x.id === id));
       todos.forEach(t => { if (t.oppgaveId === id) t.oppgaveId = null; });
       oppgaver = oppgaver.filter(x => x.id !== id);
@@ -6384,7 +6385,7 @@
   function åpneAktivitetInfo(id) {
     const a = aktiviteter.find(a => a.id === id);
     if (!a) return;
-    const erMilepel = a.leveranseType === 'milepæl';
+    const erMilepel = erResultatType(a);
 
     const d = new Date(a.dato + 'T00:00:00');
     let datoStr = UKEDAGER_K[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
@@ -6426,7 +6427,7 @@
         const iKonflikt = sjekkKonflikt && konflikt.some(p => p.id === x.id);
         const el = document.createElement('div');
         el.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 10px;background:${iKonflikt ? '#fdeaea' : 'var(--grønn-lys)'};border-radius:var(--rs);font-size:13px;color:var(--tekst);cursor:pointer;margin-bottom:4px;`;
-        el.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${x.leveranseType === 'milepæl' ? '◆ ' : ''}${escapeHtml(x.tittel)}</span>${iKonflikt ? '<span style="color:#c0392b;font-size:11px;margin-left:auto;white-space:nowrap;flex-shrink:0;">⚠ ikke ferdig i tide</span>' : ''}`;
+        el.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${erResultatType(x) ? '◆ ' : ''}${escapeHtml(x.tittel)}</span>${iKonflikt ? '<span style="color:#c0392b;font-size:11px;margin-left:auto;white-space:nowrap;flex-shrink:0;">⚠ ikke ferdig i tide</span>' : ''}`;
         el.onclick = () => { lukkModal('aktivitetInfoModal'); åpneAktivitetInfo(x.id); };
         return el;
       };
@@ -6449,7 +6450,7 @@
     if (tilknyttede.length > 0) {
       const header = document.createElement('div');
       header.style.cssText = 'margin-top:18px;font-size:11px;font-weight:700;font-family:"Syne",sans-serif;color:var(--tekst-sek);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;';
-      header.textContent = `Oppgaver (${tilknyttede.length})`;
+      header.textContent = `Milepæler (${tilknyttede.length})`;
       body.appendChild(header);
 
       tilknyttede.forEach(o => {
@@ -6561,7 +6562,7 @@
       if (direkteTodosAlone.length === 0) {
         const tom = document.createElement('div');
         tom.style.cssText = 'margin-top:18px;font-size:13px;color:var(--tekst-sek);';
-        tom.textContent = 'Ingen oppgaver knyttet til denne leveransen.';
+        tom.textContent = 'Ingen milepæler knyttet til denne leveransen.';
         body.appendChild(tom);
       }
       direkteTodosAlone.forEach(t => {
@@ -6586,10 +6587,10 @@
       });
     }
 
-    // Lukk-knapp: skjul for milepæler (krysset øverst til høyre er nok)
+    // Lukk-knapp: skjul for resultater (krysset øverst til høyre er nok)
     document.getElementById('infoModalLukkKnapp').style.display = erMilepel ? 'none' : '';
 
-    // Fullfort-knapp (kun milepæler)
+    // Fullfort-knapp (kun resultater)
     const fullfortKnapp = document.getElementById('infoModalFullfortKnapp');
     if (erMilepel) {
       fullfortKnapp.style.display = '';
@@ -6608,7 +6609,7 @@
 
     document.getElementById('infoModalRedigKnapp').onclick = () => {
       lukkModal('aktivitetInfoModal');
-      if (a.leveranseType === 'milepæl') åpneMilepelModal(id);
+      if (erResultatType(a)) åpneMilepelModal(id);
       else åpneAktivitetModal(id);
     };
     document.getElementById('infoModalSlettKnapp').onclick = () => {
@@ -6646,11 +6647,11 @@
     body.innerHTML = '';
 
     const fullforteMilepeler = aktiviteter
-      .filter(a => a.leveranseType === 'milepæl' && a.fullfort)
+      .filter(a => erResultatType(a) && a.fullfort)
       .sort((a,b) => (b.fullfortDato || b.dato).localeCompare(a.fullfortDato || a.dato));
 
     const tidligereAkt = aktiviteter
-      .filter(a => a.leveranseType !== 'milepæl' && (a.datoTil || a.dato) < iDagStr)
+      .filter(a => !erResultatType(a) && (a.datoTil || a.dato) < iDagStr)
       .sort((a,b) => b.dato.localeCompare(a.dato));
 
     if (fullforteMilepeler.length === 0 && tidligereAkt.length === 0) {
@@ -6661,7 +6662,7 @@
 
     const lagArkivItem = (a, ekstraInfo, knappTekst, knappOnClick) => {
       const kat = getKat(a.type);
-      const erMp = a.leveranseType === 'milepæl';
+      const erMp = erResultatType(a);
       const d = new Date(a.dato + 'T00:00:00');
       const datoStr = d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
       const el = document.createElement('div');
@@ -6700,7 +6701,7 @@
     if (fullforteMilepeler.length > 0) {
       const hdr = document.createElement('div');
       hdr.style.cssText = 'padding:12px 18px 6px;font-size:10px;font-weight:700;font-family:"Syne",sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);background:var(--grønn-lys);border-bottom:1px solid var(--kant);';
-      hdr.textContent = `◆ Fullførte milepæler (${fullforteMilepeler.length})`;
+      hdr.textContent = `◆ Fullførte resultater (${fullforteMilepeler.length})`;
       body.appendChild(hdr);
       fullforteMilepeler.forEach(a => {
         const info = a.fullfortDato ? 'Fullført ' + fmtDatoFra(a.fullfortDato) : '';
@@ -6723,7 +6724,7 @@
   }
 
   function settLeveranseModalType(type) {
-    const erMilepel = type === 'milepæl';
+    const erMilepel = type === 'resultat' || type === 'milepæl';
     document.getElementById('feltLeveranseType').value = type;
     document.getElementById('feltDatoTilWrap').style.display = erMilepel ? 'none' : '';
     document.getElementById('feltTidRad').style.display = erMilepel ? 'none' : '';
@@ -6745,7 +6746,7 @@
       .forEach(a => {
         const opt = document.createElement('option');
         opt.value = a.id;
-        opt.textContent = (a.leveranseType === 'milepæl' ? '◆ ' : '') + a.tittel;
+        opt.textContent = (erResultatType(a) ? '◆ ' : '') + a.tittel;
         if (valgte.includes(a.id)) opt.selected = true;
         sel.appendChild(opt);
       });
@@ -6771,8 +6772,8 @@
       const a = aktiviteter.find(a => a.id === id);
       if (!a) return;
       redigAktivitetId = id;                         // ← nødvendig for at lagreAktivitet() oppdaterer riktig
-      const erMilepel = a.leveranseType === 'milepæl';
-      document.getElementById('aktivitetModalTittel').textContent = erMilepel ? 'Rediger milepæl' : 'Rediger aktivitet';
+      const erMilepel = erResultatType(a);
+      document.getElementById('aktivitetModalTittel').textContent = erMilepel ? 'Rediger resultat' : 'Rediger aktivitet';
       settLeveranseModalType(a.leveranseType || 'aktivitet');
       document.getElementById('feltTittel').value  = a.tittel;
       document.getElementById('feltType').value    = a.type;
@@ -6810,7 +6811,7 @@
     popup.id = 'leveranseTypePopup';
     popup.style.cssText = 'position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:var(--bg);border:1px solid var(--kant);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.13);z-index:999;display:flex;gap:4px;padding:6px;white-space:nowrap;';
     popup.innerHTML = '<button class="todo-hurtig-knapp" style="font-size:12px;padding:6px 12px;" onclick="this.parentElement.remove();åpneAktivitetModal()">Aktivitet</button>'
-      + '<button class="todo-hurtig-knapp" style="font-size:12px;padding:6px 12px;" onclick="this.parentElement.remove();åpneMilepelModal()">Milepæl</button>';
+      + '<button class="todo-hurtig-knapp" style="font-size:12px;padding:6px 12px;" onclick="this.parentElement.remove();åpneMilepelModal()">Resultat</button>';
     btn.appendChild(popup);
     const lukk = e => { if (!popup.contains(e.target) && e.target !== btn) { popup.remove(); document.removeEventListener('click', lukk); } };
     setTimeout(() => document.addEventListener('click', lukk), 0);
@@ -6828,8 +6829,8 @@
       opt.value = k.id; opt.textContent = k.label;
       feltType.appendChild(opt);
     });
-    document.getElementById('aktivitetModalTittel').textContent = 'Ny milepæl';
-    settLeveranseModalType('milepæl');
+    document.getElementById('aktivitetModalTittel').textContent = 'Nytt resultat';
+    settLeveranseModalType('resultat');
     document.getElementById('feltTittel').value  = '';
     document.getElementById('feltType').value    = kategorier[0]?.id || '';
     const defaultDato = dato || _lokalDatoStr();
@@ -6848,8 +6849,9 @@
     const tittel        = document.getElementById('feltTittel').value.trim();
     const type          = document.getElementById('feltType').value;
     const dato          = document.getElementById('feltDato').value;
-    const leveranseType = document.getElementById('feltLeveranseType').value || 'aktivitet';
-    const erMilepel     = leveranseType === 'milepæl';
+    const råType        = document.getElementById('feltLeveranseType').value || 'aktivitet';
+    const leveranseType = råType === 'milepæl' ? 'resultat' : råType;  // normaliser gammel lagret verdi
+    const erMilepel     = leveranseType === 'resultat';
     const datoTil       = erMilepel ? dato : (document.getElementById('feltDatoTil').value || dato);
     const tid           = erMilepel ? '' : document.getElementById('feltTid').value;
     const tidTil        = erMilepel ? '' : document.getElementById('feltTidTil').value;
@@ -6923,19 +6925,15 @@
     document.getElementById('fristRelativInfo').style.display = 'none';
     document.getElementById('oppFeltGjenta').value = '';
     document.getElementById('oppFeltTagger').value = '';
-    document.getElementById('oppFeltEstimat').value = '';
-    document.getElementById('oppFeltFaktisk').value = '';
 
     if (id) {
       const o = oppgaver.find(o => o.id === id);
       if (!o) return;
-      document.getElementById('oppgaveModalTittel').textContent = 'Rediger oppgave';
+      document.getElementById('oppgaveModalTittel').textContent = 'Rediger milepæl';
       document.getElementById('oppFeltBesk').value  = o.beskrivelse;
       document.getElementById('oppFeltNotat').value = o.notat || '';
       document.getElementById('oppFeltGjenta').value = o.gjenta || '';
       document.getElementById('oppFeltTagger').value = (o.tagger || []).map(x => '#' + x).join(' ');
-      document.getElementById('oppFeltEstimat').value = _formatTid(o.estimat);
-      document.getElementById('oppFeltFaktisk').value = _formatTid(o.faktisk);
       // Sett kategori FØR leveranse-fylling slik at filteret er riktig
       katSelect.value = o.kategoriId || '';
       if (o.aktivitetId && !o.kategoriId) {
@@ -6949,7 +6947,7 @@
       }
       slettKnapp.style.display = 'block';
     } else {
-      document.getElementById('oppgaveModalTittel').textContent = 'Ny oppgave';
+      document.getElementById('oppgaveModalTittel').textContent = 'Ny milepæl';
       document.getElementById('oppFeltBesk').value  = '';
       document.getElementById('oppFeltNotat').value = '';
       // Sett kategori FØR leveranse-fylling
@@ -6976,14 +6974,14 @@
     const frist = document.getElementById('oppFeltFrist').value || '';
     const gjenta = document.getElementById('oppFeltGjenta').value || null;
     const tagger = _parseTagger(document.getElementById('oppFeltTagger').value);
-    const estimat = _parseTid(document.getElementById('oppFeltEstimat').value);
-    const faktisk = _parseTid(document.getElementById('oppFeltFaktisk').value);
 
     if (redigOppgaveId) {
       const o = oppgaver.find(o => o.id === redigOppgaveId);
-      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, estimat, faktisk });
+      // estimat/faktisk røres ikke: feltene er ute av UI-et (aldri brukt),
+      // men gamle verdier skal ikke slettes ved redigering.
+      Object.assign(o, { beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger });
     } else {
-      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, estimat, faktisk, opprettet: _lokalDatoStr(), fullfort: false };
+      const nyOppgave = { id: uid(), beskrivelse: besk, notat, frist, aktivitetId, kategoriId, gjenta, tagger, opprettet: _lokalDatoStr(), fullfort: false };
       oppgaver.push(nyOppgave);
     }
 
@@ -6994,7 +6992,7 @@
   }
 
   function slettOppgave() {
-    if (!confirm('Slett denne oppgaven?')) return;
+    if (!confirm('Slett denne milepælen?')) return;
     _papirkurvLegg('oppgave', oppgaver.find(o => o.id === redigOppgaveId));
     todos.forEach(t => { if (t.oppgaveId === redigOppgaveId) t.oppgaveId = null; });
     oppgaver = oppgaver.filter(o => o.id !== redigOppgaveId);
@@ -7228,7 +7226,7 @@
         } else if (Array.isArray(data.aktiviteter) && Array.isArray(data.oppgaver)) {
           // Gammel format – importer til nåværende prosjekt
           const bekreft = confirm(
-            'Dette vil erstatte alle eksisterende leveranser og oppgaver i nåværende prosjekt med dataene fra filen.\n\nFortsette?'
+            'Dette vil erstatte alle eksisterende leveranser og milepæler i nåværende prosjekt med dataene fra filen.\n\nFortsette?'
           );
           if (!bekreft) return;
           taSnapshot();
@@ -7461,7 +7459,7 @@
 
     const fullfortForrige = [
       ...oppgaver.filter(o => oppI(o) && o.fullfort && o.fullfortDato && iPeriode(o.fullfortDato, forrigeStart, forrigeSlutt))
-        .map(o => ({ type: 'oppgave', tittel: o.beskrivelse, dato: o.fullfortDato, obj: o })),
+        .map(o => ({ type: 'milepæl', tittel: o.beskrivelse, dato: o.fullfortDato, obj: o })),
       ...todos.filter(t => todoI(t) && t.fullfort && t.fullfortDato && iPeriode(t.fullfortDato, forrigeStart, forrigeSlutt))
         .map(t => ({ type: 'to do', tittel: t.tittel, dato: t.fullfortDato, obj: t }))
     ].sort((a,b) => a.dato.localeCompare(b.dato));
@@ -7534,7 +7532,7 @@
       </div>`;
 
     if (data.forfalt.length > 0) {
-      html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel" style="color:#c0392b;border-bottom-color:#c0392b;">Forfalte oppgaver</div>`;
+      html += `<div class="rapport-seksjon"><div class="rapport-seksjon-tittel" style="color:#c0392b;border-bottom-color:#c0392b;">Forfalte milepæler</div>`;
       data.forfalt.forEach(o => {
         const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
         const diff = Math.round((data.iDag - new Date(o.frist + 'T00:00:00')) / 86400000);
@@ -7558,7 +7556,7 @@
 
       aktListe.forEach(a => {
         const kat = getKat(a.type);
-        const erMp = a.leveranseType === 'milepæl';
+        const erMp = erResultatType(a);
         h += `<div class="rapport-item">
           ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
           <div style="flex:1;">
@@ -7571,7 +7569,7 @@
           h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--kant);padding-left:10px;margin-top:2px;">
             <div style="flex:1;">
               <div class="rapport-item-tittel" style="font-size:13px;">↳ ${o.beskrivelse}</div>
-              <div class="rapport-item-meta">Oppgave · Frist ${fmtDatoFra(o.frist)}</div>
+              <div class="rapport-item-meta">Milepæl · Frist ${fmtDatoFra(o.frist)}</div>
             </div>
           </div>`;
           todoListe.filter(t => t.oppgaveId === o.id).forEach(t => {
@@ -7602,7 +7600,7 @@
           ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
           <div style="flex:1;">
             <div class="rapport-item-tittel">${o.beskrivelse}</div>
-            <div class="rapport-item-meta">Oppgave · Frist ${fmtDatoFra(o.frist)}</div>
+            <div class="rapport-item-meta">Milepæl · Frist ${fmtDatoFra(o.frist)}</div>
           </div>
         </div>`;
         todoListe.filter(t => t.oppgaveId === o.id).forEach(t => {
@@ -7677,7 +7675,7 @@
     md += `| Forfalt | ${data.forfalt.length} |\n\n`;
 
     if (data.forfalt.length > 0) {
-      md += `## Forfalte oppgaver\n\n`;
+      md += `## Forfalte milepæler\n\n`;
       data.forfalt.forEach(o => {
         const diff = Math.round((data.iDag - new Date(o.frist + 'T00:00:00')) / 86400000);
         md += `- **${o.beskrivelse}** — ${diff} dag${diff===1?'':'er'} over fristen (${fmtDatoFra(o.frist)})\n`;
@@ -7691,17 +7689,17 @@
       const bruktOpp = new Set(), bruktTodo = new Set();
       aktListe.forEach(a => {
         const kat = getKat(a.type);
-        const erMp = a.leveranseType === 'milepæl';
+        const erMp = erResultatType(a);
         md += `- ${kat ? `[${kat.label}] ` : ''}**${erMp ? '◆ ' : ''}${a.tittel}** — ${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' kl. ' + a.tid : ''}\n`;
         oppListe.filter(o => o.aktivitetId === a.id).forEach(o => {
           bruktOpp.add(o.id);
-          md += `  - ↳ ${o.beskrivelse} — oppgave, frist ${fmtDatoFra(o.frist)}\n`;
+          md += `  - ↳ ${o.beskrivelse} — milepæl, frist ${fmtDatoFra(o.frist)}\n`;
           todoListe.filter(t => t.oppgaveId === o.id).forEach(t => { bruktTodo.add(t.id); md += `    - ☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
         });
       });
       oppListe.filter(o => !bruktOpp.has(o.id)).forEach(o => {
         const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
-        md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — oppgave, frist ${fmtDatoFra(o.frist)}\n`;
+        md += `- ${kat ? `[${kat.label}] ` : ''}**${o.beskrivelse}** — milepæl, frist ${fmtDatoFra(o.frist)}\n`;
         todoListe.filter(t => t.oppgaveId === o.id).forEach(t => { bruktTodo.add(t.id); md += `  - ☐ ${t.tittel} — to do, frist ${fmtDatoFra(t.frist)}\n`; });
       });
       todoListe.filter(t => !bruktTodo.has(t.id)).forEach(t => {
@@ -7758,9 +7756,9 @@
       pl.appendChild(lbl);
     });
     const dims = [
-      { key: 'milepal', navn: 'Milepæler', on: true },
+      { key: 'milepal', navn: 'Resultater', on: true },
       { key: 'aktivitet', navn: 'Aktiviteter', on: true },
-      { key: 'oppgave', navn: 'Oppgaver', on: false },
+      { key: 'oppgave', navn: 'Milepæler', on: false },
       { key: 'avhengig', navn: 'Avhengigheter', on: true },
       { key: 'idag', navn: '«I dag»-linje', on: true },
       { key: 'legende', navn: 'Tegnforklaring', on: true },
@@ -7844,8 +7842,8 @@
     const rows = [];
     data.forEach(({ p, akt, opp, kat }) => {
       const projRows = [];
-      const mp = akt.filter(a => a.leveranseType === 'milepæl' && a.dato && a.dato >= minD && a.dato <= maxD);
-      const ak = akt.filter(a => a.leveranseType !== 'milepæl' && a.dato && iRange(a.dato, a.datoTil || a.dato));
+      const mp = akt.filter(a => erResultatType(a) && a.dato && a.dato >= minD && a.dato <= maxD);
+      const ak = akt.filter(a => !erResultatType(a) && a.dato && iRange(a.dato, a.datoTil || a.dato));
       if (dims.milepal && mp.length) projRows.push({ kind: 'milestone', items: mp, farge: p.farge });
       if (dims.aktivitet && ak.length) {
         const byKat = {};
@@ -7904,7 +7902,7 @@
           body += `<rect x="${plotL}" y="${(r.y + r.h * 0.2).toFixed(1)}" width="4" height="${(r.h * 0.6).toFixed(1)}" fill="${r.farge}"/>`;
           body += `<text x="${plotL + 10}" y="${(yc + 4).toFixed(1)}" font-family="Syne,sans-serif" font-weight="700" font-size="13" fill="#2e2b45">${esc(trunc(r.navn, 60))}</text>`;
         } else if (r.kind === 'milestone') {
-          body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#9490d4">Milepæler</text>`;
+          body += `<text x="${plotL}" y="${(r.y + 10).toFixed(1)}" font-family="Nunito,sans-serif" font-size="9" fill="#9490d4">Resultater</text>`;
           const dY = r.y + r.h - 11, s = 7, tierRight = [];
           [...r.items].filter(a => iVindu(a.dato)).sort((a, b) => xFor(a.dato) - xFor(b.dato)).forEach(a => {
             const x = xFor(a.dato), lbl = trunc(a.tittel, 24), w = lbl.length * 4.6 + 8;
@@ -7962,7 +7960,7 @@
       if (dims.legende) {
         const lx = plotR - 210, ly = mT - 4;
         over += `<g font-family="Nunito,sans-serif" font-size="9" fill="#2e2b45">`;
-        over += `<path d="M ${lx} ${ly} L ${lx + 6} ${ly + 6} L ${lx} ${ly + 12} L ${lx - 6} ${ly + 6} Z" fill="#9490d4"/><text x="${lx + 12}" y="${ly + 9}">Milepæl</text>`;
+        over += `<path d="M ${lx} ${ly} L ${lx + 6} ${ly + 6} L ${lx} ${ly + 12} L ${lx - 6} ${ly + 6} Z" fill="#9490d4"/><text x="${lx + 12}" y="${ly + 9}">Resultat</text>`;
         over += `<rect x="${lx + 74}" y="${ly + 2}" width="16" height="9" rx="2" fill="#9490d4" fill-opacity="0.85"/><text x="${lx + 94}" y="${ly + 9}">Aktivitet</text>`;
         over += `</g>`;
       }
@@ -8100,7 +8098,7 @@
             const akt = o.aktivitetId ? pData.aktiviteter.find(a => a.id === o.aktivitetId) : null;
             return (akt?.type || o.kategoriId) === k.id;
           }).length;
-          lagValg(k.label, `${stats} oppgave${stats === 1 ? '' : 'r'}`, k.farge, () => {
+          lagValg(k.label, `${stats} milepæl${stats === 1 ? '' : 'er'}`, k.farge, () => {
             lukkModal('rapportVelgerModal');
             if (erAktivt) { _rapportKontekst = null; åpneRapport(k.id); }
             else { åpneRapportForProsjekt(prosjektId, k.id); }
@@ -8839,10 +8837,12 @@
   //   { tekst }                                → todo i fangstprosjektet
   //                                              (Siri-snarveien, bakoverkompatibelt)
   //   { type:'todo',    tittel, prosjektId?, frist?, url?, kategori?, under? }
-  //   { type:'oppgave', tittel, prosjektId?, frist?, kategori?, under?, notat? }
-  //   { type:'leveranse', tittel, prosjektId?, leveranseType:'milepæl'|'aktivitet',
-  //     dato, datoTil?, kategori?, beskrivelse? }
+  //   { type:'milepal', tittel, prosjektId?, frist?, kategori?, under?, notat? }
+  //                     ('oppgave' godtas som eldre alias for samme nivå)
+  //   { type:'leveranse', tittel, prosjektId?, leveranseType:'resultat'|'aktivitet',
+  //     dato, datoTil?, kategori?, beskrivelse? }  ('milepæl' leses som resultat)
   //   { type:'fullfor', malId, malType:'todo'|'oppgave', prosjektId? }
+  //   { type:'migrer', prosjektId, plan }  engangs strukturflytting, se under
   // `kategori` er kategoriens NAVN i målprosjektet; ukjent navn ignoreres.
   // `under` er en leveranses TITTEL i målprosjektet og gir aktivitetId; ukjent
   // eller flertydig navn gir null (elementet havner ukoblet, aldri feilkoblet).
@@ -8889,7 +8889,7 @@
 
       const iDag = window._lokalDatoStr ? window._lokalDatoStr() : new Date().toISOString().slice(0, 10);
       const behandlet = [];
-      let lagtTil = 0, fullfortAntall = 0;
+      let lagtTil = 0, fullfortAntall = 0, migrert = 0;
 
       for (const [pid, gruppe] of grupper) {
         const pk = s => 'lp_' + pid + '_' + s;
@@ -8946,7 +8946,7 @@
         // Leveranser først, så oppgaver, så to-dos: da kan `under` peke på en
         // leveranse som opprettes i samme sveip. Fullføring til slutt, så den
         // også treffer elementer som nettopp ble lagt inn.
-        const REKKEFOLGE = { leveranse: 0, oppgave: 1, todo: 2, fullfor: 3 };
+        const REKKEFOLGE = { migrer: 0, leveranse: 1, oppgave: 2, milepal: 2, todo: 3, fullfor: 4 };
         gruppe.sort((a, b) => (REKKEFOLGE[(a.r && a.r.type) || 'todo'] ?? 2)
                             - (REKKEFOLGE[(b.r && b.r.type) || 'todo'] ?? 2));
 
@@ -8960,7 +8960,7 @@
           // versjon forstår liggende for alltid (og ingen andre enn eieren kan
           // slette den). Etter en uke, eller uten brukbar opprettet-dato,
           // ryddes den bort.
-          if (!['todo', 'oppgave', 'leveranse', 'fullfor'].includes(type)) {
+          if (!['todo', 'oppgave', 'milepal', 'leveranse', 'fullfor', 'migrer'].includes(type)) {
             const alder = r.opprettet ? Date.now() - Date.parse(r.opprettet) : NaN;
             if (alder >= 0 && alder < 7 * 24 * 60 * 60 * 1000) {
               console.warn('[INNBOKS] Ukjent type «' + type + '» — venter på at appen oppdateres:', dokId);
@@ -9016,13 +9016,73 @@
               id: lid,
               tittel: tittel.slice(0, 200),
               beskrivelse: String(r.beskrivelse || '').slice(0, 500),
-              leveranseType: r.leveranseType === 'milepæl' ? 'milepæl' : 'aktivitet',
+              leveranseType: (r.leveranseType === 'resultat' || r.leveranseType === 'milepæl') ? 'resultat' : 'aktivitet',
               type: finnKat(r.kategori),
               dato, datoTil, tid: '', tidTil: '', avhengigAv: []
             });
             endretAktiv = true;
             lagtTil++;
-          } else if (type === 'oppgave') {
+          } else if (type === 'migrer') {
+            // Engangs strukturmigrering (v4.88): flytter elementer mellom
+            // nivåene etter en ferdig sortert plan {leveranser:{id:rolle},
+            // oppgaver:{id:rolle}}. Idempotent: id-er som alt er flyttet
+            // hoppes over, så en re-kjøring endrer ingenting.
+            let mplan;
+            try { mplan = JSON.parse(r.plan || '{}'); }
+            catch (e) { console.warn('[INNBOKS] migrer: ugyldig plan, hopper over'); continue; }
+            const demotert = new Set();
+
+            // 1) Leveranser: 'resultat' beholder plassen med ny type,
+            //    'milepal' flyttes ned til midtnivået med samme id.
+            for (const [lid, rolle] of Object.entries(mplan.leveranser || {})) {
+              const idx = aktivL.findIndex(a => a && a.id === lid);
+              if (idx === -1) continue;
+              const a = aktivL[idx];
+              if (rolle === 'resultat') {
+                if (a.leveranseType !== 'resultat') { a.leveranseType = 'resultat'; endretAktiv = true; }
+              } else if (rolle === 'milepal') {
+                if (!oppgaverL.some(o => o && o.id === lid)) {
+                  oppgaverL.push({ id: lid, beskrivelse: a.tittel, notat: a.beskrivelse || '',
+                    frist: a.dato || null, aktivitetId: null, kategoriId: a.type || null,
+                    viktig: false, gjenta: null, tagger: [],
+                    opprettet: iDag, fullfort: !!a.fullfort, fullfortDato: a.fullfortDato || null });
+                }
+                aktivL.splice(idx, 1);
+                demotert.add(lid);
+                endretAktiv = true; endretOppgaver = true;
+                // To-dos som pekte på leveransen følger med som milepæl-kobling.
+                todosL.forEach(t => {
+                  if (t && t.aktivitetId === lid) { t.oppgaveId = lid; t.aktivitetId = null; endretTodos = true; }
+                });
+              }
+            }
+
+            // 2) Oppgaver: 'milepal' blir stående (nivået har bare fått nytt
+            //    navn), 'todo' flyttes ned med samme id og kobles om.
+            for (const [oid, rolle] of Object.entries(mplan.oppgaver || {})) {
+              if (rolle !== 'todo') continue;
+              const idx = oppgaverL.findIndex(o => o && o.id === oid);
+              if (idx === -1) continue;
+              const o = oppgaverL[idx];
+              if (!todosL.some(t => t && t.id === oid)) {
+                // Pekte den på en leveranse som nå er milepæl, blir koblingen
+                // oppgaveId; ellers beholdes leveransekoblingen som før.
+                const tilMilepel = o.aktivitetId
+                  && (demotert.has(o.aktivitetId) || oppgaverL.some(x => x && x.id === o.aktivitetId));
+                todosL.push({ id: oid, tittel: o.beskrivelse, beskrivelse: o.notat || '',
+                  frist: o.frist || null,
+                  aktivitetId: tilMilepel ? null : (o.aktivitetId || null),
+                  oppgaveId: tilMilepel ? o.aktivitetId : null,
+                  kategoriId: o.kategoriId || null, viktig: o.viktig || false,
+                  gjenta: o.gjenta || null, tagger: (o.tagger || []).slice(),
+                  opprettet: o.opprettet || iDag, fullfort: !!o.fullfort,
+                  fullfortDato: o.fullfortDato || null });
+              }
+              oppgaverL.splice(idx, 1);
+              endretOppgaver = true; endretTodos = true;
+            }
+            migrert++;
+          } else if (type === 'oppgave' || type === 'milepal') {
             if (!tittel) continue;               // tomt dokument: slettes uten effekt
             const oid = 'inn_' + dokId;          // avledet id ⇒ idempotent
             if (oppgaverL.some(o => o && o.id === oid)) continue;
@@ -9079,12 +9139,13 @@
         catch (e) { /* står igjen, ryddes ved neste tømming (id-ene er idempotente) */ }
       }
 
-      if (lagtTil > 0 || fullfortAntall > 0) {
+      if (lagtTil > 0 || fullfortAntall > 0 || migrert > 0) {
         _oppdaterAppFraSky();
         if (typeof renderStartside === 'function') renderStartside();
         const deler = [];
         if (lagtTil > 0)        deler.push(lagtTil + (lagtTil === 1 ? ' ny' : ' nye'));
         if (fullfortAntall > 0) deler.push(fullfortAntall + (fullfortAntall === 1 ? ' fullført' : ' fullførte'));
+        if (migrert > 0)        deler.push('struktur migrert');
         visSynkStatus('↓ ' + deler.join(' + ') + ' fra innboksen', '#3498db');
       }
     } finally {
