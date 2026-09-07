@@ -209,9 +209,14 @@ if (fil) {
   const pidCache = new Map();
   for (const [i, el] of elementer.entries()) {
     const nr = '#' + (i + 1);
-    if (!el || !String(el.tittel || '').trim()) { console.error(nr + ' mangler tittel.'); process.exit(1); }
     if (el.type === 'fullfor') { console.error(nr + ': fullfor støttes bare med --fullfor, ikke i fil.'); process.exit(1); }
-    if (LEVERANSE_TYPER.has(el.type) && !gyldigDato(el.dato)) { console.error(nr + ' («' + el.tittel + '») trenger gyldig dato.'); process.exit(1); }
+    if (el.type === 'oppdater') {
+      if (!el.malId || !el.malType) { console.error(nr + ': oppdater krever malId og malType.'); process.exit(1); }
+      if (!['todo', 'oppgave', 'leveranse'].includes(el.malType)) { console.error(nr + ': ugyldig malType «' + el.malType + '».'); process.exit(1); }
+    } else {
+      if (!el || !String(el.tittel || '').trim()) { console.error(nr + ' mangler tittel.'); process.exit(1); }
+      if (LEVERANSE_TYPER.has(el.type) && !gyldigDato(el.dato)) { console.error(nr + ' («' + el.tittel + '») trenger gyldig dato.'); process.exit(1); }
+    }
     for (const felt of ['frist', 'dato', 'datoTil']) {
       if (el[felt] && !gyldigDato(el[felt])) { console.error(nr + ' har ugyldig ' + felt + ': ' + el[felt]); process.exit(1); }
     }
@@ -222,13 +227,31 @@ if (fil) {
   let ok = 0;
   for (const el of elementer) {
     const pNavn = el.prosjekt || plan.prosjekt || '';
+    const pid = pidCache.get(pNavn) || null;
     const full = { ...el, kategori: el.kategori || plan.kategori || '' };
     try {
-      await sendForespørsel(token, byggFelter(full, pidCache.get(pNavn) || null));
-      console.log('  ✓ ' + beskriv(full));
+      if (el.type === 'oppdater') {
+        const f = {
+          kilde: { stringValue: 'claude' }, opprettet: { stringValue: new Date().toISOString() },
+          type: { stringValue: 'oppdater' }, malId: { stringValue: el.malId },
+          malType: { stringValue: el.malType }
+        };
+        if (pid) f.prosjektId = { stringValue: pid };
+        if (el.nyTittel) f.nyTittel = { stringValue: String(el.nyTittel).slice(0, 300) };
+        if (el.frist)    f.frist    = { stringValue: el.frist };
+        if (el.dato)     f.dato     = { stringValue: el.dato };
+        if (el.datoTil)  f.datoTil  = { stringValue: el.datoTil };
+        if (el.notat != null) f.notat = { stringValue: String(el.notat).slice(0, 500) };
+        await sendForespørsel(token, f);
+        const endr = [el.nyTittel && 'navn', el.frist && 'frist', el.dato && 'dato'].filter(Boolean).join('+');
+        console.log('  ✓ Oppdater ' + el.malType + ' ' + el.malId + ' (' + (endr || 'felt') + ')');
+      } else {
+        await sendForespørsel(token, byggFelter(full, pid));
+        console.log('  ✓ ' + beskriv(full));
+      }
       ok++;
     } catch (e) {
-      console.error('  ✗ ' + beskriv(full) + ': ' + e.message);
+      console.error('  ✗ ' + (el.type === 'oppdater' ? 'oppdater ' + el.malId : beskriv(full)) + ': ' + e.message);
     }
   }
   console.log('\n' + ok + ' av ' + elementer.length + ' lagt i køen, utføres når appen er åpen.');

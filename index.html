@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.88</div>
+<div class="versjon">Prosjekt-planlegger v4.89</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -8842,6 +8842,9 @@
   //   { type:'leveranse', tittel, prosjektId?, leveranseType:'resultat'|'aktivitet',
   //     dato, datoTil?, kategori?, beskrivelse? }  ('milepæl' leses som resultat)
   //   { type:'fullfor', malId, malType:'todo'|'oppgave', prosjektId? }
+  //   { type:'oppdater', malId, malType:'todo'|'oppgave'|'leveranse', prosjektId,
+  //     nyTittel?, frist?, dato?, datoTil?, notat? }  endrer KUN oppgitte felt
+  //     på et eksisterende element, aldri koblinger.
   //   { type:'migrer', prosjektId, plan }  engangs strukturflytting, se under
   // `kategori` er kategoriens NAVN i målprosjektet; ukjent navn ignoreres.
   // `under` er en leveranses TITTEL i målprosjektet og gir aktivitetId; ukjent
@@ -8889,7 +8892,7 @@
 
       const iDag = window._lokalDatoStr ? window._lokalDatoStr() : new Date().toISOString().slice(0, 10);
       const behandlet = [];
-      let lagtTil = 0, fullfortAntall = 0, migrert = 0;
+      let lagtTil = 0, fullfortAntall = 0, migrert = 0, oppdatertAntall = 0;
 
       for (const [pid, gruppe] of grupper) {
         const pk = s => 'lp_' + pid + '_' + s;
@@ -8946,7 +8949,7 @@
         // Leveranser først, så oppgaver, så to-dos: da kan `under` peke på en
         // leveranse som opprettes i samme sveip. Fullføring til slutt, så den
         // også treffer elementer som nettopp ble lagt inn.
-        const REKKEFOLGE = { migrer: 0, leveranse: 1, oppgave: 2, milepal: 2, todo: 3, fullfor: 4 };
+        const REKKEFOLGE = { migrer: 0, leveranse: 1, oppgave: 2, milepal: 2, todo: 3, oppdater: 4, fullfor: 5 };
         gruppe.sort((a, b) => (REKKEFOLGE[(a.r && a.r.type) || 'todo'] ?? 2)
                             - (REKKEFOLGE[(b.r && b.r.type) || 'todo'] ?? 2));
 
@@ -8960,7 +8963,7 @@
           // versjon forstår liggende for alltid (og ingen andre enn eieren kan
           // slette den). Etter en uke, eller uten brukbar opprettet-dato,
           // ryddes den bort.
-          if (!['todo', 'oppgave', 'milepal', 'leveranse', 'fullfor', 'migrer'].includes(type)) {
+          if (!['todo', 'oppgave', 'milepal', 'leveranse', 'fullfor', 'migrer', 'oppdater'].includes(type)) {
             const alder = r.opprettet ? Date.now() - Date.parse(r.opprettet) : NaN;
             if (alder >= 0 && alder < 7 * 24 * 60 * 60 * 1000) {
               console.warn('[INNBOKS] Ukjent type «' + type + '» — venter på at appen oppdateres:', dokId);
@@ -8974,7 +8977,35 @@
           const tittel = String(r.tittel || r.tekst || r.text || '').trim();
           const frist = (typeof r.frist === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.frist)) ? r.frist : null;
 
-          if (type === 'fullfor') {
+          if (type === 'oppdater') {
+            // Målrettet felt-oppdatering av et eksisterende element (frist,
+            // tittel, dato, notat). Endrer KUN feltene forespørselen oppgir, og
+            // aldri koblinger — så to-dos under en milepæl beholder plassen.
+            // Samme les-fersk-og-flett-sikkerhet som fullfor.
+            const arr = r.malType === 'leveranse' ? aktivL
+                      : r.malType === 'oppgave'   ? oppgaverL : todosL;
+            const item = arr.find(x => x && x.id === r.malId);
+            if (!item) { console.warn('[INNBOKS] oppdater: fant ikke', r.malId, 'i', pid); continue; }
+            const nyTittel = typeof r.nyTittel === 'string' ? r.nyTittel.trim().slice(0, 300) : null;
+            if (nyTittel) {
+              if (r.malType === 'todo' || r.malType === 'leveranse') item.tittel = nyTittel;
+              else item.beskrivelse = nyTittel;   // midtnivå lagrer tittel i beskrivelse
+            }
+            if (frist && (r.malType === 'todo' || r.malType === 'oppgave')) item.frist = frist;
+            if (r.malType === 'leveranse') {
+              if (typeof r.dato === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.dato)) item.dato = r.dato;
+              if (typeof r.datoTil === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.datoTil)) item.datoTil = r.datoTil;
+            }
+            if (typeof r.notat === 'string') {
+              if (r.malType === 'leveranse') item.beskrivelse = r.notat.slice(0, 500);
+              else if (r.malType === 'oppgave') item.notat = r.notat.slice(0, 500);
+              else item.beskrivelse = r.notat.slice(0, 500);
+            }
+            if (r.malType === 'leveranse') endretAktiv = true;
+            else if (r.malType === 'oppgave') endretOppgaver = true;
+            else endretTodos = true;
+            oppdatertAntall++;
+          } else if (type === 'fullfor') {
             const erOppgave = r.malType === 'oppgave';
             const liste = erOppgave ? oppgaverL : todosL;
             const item = liste.find(x => x && x.id === r.malId);
@@ -9139,12 +9170,13 @@
         catch (e) { /* står igjen, ryddes ved neste tømming (id-ene er idempotente) */ }
       }
 
-      if (lagtTil > 0 || fullfortAntall > 0 || migrert > 0) {
+      if (lagtTil > 0 || fullfortAntall > 0 || migrert > 0 || oppdatertAntall > 0) {
         _oppdaterAppFraSky();
         if (typeof renderStartside === 'function') renderStartside();
         const deler = [];
         if (lagtTil > 0)        deler.push(lagtTil + (lagtTil === 1 ? ' ny' : ' nye'));
         if (fullfortAntall > 0) deler.push(fullfortAntall + (fullfortAntall === 1 ? ' fullført' : ' fullførte'));
+        if (oppdatertAntall > 0) deler.push(oppdatertAntall + ' oppdatert');
         if (migrert > 0)        deler.push('struktur migrert');
         visSynkStatus('↓ ' + deler.join(' + ') + ' fra innboksen', '#3498db');
       }
