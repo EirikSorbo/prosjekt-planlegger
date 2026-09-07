@@ -142,10 +142,12 @@ function radOppgave(o) {
   if (o.frist) deler.push('(frist ' + o.frist + ')');
   return '- [' + (o.fullfort ? 'x' : ' ') + '] ' + deler.join(' ');
 }
-function radAktivitet(a) {
-  const navn = a.navn || a.tittel || a.beskrivelse || '(uten navn)';
-  const periode = [a.start, a.slutt].filter(Boolean).join(' til ');
-  return '- ' + navn + (periode ? ' (' + periode + ')' : '');
+function radLeveranse(a) {
+  const navn = a.tittel || a.navn || a.beskrivelse || '(uten navn)';
+  const erResultat = a.leveranseType === 'resultat' || a.leveranseType === 'milepæl';
+  const periode = [a.dato, a.datoTil].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i).join(' til ');
+  const merke = erResultat ? '◆ ' : '';
+  return '- ' + merke + navn + (periode ? ' (' + periode + ')' : '');
 }
 
 function seksjon(overskrift, rader) {
@@ -162,8 +164,8 @@ function prosjektNotat(p, data, created) {
   return frontmatter(p.navn + ' (Prosjekt-planlegger)', created, 'active') + '\n\n'
     + ADVARSEL + '\n'
     + seksjon('To do (' + apneT.length + ' åpne)', todos.filter(Boolean).map(radTodo))
-    + seksjon('Oppgaver (' + apneO.length + ' åpne)', oppgaver.filter(Boolean).map(radOppgave))
-    + seksjon('Aktiviteter', aktiv.filter(Boolean).map(radAktivitet));
+    + seksjon('Milepæler (' + apneO.length + ' åpne)', oppgaver.filter(Boolean).map(radOppgave))
+    + seksjon('Leveranser', aktiv.filter(Boolean).map(radLeveranse));
 }
 
 function oversiktNotat(prosjekter, dataPerPid, innboksAntall, created) {
