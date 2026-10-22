@@ -140,7 +140,10 @@ const MIDT_TYPER = new Set(['milepal', 'oppgave']);
 function byggFelter(el, pid) {
   const felter = {
     kilde: { stringValue: 'claude' },
-    opprettet: { stringValue: new Date().toISOString() }
+    opprettet: { stringValue: new Date().toISOString() },
+    // Køens funksjonsnivå (se KO_NIVA i appen): nivå 2 = to-do under milepæl
+    // via navn og tid på leveranse. En eldre app lar forespørselen ligge.
+    krevNiva: { integerValue: '2' }
   };
   if (pid) felter.prosjektId = { stringValue: pid };
   const tit = String(el.tittel || '').trim().slice(0, 500);
@@ -151,6 +154,8 @@ function byggFelter(el, pid) {
     felter.tittel = { stringValue: tit };
     felter.dato = { stringValue: el.dato };
     if (el.datoTil) felter.datoTil = { stringValue: el.datoTil };
+    if (el.tid)     felter.tid     = { stringValue: el.tid };
+    if (el.tidTil)  felter.tidTil  = { stringValue: el.tidTil };
     if (el.beskrivelse) felter.beskrivelse = { stringValue: String(el.beskrivelse).slice(0, 500) };
   } else {
     // Midtnivå (milepæl) eller to-do. Begge bruker tittel-feltet.
@@ -219,6 +224,9 @@ if (fil) {
     }
     for (const felt of ['frist', 'dato', 'datoTil']) {
       if (el[felt] && !gyldigDato(el[felt])) { console.error(nr + ' har ugyldig ' + felt + ': ' + el[felt]); process.exit(1); }
+    }
+    for (const felt of ['tid', 'tidTil']) {
+      if (el[felt] && !/^\d{2}:\d{2}$/.test(el[felt])) { console.error(nr + ' har ugyldig ' + felt + ' (bruk HH:MM): ' + el[felt]); process.exit(1); }
     }
     const pNavn = el.prosjekt || plan.prosjekt || '';
     if (pNavn && !pidCache.has(pNavn)) pidCache.set(pNavn, await prosjektIdFor(pNavn));

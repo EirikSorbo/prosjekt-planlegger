@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.89</div>
+<div class="versjon">Prosjekt-planlegger v4.90</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -8836,7 +8836,9 @@
   // skriver til prosjektdokumentene — utfører trygt og deretter sletter:
   //   { tekst }                                → todo i fangstprosjektet
   //                                              (Siri-snarveien, bakoverkompatibelt)
+  //   Alle typer kan ha krevNiva (tall): står den høyere enn KO_NIVA venter den.
   //   { type:'todo',    tittel, prosjektId?, frist?, url?, kategori?, under? }
+  //     under = milepælens tittel (først) eller leveransens tittel
   //   { type:'milepal', tittel, prosjektId?, frist?, kategori?, under?, notat? }
   //                     ('oppgave' godtas som eldre alias for samme nivå)
   //   { type:'leveranse', tittel, prosjektId?, leveranseType:'resultat'|'aktivitet',
@@ -8859,6 +8861,11 @@
   // forespørselsdokument kan ingen overskrive, det slettes først etter
   // bekreftet skriv, og id-er avledes av dokument-id (inn_<id>) slik at en
   // re-kjøring aldri dupliserer.
+  // Køens funksjonsnivå. Heves når køen får nye felt eller typer som en eldre
+  // app ville feiltolke (v4.90: to-do under milepæl via navn, tid på leveranse).
+  // Verktøyet merker slike forespørsler med krevNiva, så en gammel fane lar dem
+  // ligge til den er oppdatert i stedet for å utføre dem halvveis.
+  const KO_NIVA = 2;
   let _tommerInnboks = false;
   let _innboksPaNytt = false;
 
@@ -8943,6 +8950,17 @@
           return t.length === 1 ? t[0].id : null;
         };
 
+        // Milepæl (midtnivå) ved TITTEL, samme regler som finnLeveranse. Brukes
+        // av to-dos: `under` kobler til en milepæl først, ellers til en leveranse.
+        const finnMilepel = navn => {
+          if (!navn) return null;
+          const n = String(navn).trim().toLowerCase();
+          const norm = o => String((o && o.beskrivelse) || '').trim().toLowerCase();
+          let t = oppgaverL.filter(o => o && norm(o) === n);
+          if (!t.length) t = oppgaverL.filter(o => o && norm(o).includes(n));
+          return t.length === 1 ? t[0].id : null;
+        };
+
         let endretTodos = false, endretOppgaver = false, endretFlog = false, endretAktiv = false;
         const gruppeBehandlet = [];
 
@@ -8963,7 +8981,10 @@
           // versjon forstår liggende for alltid (og ingen andre enn eieren kan
           // slette den). Etter en uke, eller uten brukbar opprettet-dato,
           // ryddes den bort.
-          if (!['todo', 'oppgave', 'milepal', 'leveranse', 'fullfor', 'migrer', 'oppdater'].includes(type)) {
+          // Versjonsvakt: en forespørsel kan kreve et høyere kønivå (krevNiva)
+          // enn denne appen kan. Da behandles den som ukjent type under.
+          if (!['todo', 'oppgave', 'milepal', 'leveranse', 'fullfor', 'migrer', 'oppdater'].includes(type)
+              || Number(r.krevNiva || 0) > KO_NIVA) {
             const alder = r.opprettet ? Date.now() - Date.parse(r.opprettet) : NaN;
             if (alder >= 0 && alder < 7 * 24 * 60 * 60 * 1000) {
               console.warn('[INNBOKS] Ukjent type «' + type + '» — venter på at appen oppdateres:', dokId);
@@ -9049,7 +9070,10 @@
               beskrivelse: String(r.beskrivelse || '').slice(0, 500),
               leveranseType: (r.leveranseType === 'resultat' || r.leveranseType === 'milepæl') ? 'resultat' : 'aktivitet',
               type: finnKat(r.kategori),
-              dato, datoTil, tid: '', tidTil: '', avhengigAv: []
+              dato, datoTil,
+              tid:    /^\d{2}:\d{2}$/.test(r.tid || '')    ? r.tid    : '',
+              tidTil: /^\d{2}:\d{2}$/.test(r.tidTil || '') ? r.tidTil : '',
+              avhengigAv: []
             });
             endretAktiv = true;
             lagtTil++;
@@ -9128,11 +9152,15 @@
             if (!tittel) continue;               // tomt dokument: slettes uten todo
             const tid = 'inn_' + dokId;          // avledet id ⇒ idempotent
             if (todosL.some(t => t && t.id === tid)) continue;
+            // `under`: milepæl vinner over leveranse (milepælene opprettes før
+            // to-dos i samme sveip, så de nye finnes allerede her).
+            const mpId  = finnMilepel(r.under);
+            const levId = mpId ? null : finnLeveranse(r.under);
             todosL.push({
               id: tid,
               tittel: tittel.slice(0, 200),
               beskrivelse: String(r.url || '').slice(0, 500),
-              frist, aktivitetId: finnLeveranse(r.under), oppgaveId: null,
+              frist, aktivitetId: levId, oppgaveId: mpId,
               kategoriId: finnKat(r.kategori),
               gjenta: null, tagger: [], opprettet: iDag, fullfort: false
             });
