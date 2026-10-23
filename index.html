@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.90</div>
+<div class="versjon">Prosjekt-planlegger v4.91</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2472,8 +2472,9 @@
   function oppdaterProsjektTittel() {
     const p = hentAktivtProsjekt();
     const el = document.getElementById('prosjektTittel');
-    if (el) el.textContent = p.navn;
-    document.title = p.navn;
+    const visNavn = _alleAktiv() ? 'Alle prosjekter' : p.navn;
+    if (el) el.textContent = visNavn;
+    document.title = visNavn;
   }
 
   let _visDagerIgjen = localStorage.getItem('lp_visDagerIgjen') !== 'false'; // default on
@@ -2573,6 +2574,92 @@
   let oppgaveFilterState   = {};
 
   let globalKatFilter  = null; // Hovedfilter — null = vis alt
+
+  // ── «Alle prosjekter»-modus (v4.91) ──
+  // To do, milepæler, leveranser, Start og tidslinjen viser data fra alle aktive
+  // prosjekter. Modusen overstyrer filtrene (_todoFilter m.fl.) UTEN å endre
+  // dem, så de gjenopprettes når modusen slås av. Kalender (måned/uke) viser
+  // fortsatt aktivt prosjekt: dagpanelet endrer de globale listene direkte.
+  // Nye elementer går alltid til ett prosjekt: se _velgProsjektForNy.
+  let _alleModus = localStorage.getItem('lp_alleModus') === '1';
+  let _metaFørAlle = false;
+  let _prosjektValgtForNy = false;
+  function _alleAktiv() { return _alleModus && prosjekter.filter(p => !p.arkivert).length > 1; }
+  function _alleIder()  { return prosjekter.filter(p => !p.arkivert).map(p => p.id); }
+
+  function settAlleModus(på) {
+    på = !!på;
+    if (på === _alleModus) return;
+    _alleModus = på;
+    try { localStorage.setItem('lp_alleModus', på ? '1' : '0'); } catch (e) { /* ikke kritisk */ }
+    // Tidslinjen følger modusen (meta = alle prosjekter), og går tilbake etterpå.
+    if (på) { _metaFørAlle = _metaTidslinjeAktiv; _metaTidslinjeAktiv = true; }
+    else    { _metaTidslinjeAktiv = _metaFørAlle; }
+    const mb = document.getElementById('metaTidslinjeKnapp');
+    if (mb) mb.classList.toggle('aktiv', _metaTidslinjeAktiv);
+    _tidslinjeReady = false;
+    _tidslinjeZoomInit = false;
+    oppdaterProsjektTittel();
+    _oppdaterTodoFilterKnapp();
+    _oppdaterTabFilterKnapp('leveranse');
+    _oppdaterTabFilterKnapp('oppgave');
+    oppdaterAktivPanel();
+    renderStartside();
+    renderTodos();
+    oppdaterForfaltBadge();
+  }
+
+  // Spør hvilket prosjekt et nytt element skal til, når «Alle prosjekter» vises.
+  // Uten dette ville nye elementer stille havnet i det sist aktive prosjektet.
+  // Valget bytter aktivt prosjekt (som å åpne et element fra en alle-liste gjør),
+  // og kjører så handlingen som ble avbrutt.
+  function _velgProsjektForNy(fortsett) {
+    const gammel = document.getElementById('prosjektValgOverlay');
+    if (gammel) gammel.remove();
+    const ov = document.createElement('div');
+    ov.id = 'prosjektValgOverlay';
+    ov.className = 'modal-overlay vis';
+    ov.style.zIndex = '400';
+    const boks = document.createElement('div');
+    boks.className = 'modal';
+    boks.style.maxWidth = '360px';
+    const hode = document.createElement('div');
+    hode.className = 'modal-header';
+    hode.innerHTML = '<div class="modal-tittel">Legg til i hvilket prosjekt?</div>';
+    const x = document.createElement('button');
+    x.className = 'lukk-knapp'; x.textContent = '×';
+    x.onclick = () => ov.remove();
+    hode.appendChild(x);
+    const kropp = document.createElement('div');
+    kropp.className = 'modal-body';
+    prosjekter.filter(p => !p.arkivert).forEach(p => {
+      const rad = document.createElement('button');
+      rad.className = 'knapp-sek';
+      rad.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;padding:11px 14px;font-size:13px;';
+      const dot = document.createElement('span');
+      dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${p.farge || 'var(--grønn)'};flex-shrink:0;`;
+      rad.appendChild(dot);
+      rad.appendChild(document.createTextNode(p.navn));
+      if (p.id === aktivtProsjektId) {
+        const sist = document.createElement('span');
+        sist.style.cssText = 'margin-left:auto;font-size:11px;color:var(--tekst-sek);';
+        sist.textContent = 'sist brukt';
+        rad.appendChild(sist);
+      }
+      rad.onclick = () => {
+        ov.remove();
+        if (p.id !== aktivtProsjektId) byttProsjekt(p.id);
+        _prosjektValgtForNy = true;
+        try { fortsett(); } finally { _prosjektValgtForNy = false; }
+      };
+      kropp.appendChild(rad);
+    });
+    boks.appendChild(hode);
+    boks.appendChild(kropp);
+    ov.appendChild(boks);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
   let redigAktivitetId = null;
   let redigOppgaveId   = null;
   let valgtDato        = null;
@@ -2949,7 +3036,7 @@
   let tidslinjeSluttGrense = null; // null = auto: i dag + 2 år
   let _tidslinjeReady = false;       // true etter første synlige render (vet scroll-posisjon)
   let _tidslinjeScrollTarget = null; // sett ved zoom-endring: px-pos å gjenopprette
-  let _metaTidslinjeAktiv = false;   // true når meta-tidslinje (alle prosjekter) er synlig
+  let _metaTidslinjeAktiv = localStorage.getItem('lp_alleModus') === '1';  // Alle-modus lagret ⇒ start i meta   // true når meta-tidslinje (alle prosjekter) er synlig
 
   function _tlDefault() {
     const n = new Date(); n.setHours(0,0,0,0);
@@ -3984,7 +4071,7 @@
   // periode: null = alt, '1d','3d','7d','egendefinert'
 
   function _todoFilterAktiv() {
-    return _todoFilter.prosjekter || _todoFilter.periode;
+    return _alleAktiv() || _todoFilter.prosjekter || _todoFilter.periode;
   }
 
   function _brukTodoFilter() {
@@ -4193,6 +4280,7 @@
   // Prosjekt-id-er som Start-siden viser (respekterer prosjektfilter).
   function _startProsjektIds() {
     const aktive = prosjekter.filter(p => !p.arkivert);
+    if (_alleAktiv()) return aktive.map(p => p.id);
     if (_startFilter.prosjekter && _startFilter.prosjekter.length)
       return _startFilter.prosjekter.filter(id => aktive.some(p => p.id === id));
     return aktive.map(p => p.id);
@@ -4217,7 +4305,7 @@
     const aktive = prosjekter.filter(p => !p.arkivert);
     if (aktive.length > 1) {
       const pBtn = document.createElement('button');
-      const alleValgt = !_startFilter.prosjekter || _startFilter.prosjekter.length === aktive.length;
+      const alleValgt = _alleAktiv() || !_startFilter.prosjekter || _startFilter.prosjekter.length === aktive.length;
       pBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> ${alleValgt ? 'Alle prosjekter' : _startFilter.prosjekter.length + ' prosjekt'}`;
       pBtn.style.cssText = `padding:6px 12px;border-radius:20px;border:1.5px solid ${alleValgt ? 'var(--kant)' : 'var(--grønn)'};background:${alleValgt ? 'var(--hvit)' : 'var(--grønn-lys)'};color:${alleValgt ? 'var(--tekst-sek)' : 'var(--grønn)'};font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:5px;`;
       pBtn.onclick = () => _visStartProsjektFilter(pBtn);
@@ -4478,15 +4566,22 @@
   function _renderFilterSeksjonInnhold(container) {
     container.innerHTML = '';
 
-    if (!_todoFilter.prosjekter) _todoFilter.prosjekter = [aktivtProsjektId];
+    const iAlle = _alleAktiv();
+    if (!iAlle && !_todoFilter.prosjekter) _todoFilter.prosjekter = [aktivtProsjektId];
 
     // ── Prosjekter ──
     const pTit = document.createElement('div');
     pTit.style.cssText = "font-size:10px;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;";
     pTit.textContent = 'Prosjekter';
     container.appendChild(pTit);
+    if (iAlle) {
+      const n = document.createElement('div');
+      n.style.cssText = 'font-size:12px;color:var(--tekst-sek);line-height:1.5;';
+      n.textContent = 'Alle prosjekter vises. Velg ett prosjekt i menyen øverst for å avgrense.';
+      container.appendChild(n);
+    }
 
-    prosjekter.filter(p => !p.arkivert).forEach(p => {
+    (iAlle ? [] : prosjekter.filter(p => !p.arkivert)).forEach(p => {
       const label = document.createElement('label');
       label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
       const cb = document.createElement('input');
@@ -4619,13 +4714,14 @@
 
   function _hentTodoFilterData() {
     // Returner { todos, oppgaver, aktiviteter, kategorier } basert på filter
-    if (!_todoFilter.prosjekter || _todoFilter.prosjekter.length === 0 ||
-        (_todoFilter.prosjekter.length === 1 && _todoFilter.prosjekter[0] === aktivtProsjektId)) {
+    const valgte = _alleAktiv() ? _alleIder() : _todoFilter.prosjekter;
+    if (!valgte || valgte.length === 0 ||
+        (valgte.length === 1 && valgte[0] === aktivtProsjektId)) {
       return { todos, oppgaver, aktiviteter, kategorier, multi: false };
     }
     // Multi-prosjekt: samle data fra alle valgte prosjekter
     let samletTodos = [], samletOppgaver = [], samletAktiviteter = [], samletKategorier = [];
-    _todoFilter.prosjekter.forEach(pid => {
+    valgte.forEach(pid => {
       const erAktivt = pid === aktivtProsjektId;
       const data = erAktivt ? { todos, oppgaver, aktiviteter, kategorier } : _hentProsjektData(pid);
       const pNavn = prosjekter.find(p => p.id === pid)?.navn || '';
@@ -4666,7 +4762,7 @@
   }
 
   function _tabFilterAktiv(tab) {
-    return !!_getTabFilter(tab).prosjekter;
+    return _alleAktiv() || !!_getTabFilter(tab).prosjekter;
   }
 
   function _oppdaterTabFilterKnapp(tab) {
@@ -4687,12 +4783,13 @@
 
   function _hentTabFilterData(tab) {
     const f = _getTabFilter(tab);
-    if (!f.prosjekter || f.prosjekter.length === 0 ||
-        (f.prosjekter.length === 1 && f.prosjekter[0] === aktivtProsjektId)) {
+    const valgte = _alleAktiv() ? _alleIder() : f.prosjekter;
+    if (!valgte || valgte.length === 0 ||
+        (valgte.length === 1 && valgte[0] === aktivtProsjektId)) {
       return { aktiviteter, oppgaver, kategorier, multi: false };
     }
     let sA = [], sO = [], sK = [];
-    f.prosjekter.forEach(pid => {
+    valgte.forEach(pid => {
       const erAktivt = pid === aktivtProsjektId;
       const data = erAktivt ? { aktiviteter, oppgaver, kategorier } : _hentProsjektData(pid);
       const pNavn = prosjekter.find(p => p.id === pid)?.navn || '';
@@ -4709,7 +4806,8 @@
     if (existing) { existing.remove(); _oppdaterTabFilterKnapp(tab); return; }
 
     const f = _getTabFilter(tab);
-    if (!f.prosjekter) f.prosjekter = [aktivtProsjektId];
+    const iAlle = _alleAktiv();
+    if (!iAlle && !f.prosjekter) f.prosjekter = [aktivtProsjektId];
 
     const popup = document.createElement('div');
     popup.id = popupId;
@@ -4720,8 +4818,14 @@
     pTittel.style.cssText = 'font-size:10px;font-weight:700;font-family:\'Syne\',sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--tekst-sek);margin-bottom:8px;';
     pTittel.textContent = 'Prosjekter';
     popup.appendChild(pTittel);
+    if (iAlle) {
+      const n = document.createElement('div');
+      n.style.cssText = 'font-size:12px;color:var(--tekst-sek);line-height:1.5;max-width:210px;';
+      n.textContent = 'Alle prosjekter vises. Velg ett prosjekt i menyen øverst for å avgrense.';
+      popup.appendChild(n);
+    }
 
-    prosjekter.filter(p => !p.arkivert).forEach(p => {
+    (iAlle ? [] : prosjekter.filter(p => !p.arkivert)).forEach(p => {
       const label = document.createElement('label');
       label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--tekst);font-weight:600;';
       const cb = document.createElement('input');
@@ -5317,6 +5421,9 @@
   }
 
   function åpneTodoModal(id = null, preOppgaveId = null, preLeveranseId = null) {
+    if (_alleAktiv() && !id && !preOppgaveId && !preLeveranseId && !_prosjektValgtForNy) {
+      _velgProsjektForNy(() => åpneTodoModal(id, preOppgaveId, preLeveranseId)); return;
+    }
     redigTodoId = id;
     const slettKnapp = document.getElementById('slettTodoKnapp');
 
@@ -5382,6 +5489,7 @@
   function hurtigLeggTilTodo(tittel) {
     tittel = (tittel || '').trim();
     if (!tittel) return;
+    if (_alleAktiv() && !_prosjektValgtForNy) { _velgProsjektForNy(() => hurtigLeggTilTodo(tittel)); return; }
     todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, tagger: [], opprettet: _lokalDatoStr(), fullfort: false });
     lagre(); renderTodos();
     const inp = document.getElementById('hurtigTodoInput');
@@ -6759,6 +6867,9 @@
   }
 
   function åpneAktivitetModal(id = null, dato = null) {
+    if (_alleAktiv() && !id && !_prosjektValgtForNy) {
+      _velgProsjektForNy(() => åpneAktivitetModal(id, dato)); return;
+    }
     const feltType = document.getElementById('feltType');
     feltType.innerHTML = '';
     kategorier.forEach(k => {
@@ -6818,6 +6929,9 @@
   }
 
   function åpneMilepelModal(id = null, dato = null) {
+    if (_alleAktiv() && !id && !_prosjektValgtForNy) {
+      _velgProsjektForNy(() => åpneMilepelModal(id, dato)); return;
+    }
     if (id) {
       åpneAktivitetModal(id, dato);
       return;
@@ -6906,6 +7020,9 @@
   function oppdaterFristInfo() { /* no-op — beholdes for kompatibilitet */ }
 
   function åpneOppgaveModal(id = null, preAktivitetId = null) {
+    if (_alleAktiv() && !id && !preAktivitetId && !_prosjektValgtForNy) {
+      _velgProsjektForNy(() => åpneOppgaveModal(id, preAktivitetId)); return;
+    }
     redigOppgaveId = id;
     const slettKnapp = document.getElementById('slettOppgaveKnapp');
     const katSelect  = document.getElementById('oppFeltKategori');
@@ -8284,22 +8401,38 @@
     const meny = document.getElementById('prosjektMeny');
     if (meny.style.display !== 'none') { meny.style.display = 'none'; return; }
     meny.innerHTML = '';
-    prosjekter.filter(p => !p.arkivert).forEach(p => {
+    const aktiveP = prosjekter.filter(p => !p.arkivert);
+    if (aktiveP.length > 1) {
+      const alle = document.createElement('div');
+      alle.style.cssText = `padding:10px 14px;font-size:13px;font-weight:${_alleAktiv()?'700':'500'};font-family:'Nunito',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tekst);transition:background .1s;border-bottom:1px solid var(--kant);`;
+      alle.onmouseenter = () => alle.style.background = 'var(--bg)';
+      alle.onmouseleave = () => alle.style.background = '';
+      alle.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span>Alle prosjekter</span>';
+      if (_alleAktiv()) {
+        const ck = document.createElement('span');
+        ck.style.cssText = 'margin-left:auto;font-size:14px;color:var(--grønn);';
+        ck.textContent = '✓';
+        alle.appendChild(ck);
+      }
+      alle.onclick = e => { e.stopPropagation(); meny.style.display = 'none'; settAlleModus(true); };
+      meny.appendChild(alle);
+    }
+    aktiveP.forEach(p => {
       const el = document.createElement('div');
-      el.style.cssText = `padding:10px 14px;font-size:13px;font-weight:${p.id===aktivtProsjektId?'700':'500'};font-family:'Nunito',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tekst);transition:background .1s;`;
+      el.style.cssText = `padding:10px 14px;font-size:13px;font-weight:${p.id===aktivtProsjektId && !_alleAktiv()?'700':'500'};font-family:'Nunito',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tekst);transition:background .1s;`;
       el.onmouseenter = () => el.style.background = 'var(--bg)';
       el.onmouseleave = () => el.style.background = '';
       const dot = document.createElement('span');
       dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${p.farge};flex-shrink:0;`;
       el.appendChild(dot);
       el.appendChild(document.createTextNode(p.navn));
-      if (p.id === aktivtProsjektId) {
+      if (p.id === aktivtProsjektId && !_alleAktiv()) {
         const check = document.createElement('span');
         check.style.cssText = 'margin-left:auto;font-size:14px;color:var(--grønn);';
         check.textContent = '✓';
         el.appendChild(check);
       }
-      el.onclick = e => { e.stopPropagation(); meny.style.display = 'none'; if (p.id !== aktivtProsjektId) byttProsjekt(p.id); };
+      el.onclick = e => { e.stopPropagation(); meny.style.display = 'none'; if (_alleModus) settAlleModus(false); if (p.id !== aktivtProsjektId) byttProsjekt(p.id); };
       meny.appendChild(el);
     });
     meny.style.display = 'block';
