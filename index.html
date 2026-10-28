@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.92</div>
+<div class="versjon">Prosjekt-planlegger v4.93</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -4652,24 +4652,14 @@
       const liste = _parseSafe(localStorage.getItem(nøkkel), []) || [];
       const item = liste.find(x => x.id === itemId);
       if (!item) return;
-      const varSkitten = !!localStorage.getItem(pk('dirty'));
       item.fullfort = !item.fullfort;
       item.fullfortDato = item.fullfort ? idag : null;
       localStorage.setItem(nøkkel, JSON.stringify(liste));
       localStorage.setItem(pk('dirty'), Date.now().toString());
-      if (window._currentUid) {
-        // Bare det AKTIVE prosjektet har sanntidslytter, så den lokale kopien av
-        // et annet prosjekt kan være gammel. Et helt-dokument-skriv herfra ville
-        // gjenopplivet alt som er slettet/fullført på en annen enhet — derfor et
-        // målrettet skriv som kun endrer dette ene elementet i sky. Hadde
-        // prosjektet allerede usynkede endringer, må hele dokumentet opp uansett.
-        if (!varSkitten && window._fullforIAnnetProsjekt)
-          window._fullforIAnnetProsjekt(window._currentUid, prosjektId, itemId, erTodo, item.fullfort, item.fullfortDato);
-        else if (window._lagreTilSky)
-          // Send prosjektId eksplisitt — ellers synker lagreTilSky det AKTIVE
-          // prosjektet i stedet, og denne avhukningen når aldri sky.
-          window._lagreTilSky(window._currentUid, prosjektId);
-      }
+      // Lagringen fletter mot grunnlaget, så bare denne avhukingen sendes, selv
+      // om den lokale kopien av prosjektet er gammel. prosjektId sendes
+      // eksplisitt, ellers synkes det aktive prosjektet i stedet.
+      if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid, prosjektId);
     }
     renderAlleLister();
   }
@@ -8681,7 +8671,7 @@
     }
     prosjekter = prosjekter.filter(p => p.id !== prosjektId);
     lagreProsjekter();
-    ['a','o','t','k','tl','fa','fo'].forEach(s => localStorage.removeItem('lp_' + prosjektId + '_' + s));
+    ['a','o','t','k','tl','fa','fo','base','dirty'].forEach(s => localStorage.removeItem('lp_' + prosjektId + '_' + s));
     if (window._currentUid && window._slettProsjektFraSky) window._slettProsjektFraSky(window._currentUid, prosjektId);
     renderInnstProsjektListe();
     åpneKategoriModal();
@@ -8716,7 +8706,10 @@
     const state = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('lp_') && !k.startsWith('lp_backup')) state[k] = localStorage.getItem(k);
+      // Synk-grunnlaget (_base) og dirty-markørene beskriver forholdet til skyen
+      // NÅ, ikke innholdet; de skal ikke rulles tilbake ved gjenoppretting.
+      if (k && k.startsWith('lp_') && !k.startsWith('lp_backup') && !k.endsWith('_base') && !k.endsWith('_dirty'))
+        state[k] = localStorage.getItem(k);
     }
     return state;
   }
@@ -8785,10 +8778,19 @@
     const slett = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('lp_') && !k.startsWith('lp_backup')) slett.push(k);
+      if (k && k.startsWith('lp_') && !k.startsWith('lp_backup') && !k.endsWith('_base')) slett.push(k);
     }
     slett.forEach(k => localStorage.removeItem(k));
-    Object.entries(entry.state).forEach(([k, v]) => localStorage.setItem(k, v));
+    Object.entries(entry.state)
+      .filter(([k]) => !k.endsWith('_base') && !k.endsWith('_dirty'))
+      .forEach(([k, v]) => localStorage.setItem(k, v));
+    // Merk alle gjenopprettede prosjekter som endret lokalt. Uten dette hentet
+    // appen skyen ved omlasting og skrev den over det som nettopp ble
+    // gjenopprettet. Nå sendes gjenopprettingen opp med fletting mot det
+    // gjeldende grunnlaget, så den slår igjennom på alle enheter.
+    (_parseSafe(localStorage.getItem('lp_prosjekter'), []) || []).forEach(p => {
+      if (p && p.id) localStorage.setItem('lp_' + p.id + '_dirty', Date.now().toString());
+    });
     location.reload();
   }
 
@@ -8833,7 +8835,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc, collection, getDocs }
+  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc, collection, getDocs, runTransaction }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -8900,160 +8902,269 @@
     el._timer = setTimeout(() => { el.style.opacity = '0'; }, ms || 3000);
   }
 
-  // ── Synkroniser data med Firestore ──
-  async function lagreTilSky(userId, pid) {
+  // ── Synkronisering med fletting (v4.93) ───────────────────────────────────
+  // Hvert prosjekt har et GRUNNLAG (lp_<pid>_base): listene slik de sist var i
+  // synk med skyen. Ved lagring tas bare det denne enheten faktisk har endret,
+  // lagt til eller slettet i forhold til grunnlaget; alt annet hentes fra
+  // skyen. Før skrev hver lagring hele prosjektet fra den lokale kopien, så en
+  // enhet som hadde vært offline slettet alt som var lagt til andre steder i
+  // mellomtiden (Siri, køen, en annen enhet). Det samme gjelder motsatt vei:
+  // når skyen endrer seg, flettes den inn, så usynkede lokale endringer består.
+  const _LISTER = [['aktiviteter', 'a'], ['oppgaver', 'o'], ['todos', 't'], ['kategorier', 'k']];
+
+  function _lesLokalDok(pid) {
+    const d = {};
+    _LISTER.forEach(([felt, n]) => {
+      let v = null;
+      try { v = JSON.parse(localStorage.getItem('lp_' + pid + '_' + n) || 'null'); } catch (e) { v = null; }
+      d[felt] = Array.isArray(v) ? v : [];
+    });
+    return d;
+  }
+  function _lesBase(pid) {
+    try { return JSON.parse(localStorage.getItem('lp_' + pid + '_base') || 'null'); } catch (e) { return null; }
+  }
+  function _skrivBase(pid, d) {
+    const b = {};
+    _LISTER.forEach(([felt]) => { b[felt] = Array.isArray(d[felt]) ? d[felt] : []; });
+    try { localStorage.setItem('lp_' + pid + '_base', JSON.stringify(b)); }
+    catch (e) { localStorage.removeItem('lp_' + pid + '_base'); /* uten grunnlag: trygg union neste gang */ }
+  }
+  function _skyDok(data) {
+    const d = {};
+    _LISTER.forEach(([felt]) => { d[felt] = (data && Array.isArray(data[felt])) ? data[felt] : []; });
+    return d;
+  }
+
+  // Tre-veis fletting av én liste (elementer med id). Regel: det denne enheten
+  // har endret eller slettet i forhold til grunnlaget vinner; alt annet tas fra
+  // skyen. Uten grunnlag (base = null): union der lokal vinner ved likt id, og
+  // ingen sletting formidles. Det er trygt, men kan gjenopplive noe én gang.
+  function _flett3(base, lokal, sky) {
+    const nøkkel = x => (x && x.id != null) ? String(x.id) : null;
+    const tilMap = arr => {
+      const m = new Map();
+      (arr || []).forEach(x => { const k = nøkkel(x); if (k !== null && !m.has(k)) m.set(k, x); });
+      return m;
+    };
+    const B = base ? tilMap(base) : null, L = tilMap(lokal), S = tilMap(sky);
+    const lik = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    const avgjør = k => {
+      const l = L.get(k), s = S.get(k);
+      if (!B) return l !== undefined ? l : s;
+      const b = B.get(k);
+      const lokalRørt = b === undefined ? l !== undefined : (l === undefined || !lik(l, b));
+      return lokalRørt ? l : s;          // undefined = slettet (lokalt hhv. i skyen)
+    };
+    const ut = [], sett = new Set();
+    // Rekkefølge: lokal først (det brukeren ser), så det som bare finnes i skyen.
+    [...L.keys(), ...S.keys()].forEach(k => {
+      if (sett.has(k)) return;
+      sett.add(k);
+      const v = avgjør(k);
+      if (v !== undefined) ut.push(v);
+    });
+    (lokal || []).forEach(x => { if (nøkkel(x) === null) ut.push(x); });   // skal ikke forekomme
+    return ut;
+  }
+  function _flettDok(base, lokal, sky) {
+    const d = {};
+    _LISTER.forEach(([felt]) => { d[felt] = _flett3(base ? (base[felt] || []) : null, lokal[felt], sky[felt]); });
+    return d;
+  }
+  window._flett3 = _flett3;   // for test og feilsøking
+
+  // Ta skyens tilstand inn i den lokale kopien uten å miste usynkede lokale
+  // endringer: flett mot grunnlaget, og la skyen bli nytt grunnlag. Returnerer
+  // true hvis den lokale kopien endret seg.
+  function _adopterSky(pid, skyD) {
+    const lokal = _lesLokalDok(pid);
+    let base = _lesBase(pid);
+    // Uten grunnlag og uten usynkede endringer skal den lokale kopien være lik
+    // skyen (første synk etter oppgradering): ta skyen som den er.
+    if (!base && !localStorage.getItem('lp_' + pid + '_dirty')) base = lokal;
+    const ny = _flettDok(base, lokal, skyD);
+    let endret = false;
+    _LISTER.forEach(([felt, n]) => {
+      const s = JSON.stringify(ny[felt]);
+      if (s !== localStorage.getItem('lp_' + pid + '_' + n)) {
+        localStorage.setItem('lp_' + pid + '_' + n, s);
+        endret = true;
+      }
+    });
+    _skrivBase(pid, skyD);
+    return endret;
+  }
+
+  // Alt som leser og skriver ett prosjekt kjøres etter hverandre, så to
+  // lagringer (eller en lagring og et kø-sveip) aldri fletter mot samme
+  // utgangspunkt samtidig på denne enheten.
+  const _synkKjede = new Map();
+  function _kjedet(pid, fn) {
+    const forrige = _synkKjede.get(pid) || Promise.resolve();
+    const neste = forrige.catch(() => {}).then(fn);
+    _synkKjede.set(pid, neste);
+    neste.catch(() => {}).finally(() => { if (_synkKjede.get(pid) === neste) _synkKjede.delete(pid); });
+    return neste;
+  }
+
+  // Lagring. Mange raske endringer slås sammen til én lagring: venter det
+  // allerede en som ikke har startet, tar den med alt (den leser lokal kopi
+  // først når den starter).
+  const _lagringVenter = new Map();
+  function lagreTilSky(userId, pid) {
     // pid kan sendes eksplisitt (f.eks. ved kryss-prosjekt-avhuking fra
     // startsiden) — ellers synkes det aktive prosjektet.
     if (!pid) pid = window._getAktivtProsjektId();
-    if (!pid) return false;
+    if (!pid) return Promise.resolve(false);
+    if (_lagringVenter.has(pid)) return _lagringVenter.get(pid);
+    const p = _kjedet(pid, () => { _lagringVenter.delete(pid); return _lagreNå(userId, pid); });
+    _lagringVenter.set(pid, p);
+    return p;
+  }
+
+  // Selve lagringen. Kalles bare via lagreTilSky, eller fra kode som allerede
+  // kjører i prosjektets kjede (ellers ville den ventet på seg selv).
+  async function _lagreNå(userId, pid) {
     const pk = s => 'lp_' + pid + '_' + s;
+    if (!navigator.onLine) {
+      visSynkStatus('Lagret lokalt, synkes når du er på nett', '#e08a3c', 4000);
+      return false;   // dirty står: sendes ved 'online' eller neste lagring
+    }
     const dirtyToken = localStorage.getItem(pk('dirty'));
+    const lokal = _lesLokalDok(pid);
+    const base = _lesBase(pid);
+    let lokalFlog = [];
+    try { lokalFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]') || []; } catch (e) { lokalFlog = []; }
+    const lesObj = n => { try { return JSON.parse(localStorage.getItem(pk(n)) || '{}') || {}; } catch (e) { return {}; } };
     try {
       visSynkStatus('Synkroniserer…', '#f39c12');
-
-      // Hent eksisterende prosjektliste fra sky for å merge
-      const lokaleProsjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
-      let mergedProsjekter = [...lokaleProsjekter];
-      let skyFangst = null;
-      try {
-        const brukerSnap = await getDoc(doc(db, 'brukere', userId));
-        if (brukerSnap.exists() && brukerSnap.data().fangstProsjekt) skyFangst = brukerSnap.data().fangstProsjekt;
-        if (brukerSnap.exists() && brukerSnap.data().prosjekter) {
-          const skyProsjekter = brukerSnap.data().prosjekter;
-          // Legg til sky-prosjekter som ikke finnes lokalt
-          skyProsjekter.forEach(sp => {
-            if (!mergedProsjekter.find(lp => lp.id === sp.id)) mergedProsjekter.push(sp);
-          });
-          // Oppdater eksisterende med lokale verdier (navn, farge)
-          mergedProsjekter = mergedProsjekter.map(mp => {
-            const lokal = lokaleProsjekter.find(lp => lp.id === mp.id);
-            return lokal || mp;
-          });
-        }
-      } catch(e) { /* ignorer merge-feil, bruk lokale */ }
-
-      // Lagre prosjektliste på brukernivå. aktivtProsjekt skal alltid peke på
-      // det FAKTISK aktive prosjektet — ikke nødvendigvis pid-en vi bakgrunns-
-      // synker (som kan være et annet prosjekt ved kryss-prosjekt-avhuking).
-      await setDoc(doc(db, 'brukere', userId), {
-        prosjekter: mergedProsjekter,
-        aktivtProsjekt: window._getAktivtProsjektId() || pid,
-        // Fangstprosjektet deles mellom enhetene. Skrivet er uten merge, så
-        // sky-verdien må bæres videre når denne enheten ikke har satt noe selv.
-        fangstProsjekt: localStorage.getItem('lp_fangstProsjekt') || skyFangst || null,
-        oppdatert: new Date().toISOString()
+      const ref = doc(db, 'brukere', userId, 'prosjekter', pid);
+      // Les og skriv i én transaksjon: skriver noe annet til prosjektet før vi
+      // er ferdige, kjøres flettingen på nytt med det ferske innholdet.
+      const res = await runTransaction(db, async tx => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : null;
+        const flettet = data ? _flettDok(base, lokal, _skyDok(data)) : lokal;
+        const flog = window._flogUnion(lokalFlog, (data && Array.isArray(data.flog)) ? data.flog : []);
+        tx.set(ref, {
+          aktiviteter: flettet.aktiviteter, oppgaver: flettet.oppgaver,
+          todos: flettet.todos, kategorier: flettet.kategorier,
+          filterAkt: lesObj('fa'), filterOpp: lesObj('fo'), tidslinjeGrenser: lesObj('tl'),
+          flog, oppdatert: new Date().toISOString()
+        }, { merge: true });
+        return { flettet, flog };
       });
-
-      // Fullført-logg: merge sky + lokal (append-only, union på eid) så ingen
-      // enhet mister historikk ved et blindt skriv. Skriv merged både til sky
-      // og tilbake til localStorage.
-      let mergedFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]');
-      try {
-        const pSnap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', pid));
-        const skyFlog = (pSnap.exists() && Array.isArray(pSnap.data().flog)) ? pSnap.data().flog : [];
-        mergedFlog = window._flogUnion(mergedFlog, skyFlog);
-        localStorage.setItem(pk('flog'), JSON.stringify(mergedFlog));
-      } catch(e) { /* lesefeil: behold lokal flog */ }
-
-      // Lagre prosjektdata i subcollection
-      await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid), {
-        aktiviteter: JSON.parse(localStorage.getItem(pk('a')) || '[]'),
-        oppgaver:    JSON.parse(localStorage.getItem(pk('o')) || '[]'),
-        todos:       JSON.parse(localStorage.getItem(pk('t')) || '[]'),
-        kategorier:  JSON.parse(localStorage.getItem(pk('k')) || 'null') || [],
-        filterAkt:   JSON.parse(localStorage.getItem(pk('fa')) || '{}'),
-        filterOpp:   JSON.parse(localStorage.getItem(pk('fo')) || '{}'),
-        tidslinjeGrenser: JSON.parse(localStorage.getItem(pk('tl')) || '{}'),
-        flog:        mergedFlog,
-        oppdatert:   new Date().toISOString()
-      });
-      // Skriv bekreftet: tøm dirty-markøren — men KUN hvis ingen ny lokal
-      // endring kom mens skrivet pågikk (da endres tokenet og vi lar den stå,
-      // så neste lagre() re-synker).
+      // Skyen er nå lik «flettet». Ta den inn lokalt; endringer gjort her mens
+      // lagringen pågikk bevares av flettingen og sendes med neste lagring.
+      const endret = _adopterSky(pid, res.flettet);
+      let nåFlog = [];
+      try { nåFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]') || []; } catch (e) { nåFlog = []; }
+      localStorage.setItem(pk('flog'), JSON.stringify(window._flogUnion(nåFlog, res.flog)));
+      // Tøm dirty-markøren bare hvis ingen ny lokal endring kom mens vi lagret.
       if (localStorage.getItem(pk('dirty')) === dirtyToken) localStorage.removeItem(pk('dirty'));
+      if (endret) {
+        if (pid === window._getAktivtProsjektId()) _oppdaterAppFraSky();
+        else if (typeof renderAlleLister === 'function') renderAlleLister();
+      }
+      try { await _synkProsjektliste(userId, pid); }
+      catch (e) { console.warn('[SYNK] Prosjektlista ble ikke oppdatert:', e.code || e.message); }
       visSynkStatus('✓ Synkronisert', '#27ae60');
       return true;
-    } catch(e) {
-      visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
-      console.error('[SYNK] Sky-lagring feilet:', e.code, e.message, e);
+    } catch (e) {
+      if (!navigator.onLine || e.code === 'unavailable') {
+        visSynkStatus('Lagret lokalt, synkes når du er på nett', '#e08a3c', 4000);
+      } else {
+        visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
+      }
+      console.error('[SYNK] Sky-lagring feilet:', e.code, e.message);
       return false;
     }
   }
 
+  // Prosjektlista på brukernivå (navn, farger, aktivt prosjekt, fangstprosjekt).
+  async function _synkProsjektliste(userId, pid) {
+    const lokaleProsjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
+    let mergedProsjekter = [...lokaleProsjekter];
+    let skyFangst = null;
+    try {
+      const brukerSnap = await getDoc(doc(db, 'brukere', userId));
+      if (brukerSnap.exists() && brukerSnap.data().fangstProsjekt) skyFangst = brukerSnap.data().fangstProsjekt;
+      if (brukerSnap.exists() && brukerSnap.data().prosjekter) {
+        const skyProsjekter = brukerSnap.data().prosjekter;
+        // Legg til sky-prosjekter som ikke finnes lokalt
+        skyProsjekter.forEach(sp => {
+          if (!mergedProsjekter.find(lp => lp.id === sp.id)) mergedProsjekter.push(sp);
+        });
+        // Oppdater eksisterende med lokale verdier (navn, farge)
+        mergedProsjekter = mergedProsjekter.map(mp => {
+          const lokal = lokaleProsjekter.find(lp => lp.id === mp.id);
+          return lokal || mp;
+        });
+      }
+    } catch(e) { /* ignorer merge-feil, bruk lokale */ }
+    // aktivtProsjekt skal alltid peke på det FAKTISK aktive prosjektet, ikke
+    // nødvendigvis pid-en vi bakgrunnssynker.
+    await setDoc(doc(db, 'brukere', userId), {
+      prosjekter: mergedProsjekter,
+      aktivtProsjekt: window._getAktivtProsjektId() || pid,
+      // Fangstprosjektet deles mellom enhetene. Skrivet er uten merge, så
+      // sky-verdien må bæres videre når denne enheten ikke har satt noe selv.
+      fangstProsjekt: localStorage.getItem('lp_fangstProsjekt') || skyFangst || null,
+      oppdatert: new Date().toISOString()
+    });
+  }
+
   window._lagreTilSky = lagreTilSky;
 
+  // Kommer nettet tilbake: send alle prosjekter med usynkede endringer.
+  window.addEventListener('online', () => {
+    const uid = window._currentUid;
+    if (!uid) return;
+    (window._getProsjekter && window._getProsjekter() || []).forEach(p => {
+      if (p && p.id && localStorage.getItem('lp_' + p.id + '_dirty')) lagreTilSky(uid, p.id);
+    });
+  });
+
   // Avhuking fra Start av et element i et prosjekt som ikke er det aktive.
-  // Leser ferskt fra server, endrer KUN dette elementet og skriver tilbake med
-  // merge — samme mønster som innboks-køen. Alternativet (full push av den
-  // lokale kopien) ville gjenopplivet alt som er slettet eller fullført på en
-  // annen enhet siden dette prosjektet sist var aktivt her.
-  window._fullforIAnnetProsjekt = async function(userId, pid, itemId, erTodo, fullfort, dato) {
-    const pk = s => 'lp_' + pid + '_' + s;
-    const felt = erTodo ? 'todos' : 'oppgaver';
-    const dirtyToken = localStorage.getItem(pk('dirty'));
-    try {
-      visSynkStatus('Synkroniserer…', '#f39c12');
-      let snap;
-      try { snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', pid)); }
-      catch (e) { snap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', pid)); }
-      // Aldri synket, eller elementet finnes ikke i sky: fall tilbake til full push.
-      if (!snap || !snap.exists()) return await lagreTilSky(userId, pid);
-      const liste = snap.data()[felt] || [];
-      const item = liste.find(x => x && x.id === itemId);
-      if (!item) return await lagreTilSky(userId, pid);
-      item.fullfort = !!fullfort;
-      item.fullfortDato = fullfort ? dato : null;
-      await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid),
-        { [felt]: liste, oppdatert: new Date().toISOString() }, { merge: true });
-      // Sky er nå fasit for denne lista — speil den lokalt, slik at Start viser
-      // det samme som de andre enhetene.
-      localStorage.setItem(pk(erTodo ? 't' : 'o'), JSON.stringify(liste));
-      if (localStorage.getItem(pk('dirty')) === dirtyToken) localStorage.removeItem(pk('dirty'));
-      visSynkStatus('✓ Synkronisert', '#27ae60');
-      if (typeof renderAlleLister === 'function') renderAlleLister();
-      return true;
-    } catch (e) {
-      console.error('[SYNK] Kryss-prosjekt-avhuking feilet:', e.code, e.message);
-      visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
-      return false;   // dirty står igjen: endringen pushes når prosjektet blir aktivt
-    }
+  // Kalleren har allerede lagt endringen i den lokale kopien og merket den;
+  // flettingen sender bare den ene endringen. (Før v4.93 trengtes et eget
+  // målrettet skriv her, fordi lagring skrev hele den lokale kopien.)
+  window._fullforIAnnetProsjekt = function(userId, pid) {
+    return lagreTilSky(userId, pid);
   };
 
   // Flytting: legg elementer til i et prosjekt som ikke er det aktive. Krever
-  // nett: leser ferskt fra SERVER (ikke cache), legger til de som mangler, og
-  // skriver bare de berørte listene med merge. Usynkede lokale endringer i
-  // målprosjektet pushes først, så de ikke går tapt når sky-lista speiles lokalt.
-  // Returnerer false uten å ha endret noe hvis noe feiler.
-  window._leggTilIAnnetProsjekt = async function(userId, pid, nye) {
-    const pk = s => 'lp_' + pid + '_' + s;
-    try {
-      visSynkStatus('Flytter…', '#f39c12');
-      if (localStorage.getItem(pk('dirty'))) {
-        const pushet = await lagreTilSky(userId, pid);
-        if (!pushet) return false;
+  // nett. Leser og skriver i én transaksjon, legger bare til det som mangler,
+  // og fletter resultatet inn lokalt så usynkede endringer i målprosjektet
+  // består. Returnerer false uten å ha endret noe hvis noe feiler.
+  window._leggTilIAnnetProsjekt = function(userId, pid, nye) {
+    return _kjedet(pid, async () => {
+      if (!navigator.onLine) return false;
+      try {
+        visSynkStatus('Flytter…', '#f39c12');
+        const ref = doc(db, 'brukere', userId, 'prosjekter', pid);
+        const ut = await runTransaction(db, async tx => {
+          const snap = await tx.get(ref);
+          const sky = snap.exists() ? _skyDok(snap.data()) : _lesLokalDok(pid);
+          const r = { ...sky };
+          ['aktiviteter', 'oppgaver', 'todos'].forEach(felt => {
+            const liste = [...(sky[felt] || [])];
+            (nye[felt] || []).forEach(n => { if (!liste.some(x => x && x.id === n.id)) liste.push(n); });
+            r[felt] = liste;
+          });
+          tx.set(ref, { aktiviteter: r.aktiviteter, oppgaver: r.oppgaver, todos: r.todos,
+                        kategorier: r.kategorier, oppdatert: new Date().toISOString() }, { merge: true });
+          return r;
+        });
+        _adopterSky(pid, ut);
+        return true;
+      } catch (e) {
+        console.error('[SYNK] Flytting til prosjekt', pid, 'feilet:', e.code || e.message);
+        visSynkStatus('✗ Flytting feilet: ' + (e.code || e.message || 'ukjent feil'), '#e74c3c', 15000);
+        return false;
       }
-      const snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', pid));
-      const sky = snap.exists() ? snap.data() : null;
-      const flett = (felt, nøkkel) => {
-        const liste = sky ? (sky[felt] || []) : (JSON.parse(localStorage.getItem(pk(nøkkel)) || '[]'));
-        (nye[felt] || []).forEach(n => { if (!liste.some(x => x && x.id === n.id)) liste.push(n); });
-        return liste;
-      };
-      const aL = flett('aktiviteter', 'a'), oL = flett('oppgaver', 'o'), tL = flett('todos', 't');
-      const felter = { oppdatert: new Date().toISOString() };
-      if ((nye.aktiviteter || []).length) felter.aktiviteter = aL;
-      if ((nye.oppgaver || []).length)    felter.oppgaver = oL;
-      if ((nye.todos || []).length)       felter.todos = tL;
-      await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid), felter, { merge: true });
-      if (felter.aktiviteter) localStorage.setItem(pk('a'), JSON.stringify(aL));
-      if (felter.oppgaver)    localStorage.setItem(pk('o'), JSON.stringify(oL));
-      if (felter.todos)       localStorage.setItem(pk('t'), JSON.stringify(tL));
-      return true;
-    } catch (e) {
-      console.error('[SYNK] Flytting til prosjekt', pid, 'feilet:', e.code || e.message);
-      visSynkStatus('✗ Flytting feilet: ' + (e.code || e.message || 'ukjent feil'), '#e74c3c', 15000);
-      return false;
-    }
+    });
   };
 
   // Start-fanen viser elementer fra ALLE prosjekter, men bare det aktive har
@@ -9094,44 +9205,35 @@
   // ── Last prosjektdata fra sky ──
   async function _lastProsjektFraSky(userId, prosjektId) {
     const pk = s => 'lp_' + prosjektId + '_' + s;
-    // Datataps-vakt: hvis prosjektet har usynkede lokale endringer (dirty),
-    // IKKE overskriv localStorage med (muligens eldre) sky-data. Behold lokalt
-    // og push det heller opp. Dette hindrer at et fire-and-forget-skriv som
-    // ikke rakk å fullføre (lukket fane / offline) klobres ved neste oppstart.
+    // Usynkede lokale endringer: lagringen fletter dem med skyen og tar
+    // samtidig inn det som er nytt der, så det er alt som trengs.
     if (localStorage.getItem(pk('dirty'))) {
-      console.warn('[SYNK] Usynkede lokale endringer for', prosjektId, '— beholder lokalt og pusher til sky');
       try { await lagreTilSky(userId, prosjektId); } catch(e) { /* la dirty stå til neste forsøk */ }
       return;
     }
     let snap;
     try {
       snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', prosjektId));
-      console.log('[SYNK] ✓ Prosjekt hentet fra server:', prosjektId, 'exists:', snap.exists());
     } catch(e) {
       console.warn('[SYNK] Server-henting feilet for prosjekt', prosjektId, ':', e.code);
       try { snap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', prosjektId)); } catch(e2) { return; }
     }
-    if (snap && snap.exists()) {
-      // Rakk brukeren å endre noe mens server-svaret var underveis? Da er
-      // snapshotet eldre enn siste handling. Uten denne sjekken rulles f.eks. en
-      // avhuking rett etter prosjektbytte tilbake av svaret på hentingen som ble
-      // startet like før klikket.
-      if (localStorage.getItem(pk('dirty'))) {
-        console.warn('[SYNK] Lokal endring kom mens sky-henting pågikk for', prosjektId, '— beholder lokalt');
-        try { await lagreTilSky(userId, prosjektId); } catch(e) { /* la dirty stå */ }
-        return;
-      }
-      const data = snap.data();
-      localStorage.setItem(pk('a'), JSON.stringify(data.aktiviteter || []));
-      localStorage.setItem(pk('o'), JSON.stringify(data.oppgaver    || []));
-      localStorage.setItem(pk('t'), JSON.stringify(data.todos       || []));
-      localStorage.setItem(pk('k'), JSON.stringify(data.kategorier  || []));
+    if (!(snap && snap.exists())) return;
+    const data = snap.data();
+    await _kjedet(prosjektId, async () => {
+      // Flettingen bevarer en endring brukeren rakk å gjøre mens hentingen
+      // pågikk (f.eks. en avhuking rett etter prosjektbytte).
+      _adopterSky(prosjektId, _skyDok(data));
       if (data.filterAkt) localStorage.setItem(pk('fa'), JSON.stringify(data.filterAkt));
       if (data.filterOpp) localStorage.setItem(pk('fo'), JSON.stringify(data.filterOpp));
       if (data.tidslinjeGrenser) localStorage.setItem(pk('tl'), JSON.stringify(data.tidslinjeGrenser));
       // Fullført-logg: union (aldri overskriv lokal historikk).
       const lokalFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]');
       localStorage.setItem(pk('flog'), JSON.stringify(window._flogUnion(lokalFlog, data.flog || [])));
+    });
+    // Kom det en lokal endring mens hentingen pågikk, er den bevart; send den opp.
+    if (localStorage.getItem(pk('dirty'))) {
+      try { await lagreTilSky(userId, prosjektId); } catch(e) { /* la dirty stå */ }
     }
   }
 
@@ -9144,33 +9246,27 @@
       if (firstSnapshot) { firstSnapshot = false; return; }
       if (!snap.exists()) return;
       const data = snap.data();
-      console.log('[SYNK] onSnapshot: endring mottatt for prosjekt', prosjektId);
-      // Fullført-logg: union inn i lokal uavhengig av øvrige felt (append-only).
-      if (Array.isArray(data.flog)) {
-        const lokalFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]');
-        const mergetFlog = window._flogUnion(lokalFlog, data.flog);
-        if (JSON.stringify(mergetFlog) !== localStorage.getItem(pk('flog')))
-          localStorage.setItem(pk('flog'), JSON.stringify(mergetFlog));
-      }
-      const nyA = JSON.stringify(data.aktiviteter || []);
-      const nyO = JSON.stringify(data.oppgaver    || []);
-      const nyT = JSON.stringify(data.todos       || []);
-      const nyK = JSON.stringify(data.kategorier  || []);
-      const nyFA = JSON.stringify(data.filterAkt  || {});
-      const nyFO = JSON.stringify(data.filterOpp  || {});
-      if (nyA !== localStorage.getItem(pk('a')) || nyO !== localStorage.getItem(pk('o')) ||
-          nyT !== localStorage.getItem(pk('t')) || nyK !== localStorage.getItem(pk('k')) ||
-          nyFA !== localStorage.getItem(pk('fa')) || nyFO !== localStorage.getItem(pk('fo'))) {
-        visSynkStatus('↓ Mottatt fra sky', '#3498db');
-        localStorage.setItem(pk('a'), nyA);
-        localStorage.setItem(pk('o'), nyO);
-        localStorage.setItem(pk('t'), nyT);
-        localStorage.setItem(pk('k'), nyK);
-        if (data.filterAkt) localStorage.setItem(pk('fa'), nyFA);
-        if (data.filterOpp) localStorage.setItem(pk('fo'), nyFO);
+      _kjedet(prosjektId, async () => {
+        // Fullført-logg: union inn i lokal uavhengig av øvrige felt (append-only).
+        if (Array.isArray(data.flog)) {
+          const lokalFlog = JSON.parse(localStorage.getItem(pk('flog')) || '[]');
+          const mergetFlog = window._flogUnion(lokalFlog, data.flog);
+          if (JSON.stringify(mergetFlog) !== localStorage.getItem(pk('flog')))
+            localStorage.setItem(pk('flog'), JSON.stringify(mergetFlog));
+        }
+        // Flett i stedet for å overskrive: har brukeren usynkede endringer her,
+        // består de (før ble de visket ut av første endring fra en annen enhet).
+        let endret = _adopterSky(prosjektId, _skyDok(data));
+        const nyFA = JSON.stringify(data.filterAkt || {});
+        const nyFO = JSON.stringify(data.filterOpp || {});
+        if (data.filterAkt && nyFA !== localStorage.getItem(pk('fa'))) { localStorage.setItem(pk('fa'), nyFA); endret = true; }
+        if (data.filterOpp && nyFO !== localStorage.getItem(pk('fo'))) { localStorage.setItem(pk('fo'), nyFO); endret = true; }
         if (data.tidslinjeGrenser) localStorage.setItem(pk('tl'), JSON.stringify(data.tidslinjeGrenser));
-        _oppdaterAppFraSky();
-      }
+        if (endret) {
+          visSynkStatus('↓ Mottatt fra sky', '#3498db');
+          _oppdaterAppFraSky();
+        }
+      });
     });
   }
 
@@ -9245,24 +9341,28 @@
       let lagtTil = 0, fullfortAntall = 0, migrert = 0, oppdatertAntall = 0;
 
       for (const [pid, gruppe] of grupper) {
+        // Hele sveipet av ett prosjekt kjøres i prosjektets synk-kjede, så det
+        // aldri går samtidig med en lagring av samme prosjekt på denne enheten.
+        await _kjedet(pid, async () => {
         const pk = s => 'lp_' + pid + '_' + s;
 
-        // Usynkede lokale endringer i målprosjektet må opp FØR vi leser sky —
-        // ellers fletter vi inn i lister som straks blir overskrevet av dem.
+        // Usynkede lokale endringer i målprosjektet opp først. (_lagreNå direkte:
+        // lagreTilSky ville ventet på denne kjeden, altså på seg selv.)
         if (localStorage.getItem(pk('dirty'))) {
-          const ok = await lagreTilSky(userId, pid);
-          if (!ok) { console.warn('[INNBOKS] Utsatt for', pid, ': fikk ikke synket lokale endringer først'); continue; }
+          const ok = await _lagreNå(userId, pid);
+          if (!ok) { console.warn('[INNBOKS] Utsatt for', pid, ': fikk ikke synket lokale endringer først'); return; }
         }
 
-        // Les ferske lister fra sky, ikke fra localStorage: målprosjektet er
-        // ofte ikke det aktive, og da kan den lokale kopien være gammel.
-        let pSnap = null;
+        // Les og skriv i én transaksjon. Skriver noe annet til prosjektet før vi
+        // er ferdige, kjøres sveipet på nytt med ferske data. Id-ene er avledet
+        // av dokument-id-ene, så et nytt forsøk dobler ingenting, og tellerne
+        // ligger inne i transaksjonen av samme grunn.
+        const ref = doc(db, 'brukere', userId, 'prosjekter', pid);
+        let utfall;
         try {
-          pSnap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', pid));
-        } catch (e) {
-          try { pSnap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', pid)); }
-          catch (e2) { console.warn('[INNBOKS] Fikk ikke lest prosjekt', pid, ':', e2.code || e2.message); continue; }
-        }
+        utfall = await runTransaction(db, async tx => {
+        let lagtTil = 0, fullfortAntall = 0, migrert = 0, oppdatertAntall = 0;
+        const pSnap = await tx.get(ref);
         // Finnes ikke dokumentet ennå (prosjekt aldri synket): bruk lokale
         // lister som utgangspunkt, ellers ville vi opprettet det nesten tomt.
         const finnes = pSnap && pSnap.exists();
@@ -9512,27 +9612,36 @@
           }
         }
 
-        if (endretTodos || endretOppgaver || endretFlog || endretAktiv) {
-          // Kun feltene vi faktisk endret (merge) — vi skal ikke skrive andre
-          // felter tilbake fra en muligens utdatert kilde.
+        const endret = endretTodos || endretOppgaver || endretFlog || endretAktiv;
+        if (endret) {
+          // Kun feltene vi faktisk endret (merge). Fantes ikke dokumentet, skrives
+          // alle listene, ellers ville skyen mangle dem som vi nå tar som grunnlag.
           const felter = { oppdatert: new Date().toISOString() };
-          if (endretTodos)    felter.todos    = todosL;
-          if (endretOppgaver) felter.oppgaver = oppgaverL;
-          if (endretAktiv)    felter.aktiviteter = aktivL;
-          if (endretFlog)     felter.flog     = window._flogUnion(flogL, []);
-          try {
-            await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid), felter, { merge: true });
-          } catch (e) {
-            console.error('[INNBOKS] Skriving feilet for', pid, ', beholder forespørslene:', e.code || e.message);
-            continue;                            // dokumentene står, nytt forsøk senere
-          }
-          if (endretTodos)    localStorage.setItem(pk('t'), JSON.stringify(todosL));
-          if (endretOppgaver) localStorage.setItem(pk('o'), JSON.stringify(oppgaverL));
-          if (endretAktiv)    localStorage.setItem(pk('a'), JSON.stringify(aktivL));
-          if (endretFlog)     localStorage.setItem(pk('flog'),
-            JSON.stringify(window._flogUnion(JSON.parse(localStorage.getItem(pk('flog')) || '[]'), flogL)));
+          if (endretTodos    || !finnes) felter.todos       = todosL;
+          if (endretOppgaver || !finnes) felter.oppgaver    = oppgaverL;
+          if (endretAktiv    || !finnes) felter.aktiviteter = aktivL;
+          if (!finnes)                   felter.kategorier  = katL;
+          if (endretFlog)                felter.flog        = window._flogUnion(flogL, []);
+          tx.set(ref, felter, { merge: true });
         }
-        behandlet.push(...gruppeBehandlet);
+        return { endret, endretFlog, flogL, gruppeBehandlet, lagtTil, fullfortAntall, migrert, oppdatertAntall,
+                 sky: { aktiviteter: aktivL, oppgaver: oppgaverL, todos: todosL, kategorier: katL } };
+        });
+        } catch (e) {
+          console.error('[INNBOKS] Sveip feilet for', pid, ', beholder forespørslene:', e.code || e.message);
+          return;                                // dokumentene står, nytt forsøk senere
+        }
+        if (utfall.endret) {
+          // Skyen er nå fasit for prosjektet. Flett den inn lokalt, så en endring
+          // gjort her mens sveipet pågikk ikke går tapt.
+          _adopterSky(pid, utfall.sky);
+          if (utfall.endretFlog) localStorage.setItem(pk('flog'),
+            JSON.stringify(window._flogUnion(JSON.parse(localStorage.getItem(pk('flog')) || '[]'), utfall.flogL)));
+        }
+        behandlet.push(...utfall.gruppeBehandlet);
+        lagtTil += utfall.lagtTil; fullfortAntall += utfall.fullfortAntall;
+        migrert += utfall.migrert; oppdatertAntall += utfall.oppdatertAntall;
+        });
       }
 
       // Slett først NÅ, når endringene er bekreftet i sky.
