@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.91</div>
+<div class="versjon">Prosjekt-planlegger v4.92</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2077,6 +2077,9 @@
         <button class="info-ikon-knapp" title="Del" onclick="delTodoFraInfo()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </button>
+        <button class="info-ikon-knapp flytt-knapp" id="todoInfoFlyttKnapp" title="Flytt til annet prosjekt" onclick="åpneFlyttDialog('todo', window._todoInfoId)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="13" x2="15" y2="13"/><polyline points="12 10 15 13 12 16"/></svg>
+        </button>
         <button class="info-ikon-knapp" id="todoInfoRedigKnapp" title="Rediger">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -2171,6 +2174,9 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </button>
         <button class="knapp-sek" id="oppInfoLeggTilTodoKnapp">+ To do</button>
+        <button class="info-ikon-knapp flytt-knapp" id="oppInfoFlyttKnapp" title="Flytt til annet prosjekt" onclick="åpneFlyttDialog('oppgave', window._oppInfoId)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="13" x2="15" y2="13"/><polyline points="12 10 15 13 12 16"/></svg>
+        </button>
         <button class="info-ikon-knapp" id="oppInfoRedigKnapp" title="Rediger">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -2196,6 +2202,9 @@
       <div class="knapp-gruppe" style="align-items:center;">
         <button class="knapp-sek" id="infoModalLeggTilTodoKnapp">+ To do</button>
         <button class="knapp-sek" id="infoModalLeggTilOppgaveKnapp">+ Milepæl</button>
+        <button class="info-ikon-knapp flytt-knapp" id="infoModalFlyttKnapp" title="Flytt til annet prosjekt">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="13" x2="15" y2="13"/><polyline points="12 10 15 13 12 16"/></svg>
+        </button>
         <button class="info-ikon-knapp" id="infoModalRedigKnapp" title="Rediger">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -2607,6 +2616,157 @@
     renderStartside();
     renderTodos();
     oppdaterForfaltBadge();
+  }
+
+  // ── Flytt til annet prosjekt (v4.92) ──
+  // Elementet flyttes med alt som henger under det: en leveranse tar med sine
+  // milepæler og to-dos, en milepæl sine to-dos. Koblinger til noe som blir
+  // igjen i kildeprosjektet nullstilles, og kategorien følger med hvis
+  // målprosjektet har en kategori med samme navn. Rekkefølgen er bevisst:
+  // målet skrives (og bekreftes) først, så fjernes elementene her. Går noe galt
+  // underveis blir resultatet i verste fall et duplikat, aldri et tap.
+  function _visFlyttKnapper() {
+    const fler = prosjekter.filter(p => !p.arkivert).length > 1;
+    document.querySelectorAll('.flytt-knapp').forEach(b => { b.style.display = fler ? '' : 'none'; });
+  }
+
+  function _samleForFlytting(type, id) {
+    let L = [], M = [], T = [];
+    if (type === 'aktivitet') {
+      const a = aktiviteter.find(x => x.id === id); if (!a) return null;
+      L = [a];
+      M = oppgaver.filter(o => o.aktivitetId === id);
+      const mIds = new Set(M.map(o => o.id));
+      T = todos.filter(t => t.aktivitetId === id || (t.oppgaveId && mIds.has(t.oppgaveId)));
+    } else if (type === 'oppgave') {
+      const o = oppgaver.find(x => x.id === id); if (!o) return null;
+      M = [o];
+      T = todos.filter(t => t.oppgaveId === id);
+    } else {
+      const t = todos.find(x => x.id === id); if (!t) return null;
+      T = [t];
+    }
+    return { L, M, T };
+  }
+
+  function åpneFlyttDialog(type, id) {
+    const samlet = _samleForFlytting(type, id);
+    if (!samlet) return;
+    const mål = prosjekter.filter(p => !p.arkivert && p.id !== aktivtProsjektId);
+    if (!mål.length) return;
+    const hoved = type === 'aktivitet' ? samlet.L[0] : type === 'oppgave' ? samlet.M[0] : samlet.T[0];
+    const navn = hoved.tittel || hoved.beskrivelse || '';
+    const ekstra = [];
+    if (type === 'aktivitet' && samlet.M.length) ekstra.push(samlet.M.length + (samlet.M.length === 1 ? ' milepæl' : ' milepæler'));
+    if (type !== 'todo' && samlet.T.length) ekstra.push(samlet.T.length + (samlet.T.length === 1 ? ' to-do' : ' to-dos'));
+
+    const gammel = document.getElementById('flyttOverlay');
+    if (gammel) gammel.remove();
+    const ov = document.createElement('div');
+    ov.id = 'flyttOverlay';
+    ov.className = 'modal-overlay vis';
+    ov.style.zIndex = '400';
+    const boks = document.createElement('div');
+    boks.className = 'modal';
+    boks.style.maxWidth = '380px';
+    const hode = document.createElement('div');
+    hode.className = 'modal-header';
+    const tit = document.createElement('div');
+    tit.className = 'modal-tittel';
+    tit.textContent = 'Flytt til hvilket prosjekt?';
+    hode.appendChild(tit);
+    const x = document.createElement('button');
+    x.className = 'lukk-knapp'; x.textContent = '×';
+    x.onclick = () => ov.remove();
+    hode.appendChild(x);
+    const kropp = document.createElement('div');
+    kropp.className = 'modal-body';
+    const info = document.createElement('div');
+    info.style.cssText = 'font-size:13px;color:var(--tekst-sek);line-height:1.5;margin-bottom:12px;';
+    info.textContent = '«' + navn + '»' + (ekstra.length ? ' flyttes sammen med ' + ekstra.join(' og ') + '.' : ' flyttes.');
+    kropp.appendChild(info);
+    mål.forEach(p => {
+      const rad = document.createElement('button');
+      rad.className = 'knapp-sek';
+      rad.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;padding:11px 14px;font-size:13px;';
+      const dot = document.createElement('span');
+      dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${p.farge || 'var(--grønn)'};flex-shrink:0;`;
+      rad.appendChild(dot);
+      rad.appendChild(document.createTextNode(p.navn));
+      rad.onclick = () => { ov.remove(); flyttTilProsjekt(type, id, p.id); };
+      kropp.appendChild(rad);
+    });
+    boks.appendChild(hode);
+    boks.appendChild(kropp);
+    ov.appendChild(boks);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
+
+  async function flyttTilProsjekt(type, id, målPid) {
+    const samlet = _samleForFlytting(type, id);
+    if (!samlet || målPid === aktivtProsjektId) return;
+    const målP = prosjekter.find(p => p.id === målPid);
+    if (!målP) return;
+    const kildePid = aktivtProsjektId;
+
+    // Kategori: følger med ved likt navn i målprosjektet, ellers ingen.
+    const målKat = _parseSafe(localStorage.getItem('lp_' + målPid + '_k'), []) || [];
+    const katMap = katId => {
+      if (!katId) return null;
+      const k = kategorier.find(x => x.id === katId);
+      if (!k) return null;
+      const n = String(k.label || '').trim().toLowerCase();
+      const t = målKat.find(x => x && String(x.label || '').trim().toLowerCase() === n);
+      return t ? t.id : null;
+    };
+    const kopi = o => JSON.parse(JSON.stringify(o));
+    const lIds = new Set(samlet.L.map(a => a.id));
+    const mIds = new Set(samlet.M.map(o => o.id));
+    const nyeL = samlet.L.map(a => Object.assign(kopi(a), { type: katMap(a.type), avhengigAv: [] }));
+    const nyeM = samlet.M.map(o => Object.assign(kopi(o), {
+      kategoriId: katMap(o.kategoriId),
+      aktivitetId: lIds.has(o.aktivitetId) ? o.aktivitetId : null }));
+    const nyeT = samlet.T.map(t => Object.assign(kopi(t), {
+      kategoriId: katMap(t.kategoriId),
+      aktivitetId: lIds.has(t.aktivitetId) ? t.aktivitetId : null,
+      oppgaveId: mIds.has(t.oppgaveId) ? t.oppgaveId : null }));
+    const antall = nyeL.length + nyeM.length + nyeT.length;
+
+    lukkModal('todoInfoModal'); lukkModal('oppgaveInfoModal'); lukkModal('aktivitetInfoModal');
+
+    // 1) Skriv til målet først.
+    let ok;
+    if (window._currentUid && window._leggTilIAnnetProsjekt) {
+      ok = await window._leggTilIAnnetProsjekt(window._currentUid, målPid, { aktiviteter: nyeL, oppgaver: nyeM, todos: nyeT });
+    } else {
+      // Ikke innlogget: bare lokal lagring.
+      const leggTil = (nøkkel, nye) => {
+        const liste = _parseSafe(localStorage.getItem('lp_' + målPid + '_' + nøkkel), []) || [];
+        nye.forEach(n => { if (!liste.some(x => x && x.id === n.id)) liste.push(n); });
+        localStorage.setItem('lp_' + målPid + '_' + nøkkel, JSON.stringify(liste));
+      };
+      leggTil('a', nyeL); leggTil('o', nyeM); leggTil('t', nyeT);
+      ok = true;
+    }
+    if (!ok) {
+      alert('Flyttingen ble ikke gjennomført, og ingenting er endret. Den krever nettforbindelse. Prøv igjen når du er på nett.');
+      return;
+    }
+
+    // 2) Fjern fra kilden (fortsatt aktivt prosjekt) og rydd avhengigheter.
+    if (aktivtProsjektId !== kildePid) byttProsjekt(kildePid);
+    const tIds = new Set(nyeT.map(t => t.id));
+    aktiviteter = aktiviteter.filter(a => !lIds.has(a.id));
+    oppgaver    = oppgaver.filter(o => !mIds.has(o.id));
+    todos       = todos.filter(t => !tIds.has(t.id));
+    aktiviteter.forEach(a => {
+      if (Array.isArray(a.avhengigAv) && a.avhengigAv.some(d => lIds.has(d)))
+        a.avhengigAv = a.avhengigAv.filter(d => !lIds.has(d));
+    });
+    lagre();
+    oppdaterAktivPanel();
+    visAngreToast('Flyttet ' + antall + (antall === 1 ? ' element' : ' elementer') + ' til ' + målP.navn, null);
   }
 
   // Spør hvilket prosjekt et nytt element skal til, når «Alle prosjekter» vises.
@@ -3369,7 +3529,10 @@
               bar.style.outline = '2px solid #c0392b';
               bar.title = a.tittel + ' — starter før en avhengighet er ferdig';
             }
-            bar.onclick = () => åpneAktivitetInfo(a.id);
+            bar.onclick = () => {
+              if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
+              åpneAktivitetInfo(a.id);
+            };
             spor.appendChild(bar);
           });
           sporer.appendChild(spor);
@@ -3387,7 +3550,10 @@
             mp.style.left = (offsetDager * pxPerDag) + 'px';
             mp.style.background = k.farge;
             mp.title = (a.fullfort ? '✓ ' : '◆ ') + a.tittel;
-            mp.onclick = () => åpneAktivitetInfo(a.id);
+            mp.onclick = () => {
+              if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
+              åpneAktivitetInfo(a.id);
+            };
             sporMP.appendChild(mp);
           });
           sporer.appendChild(sporMP);
@@ -3482,6 +3648,7 @@
         samlet.aktiviteter.push({
           ...a,
           type: p.id + '__' + a.type,
+          _prosjektId: p.id,
           _prosjektNavn: p.navn,
           _prosjektFarge: p.farge
         });
@@ -5570,7 +5737,7 @@
       lagre(); lukkModal('todoInfoModal'); renderTodos();
     };
     window._todoInfoId = id;
-    document.getElementById('todoInfoModal').classList.add('vis');
+    document.getElementById('todoInfoModal').classList.add('vis'); _visFlyttKnapper();
   }
 
   function toggleTodoFraInfo() {
@@ -5851,7 +6018,7 @@
     const skjul = () => { el.classList.remove('vis'); clearTimeout(_angreToastTimer); };
     btn.onclick = () => { skjul(); angreFn(); };
     el.appendChild(t);
-    el.appendChild(btn);
+    if (angreFn) el.appendChild(btn);   // uten angre-funksjon: ren beskjed
     el.classList.add('vis');
     clearTimeout(_angreToastTimer);
     _angreToastTimer = setTimeout(skjul, 5000);
@@ -6096,13 +6263,16 @@
         ob.title = antallUferdige + ' milepæl(er) knyttet til denne leveransen';
         ob.onclick = e => {
           e.stopPropagation();
+          if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
           åpneAktivitetInfo(a.id);
         };
         kort.appendChild(ob);
       }
     }
 
-    // Knapper: + To do og + Oppgave
+    // Knapper: + To do og + Milepæl. Fra en flerprosjekt-liste må vi bytte til
+    // leveransens prosjekt først, ellers havner det nye elementet i det aktive
+    // prosjektet med en kobling til en leveranse som ikke finnes der.
     const knappFarge = getKat(a.type)?.farge || 'var(--tekst-sek)';
 
     const leggTilTodoKnapp = document.createElement('button');
@@ -6112,6 +6282,7 @@
     leggTilTodoKnapp.textContent = '+ to do';
     leggTilTodoKnapp.onclick = e => {
       e.stopPropagation();
+      if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
       åpneTodoModal(null, null, a.id);
     };
     kort.appendChild(leggTilTodoKnapp);
@@ -6119,10 +6290,11 @@
     const leggTilOppgaveKnapp = document.createElement('button');
     leggTilOppgaveKnapp.className = 'ikon-knapp';
     leggTilOppgaveKnapp.textContent = '+';
-    leggTilOppgaveKnapp.title = 'Legg til oppgave';
+    leggTilOppgaveKnapp.title = 'Legg til milepæl';
     leggTilOppgaveKnapp.style.cssText = `font-size:18px;font-weight:400;color:${knappFarge};line-height:1;`;
     leggTilOppgaveKnapp.onclick = e => {
       e.stopPropagation();
+      if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
       åpneOppgaveModal(null, a.id);
     };
     kort.appendChild(leggTilOppgaveKnapp);
@@ -6467,7 +6639,7 @@
     };
     document.getElementById('oppInfoFullfortKnapp').textContent = o.fullfort ? '↩ Angre fullført' : '✓ Merk fullført';
     window._oppInfoId = id;
-    document.getElementById('oppgaveInfoModal').classList.add('vis');
+    document.getElementById('oppgaveInfoModal').classList.add('vis'); _visFlyttKnapper();
   }
 
   function toggleOppgaveFraInfo() {
@@ -6736,7 +6908,8 @@
       lukkModal('aktivitetInfoModal');
       åpneOppgaveModal(null, id);
     };
-    document.getElementById('aktivitetInfoModal').classList.add('vis');
+    document.getElementById('infoModalFlyttKnapp').onclick = () => åpneFlyttDialog('aktivitet', id);
+    document.getElementById('aktivitetInfoModal').classList.add('vis'); _visFlyttKnapper();
   }
 
   function fullfortMilepel(id) {
@@ -8843,6 +9016,43 @@
       console.error('[SYNK] Kryss-prosjekt-avhuking feilet:', e.code, e.message);
       visSynkStatus('✗ ' + (e.code || e.message || 'Synk feilet'), '#e74c3c', 15000);
       return false;   // dirty står igjen: endringen pushes når prosjektet blir aktivt
+    }
+  };
+
+  // Flytting: legg elementer til i et prosjekt som ikke er det aktive. Krever
+  // nett: leser ferskt fra SERVER (ikke cache), legger til de som mangler, og
+  // skriver bare de berørte listene med merge. Usynkede lokale endringer i
+  // målprosjektet pushes først, så de ikke går tapt når sky-lista speiles lokalt.
+  // Returnerer false uten å ha endret noe hvis noe feiler.
+  window._leggTilIAnnetProsjekt = async function(userId, pid, nye) {
+    const pk = s => 'lp_' + pid + '_' + s;
+    try {
+      visSynkStatus('Flytter…', '#f39c12');
+      if (localStorage.getItem(pk('dirty'))) {
+        const pushet = await lagreTilSky(userId, pid);
+        if (!pushet) return false;
+      }
+      const snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', pid));
+      const sky = snap.exists() ? snap.data() : null;
+      const flett = (felt, nøkkel) => {
+        const liste = sky ? (sky[felt] || []) : (JSON.parse(localStorage.getItem(pk(nøkkel)) || '[]'));
+        (nye[felt] || []).forEach(n => { if (!liste.some(x => x && x.id === n.id)) liste.push(n); });
+        return liste;
+      };
+      const aL = flett('aktiviteter', 'a'), oL = flett('oppgaver', 'o'), tL = flett('todos', 't');
+      const felter = { oppdatert: new Date().toISOString() };
+      if ((nye.aktiviteter || []).length) felter.aktiviteter = aL;
+      if ((nye.oppgaver || []).length)    felter.oppgaver = oL;
+      if ((nye.todos || []).length)       felter.todos = tL;
+      await setDoc(doc(db, 'brukere', userId, 'prosjekter', pid), felter, { merge: true });
+      if (felter.aktiviteter) localStorage.setItem(pk('a'), JSON.stringify(aL));
+      if (felter.oppgaver)    localStorage.setItem(pk('o'), JSON.stringify(oL));
+      if (felter.todos)       localStorage.setItem(pk('t'), JSON.stringify(tL));
+      return true;
+    } catch (e) {
+      console.error('[SYNK] Flytting til prosjekt', pid, 'feilet:', e.code || e.message);
+      visSynkStatus('✗ Flytting feilet: ' + (e.code || e.message || 'ukjent feil'), '#e74c3c', 15000);
+      return false;
     }
   };
 
