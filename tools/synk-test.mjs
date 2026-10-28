@@ -84,22 +84,34 @@ function lagEnhet(navn) {
     setItem: (k, v) => lager.set(k, String(v)),
     removeItem: k => lager.delete(k),
   };
+  let prosjekter = JSON.parse(JSON.stringify(sky.startProsjekter || [{ id: 'P', navn: 'P' }]));
+  let aktiv = 'P', lastetPåNytt = false;
+  localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
   const window = {
-    _getAktivtProsjektId: () => 'P', _getProsjekter: () => [{ id: 'P', navn: 'P' }],
+    _getAktivtProsjektId: () => aktiv, _getProsjekter: () => prosjekter,
+    _settProsjektFraSky: (liste, nyAktiv) => {
+      if (liste) { prosjekter = liste; localStorage.setItem('lp_prosjekter', JSON.stringify(liste)); }
+      if (nyAktiv) aktiv = nyAktiv;
+    },
     _flogUnion: (a, b) => { const ut = [], s = new Set(); [...(a||[]), ...(b||[])].forEach(e => { if (e && e.eid) { if (s.has(e.eid)) return; s.add(e.eid); } ut.push(e); }); return ut; },
     _lokalDatoStr: () => '2026-10-28', _fangstProsjektId: () => 'P', addEventListener: () => {},
   };
   const navigator = { get onLine() { return sky.online; } };
-  const stubs = { visSynkStatus: () => {}, _oppdaterAppFraSky: () => {}, renderAlleLister: () => {}, renderStartside: () => {} };
+  const stubs = { visSynkStatus: () => {}, _oppdaterAppFraSky: () => {}, renderAlleLister: () => {}, renderStartside: () => {},
+                  oppdaterProsjektTittel: () => {}, location: { reload: () => { lastetPåNytt = true; } } };
   const fabrikk = new Function('fb', 'localStorage', 'window', 'navigator', 'stubs',
     `const { db, doc, collection, getDoc, getDocFromServer, setDoc, deleteDoc, getDocs, onSnapshot, runTransaction } = fb;
-     const { visSynkStatus, _oppdaterAppFraSky, renderAlleLister, renderStartside } = stubs;
+     const { visSynkStatus, _oppdaterAppFraSky, renderAlleLister, renderStartside, oppdaterProsjektTittel, location } = stubs;
      ${KODE}
-     return { lagreTilSky, _lastProsjektFraSky, _tommInnboks, _adopterSky, _skyDok };`);
+     return { lagreTilSky, _lastProsjektFraSky, _tommInnboks, _adopterSky, _skyDok, _adopterProsjektliste };`);
   const api = fabrikk(fb, localStorage, window, navigator, stubs);
   const les = n => JSON.parse(localStorage.getItem('lp_P_' + n) || '[]');
   return {
     navn, api, localStorage,
+    prosjektNavn: () => prosjekter.map(x => x.id).sort().join(','),
+    aktiv: () => aktiv, lastetPåNytt: () => lastetPåNytt,
+    // Slik slettProsjekt/opprettProsjekt gjør: endre lista lokalt.
+    settListe: (liste) => { prosjekter = liste; localStorage.setItem('lp_prosjekter', JSON.stringify(liste)); },
     todos: () => les('t').map(t => t.id + (t.fullfort ? '✓' : '')).sort().join(','),
     // Slik appens lagre() gjør: skriv lokalt, merk dirty, send.
     endre: async (mutér, vent = true) => {
@@ -112,6 +124,7 @@ function lagEnhet(navn) {
     hent: () => api._lastProsjektFraSky('u', 'P'),
   };
 }
+const skyProsjekter = () => ((sky.docs.get('brukere/u') || {}).prosjekter || []).map(x => x.id).sort().join(',');
 const skyTodos = () => ((sky.docs.get('brukere/u/prosjekter/P') || {}).todos || []).map(t => t.id + (t.fullfort ? '✓' : '')).sort().join(',');
 const td = (id, x = {}) => ({ id, tittel: id, fullfort: false, ...x });
 
@@ -217,6 +230,53 @@ const nullstill = (todos) => {
   sjekk('8  konflikt i kø-transaksjonen: to-doen finnes én gang', skyTodos(), 'A,inn_q2');
   sjekk('8b kø-transaksjonen prøvde på nytt', String(sky.konflikter >= 1), 'true');
 }
+
+// ─── 9. Prosjektlista: sletting slår igjennom og kommer ikke tilbake ────────────
+{
+  sky.startProsjekter = [{ id: 'P', navn: 'P' }, { id: 'Q', navn: 'Q' }];
+  const { tlf, mac } = nullstill([td('A')]);
+  skrivDok('brukere/u', { prosjekter: sky.startProsjekter });
+  tlf.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);
+  mac.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);
+  skrivDok('brukere/u/prosjekter/Q', { todos: [td('q1')] });
+  tlf.settListe([{ id: 'P', navn: 'P' }]);                          // telefonen sletter Q
+  sky.docs.delete('brukere/u/prosjekter/Q');                        // (_slettProsjektFraSky)
+  await tlf.endre(t => t);                                          // lagring synker lista
+  sjekk('9a slettingen av Q når skyens prosjektliste', skyProsjekter(), 'P');
+  mac.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);   // Macens lytter
+  sjekk('9b Mac fjerner Q fra lista', mac.prosjektNavn(), 'P');
+  await mac.endre(t => t.push(td('B')));
+  sjekk('9c Mac gjenoppliver ikke Q ved neste lagring', skyProsjekter(), 'P');
+  mac.localStorage.setItem('lp_Q_t', JSON.stringify([td('q1')])); mac.localStorage.setItem('lp_Q_dirty', '1');
+  await mac.api.lagreTilSky('u', 'Q');
+  sjekk('9d gammel lokal kopi av Q gjenoppretter ikke dokumentet', String(sky.docs.has('brukere/u/prosjekter/Q')), 'false');
+}
+// ─── 10. Nytt prosjekt overlever en samtidig endring fra en annen enhet ──────────
+{
+  sky.startProsjekter = [{ id: 'P', navn: 'P' }];
+  const { tlf, mac } = nullstill([td('A')]);
+  skrivDok('brukere/u', { prosjekter: sky.startProsjekter });
+  tlf.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);
+  mac.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);
+  mac.settListe([{ id: 'P', navn: 'P' }, { id: 'R', navn: 'R' }]);  // Mac lager R, ikke synket ennå
+  tlf.settListe([{ id: 'P', navn: 'P (nytt navn)' }]);
+  await tlf.endre(t => t);                                          // telefonen synker et nytt navn
+  mac.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);   // Macens lytter
+  sjekk('10a Mac beholder R (før ble lista overskrevet)', mac.prosjektNavn(), 'P,R');
+  await mac.endre(t => t);
+  sjekk('10b R og navneendringen begge i skyen', skyProsjekter() + ' / ' + (sky.docs.get('brukere/u').prosjekter.find(x => x.id === 'P') || {}).navn, 'P,R / P (nytt navn)');
+}
+// ─── 11. Aktivt prosjekt slettet på en annen enhet ───────────────────────────────
+{
+  sky.startProsjekter = [{ id: 'P', navn: 'P' }, { id: 'Q', navn: 'Q' }];
+  const { tlf } = nullstill([td('A')]);
+  skrivDok('brukere/u', { prosjekter: sky.startProsjekter });
+  tlf.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);
+  skrivDok('brukere/u', { prosjekter: [{ id: 'Q', navn: 'Q' }] });  // P slettet på Mac
+  tlf.api._adopterProsjektliste(sky.docs.get('brukere/u').prosjekter);
+  sjekk('11 telefonen bytter til gjenværende prosjekt og laster på nytt', tlf.aktiv() + ' / ' + tlf.lastetPåNytt(), 'Q / true');
+}
+sky.startProsjekter = null;
 
 console.log(feil ? `\n${feil} FEIL` : '\nAlle scenarioer OK');
 process.exit(feil ? 1 : 0);

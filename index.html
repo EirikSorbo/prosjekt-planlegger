@@ -1739,7 +1739,7 @@
 </main>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v4.93</div>
+<div class="versjon">Prosjekt-planlegger v4.94</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -3660,10 +3660,38 @@
     return { aktiviteter: samlet.aktiviteter, kategorier: samlet.kategorier, start: globalStart, slutt: globalSlutt };
   }
 
+  // ── Kalenderdata (v4.94) ──
+  // I «Alle prosjekter» viser måned, uke og dagpanelet alle aktive prosjekter.
+  // Elementene er da kopier merket med _prosjektId, så hver handling må bytte
+  // til elementets prosjekt før den endrer noe (_tilElementetsProsjekt), slik
+  // resten av flerprosjektvisningen gjør. Kategoriene er per prosjekt, derfor
+  // _kalKat i stedet for getKat.
+  function _kalData() {
+    if (!_alleAktiv()) return { aktiviteter, oppgaver, kategorier, multi: false };
+    const sA = [], sO = [], sK = [];
+    _alleIder().forEach(pid => {
+      const d = pid === aktivtProsjektId ? { aktiviteter, oppgaver, kategorier } : _hentProsjektData(pid);
+      const pNavn = prosjekter.find(p => p.id === pid)?.navn || '';
+      (d.aktiviteter || []).forEach(a => sA.push({ ...a, _prosjektId: pid, _prosjektNavn: pNavn }));
+      (d.oppgaver || []).forEach(o => sO.push({ ...o, _prosjektId: pid, _prosjektNavn: pNavn }));
+      (d.kategorier || []).forEach(k => sK.push({ ...k, _prosjektId: pid }));
+    });
+    return { aktiviteter: sA, oppgaver: sO, kategorier: sK, multi: true };
+  }
+  function _kalKat(kd, katId, pid) {
+    if (!katId) return null;
+    if (!kd.multi) return getKat(katId);
+    return kd.kategorier.find(k => k.id === katId && k._prosjektId === pid) || null;
+  }
+  function _tilElementetsProsjekt(item) {
+    if (item && item._prosjektId && item._prosjektId !== aktivtProsjektId) byttProsjekt(item._prosjektId);
+  }
+
   function renderUke() {
     const grid = document.getElementById('ukeGrid');
     if (!grid) return;
     grid.innerHTML = '';
+    const kd = _kalData();
 
     // Finn mandagen i gjeldende uke
     const iDag = new Date(); iDag.setHours(0,0,0,0);
@@ -3684,8 +3712,8 @@
       const erIDag = ds === _lokalDatoStr(iDag);
       const erValgt = ds === valgtDato;
 
-      const dagAkt = aktiviteter.filter(a => a.dato <= ds && (a.datoTil >= ds || a.dato === ds));
-      const dagOpp = oppgaver.filter(o => o.frist === ds && !o.fullfort);
+      const dagAkt = kd.aktiviteter.filter(a => a.dato <= ds && (a.datoTil >= ds || a.dato === ds));
+      const dagOpp = kd.oppgaver.filter(o => o.frist === ds && !o.fullfort);
 
       const dagEl = document.createElement('div');
       dagEl.className = 'uke-dag' + (erValgt ? ' valgt' : '');
@@ -3707,7 +3735,7 @@
       dagAkt.forEach(a => {
         const p = document.createElement('div');
         p.className = 'uke-prikk';
-        p.style.background = getKat(a.type)?.farge || '#999';
+        p.style.background = _kalKat(kd, a.type, a._prosjektId)?.farge || '#999';
         prikker.appendChild(p);
       });
       dagOpp.forEach(() => {
@@ -3726,17 +3754,19 @@
       dagAkt.forEach(a => {
         const el = document.createElement('div');
         el.className = 'uke-hendelse';
-        el.style.borderLeftColor = getKat(a.type)?.farge || '#ccc';
-        el.style.background = (getKat(a.type)?.farge || '#ccc') + '18';
+        const kFarge = _kalKat(kd, a.type, a._prosjektId)?.farge || '#ccc';
+        el.style.borderLeftColor = kFarge;
+        el.style.background = kFarge + '18';
+        if (kd.multi) el.title = a._prosjektNavn;
         const erMilepel = erResultatType(a);
         const tid = (!erMilepel && a.tid) ? ' · ' + a.tid : '';
         el.textContent = (erMilepel ? '◆ ' : '') + a.tittel + tid;
         if (erMilepel) el.style.fontWeight = '700';
-        el.onclick = e => { e.stopPropagation(); åpneAktivitetInfo(a.id); };
+        el.onclick = e => { e.stopPropagation(); _tilElementetsProsjekt(a); åpneAktivitetInfo(a.id); };
         dagEl.appendChild(el);
       });
 
-      // Vis oppgaver med frist på denne dagen
+      // Vis milepæler med frist på denne dagen
       dagOpp.forEach(o => {
         const el = document.createElement('div');
         el.className = 'uke-hendelse';
@@ -3744,7 +3774,8 @@
         el.style.background = 'var(--grønn-lys)';
         el.style.color = 'var(--tekst-sek)';
         el.textContent = '◻ ' + o.beskrivelse;
-        el.onclick = e => { e.stopPropagation(); åpneOppgaveInfo(o.id); };
+        if (kd.multi) el.title = o._prosjektNavn;
+        el.onclick = e => { e.stopPropagation(); _tilElementetsProsjekt(o); åpneOppgaveInfo(o.id); };
         dagEl.appendChild(el);
       });
 
@@ -3770,6 +3801,7 @@
 
     const grid = document.getElementById('dagerGrid');
     grid.innerHTML = '';
+    const kd = _kalData();
 
     const iDag = new Date();
     const forsteDag   = new Date(visAar, visMaaned, 1);
@@ -3784,7 +3816,7 @@
       const d = dagerForr - i;
       const mnd = visMaaned - 1 < 0 ? 11 : visMaaned - 1;
       const aar = visMaaned - 1 < 0 ? visAar - 1 : visAar;
-      grid.appendChild(lagCelle(d, aar, mnd, true));
+      grid.appendChild(lagCelle(d, aar, mnd, true, false, kd));
     }
 
     // Denne måneden
@@ -3793,7 +3825,7 @@
         d === iDag.getDate() &&
         visMaaned === iDag.getMonth() &&
         visAar    === iDag.getFullYear();
-      grid.appendChild(lagCelle(d, visAar, visMaaned, false, erIDag));
+      grid.appendChild(lagCelle(d, visAar, visMaaned, false, erIDag, kd));
     }
 
     // Neste måned
@@ -3802,16 +3834,16 @@
     for (let d = 1; d <= rest; d++) {
       const mnd = visMaaned + 1 > 11 ? 0  : visMaaned + 1;
       const aar = visMaaned + 1 > 11 ? visAar + 1 : visAar;
-      grid.appendChild(lagCelle(d, aar, mnd, true));
+      grid.appendChild(lagCelle(d, aar, mnd, true, false, kd));
     }
 
     if (valgtDato) renderValgtDag(valgtDato);
   }
 
-  function lagCelle(dag, aar, mnd, annen, erIDag) {
+  function lagCelle(dag, aar, mnd, annen, erIDag, kd = _kalData()) {
     const ds = `${aar}-${String(mnd+1).padStart(2,'0')}-${String(dag).padStart(2,'0')}`;
-    const dagAkt = aktiviteter.filter(a => a.dato === ds);
-    const dagOpp = oppgaver.filter(o => o.frist === ds);
+    const dagAkt = kd.aktiviteter.filter(a => a.dato === ds);
+    const dagOpp = kd.oppgaver.filter(o => o.frist === ds);
 
     const celle = document.createElement('div');
     celle.className = 'dag-celle'
@@ -3832,7 +3864,7 @@
       dagAkt.slice(0, 5).forEach(a => {
         const p = document.createElement('div');
         p.className = 'prikk';
-        p.style.background = getKat(a.type)?.farge || '#999';
+        p.style.background = _kalKat(kd, a.type, a._prosjektId)?.farge || '#999';
         if (erResultatType(a)) {
           p.style.borderRadius = '1px';
           p.style.transform = 'rotate(45deg)';
@@ -3874,13 +3906,14 @@
       navn.charAt(0).toUpperCase() + navn.slice(1) +
       ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()];
 
-    const dagAkt = aktiviteter
+    const kd = _kalData();
+    const dagAkt = kd.aktiviteter
       .filter(a => a.dato === ds)
       .sort((a, b) => (a.tid || '').localeCompare(b.tid || ''));
 
     // Oppgaver med frist denne dagen, ELLER koblet til en aktivitet denne dagen
     const aktIdsIDag = new Set(dagAkt.map(a => a.id));
-    const dagOpp = oppgaver
+    const dagOpp = kd.oppgaver
       .filter(o => !o.fullfort && (
         o.frist === ds ||
         (o.aktivitetId && aktIdsIDag.has(o.aktivitetId))
@@ -3910,9 +3943,11 @@
       listEl.appendChild(tom);
     } else {
       dagOpp.forEach(o => {
-        const akt = aktiviteter.find(a => a.id === o.aktivitetId);
+        const akt = kd.aktiviteter.find(a => a.id === o.aktivitetId);
         const vType = akt?.type || o.kategoriId;
         const stripeKlasse = vType ? 'stripe-' + vType : 'stripe-fri';
+        // Stripe-klassene finnes bare for det aktive prosjektets kategorier.
+        const vFarge = kd.multi ? (_kalKat(kd, vType, o._prosjektId)?.farge || null) : null;
 
         const ytre = document.createElement('div');
         ytre.style.cssText = 'position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:1px;';
@@ -3926,27 +3961,32 @@
 
         const kort = document.createElement('div');
         kort.className = 'oppgave-kort ' + stripeKlasse;
+        if (vFarge) kort.style.borderLeftColor = vFarge;
         kort.style.cursor = 'pointer';
-        kort.onclick = () => åpneOppgaveInfo(o.id);
+        kort.onclick = () => { _tilElementetsProsjekt(o); åpneOppgaveInfo(o.id); };
 
         const cb = document.createElement('div');
         cb.className = 'checkbox' + (o.fullfort ? ' sjekket' : '');
         cb.textContent = o.fullfort ? '✓' : '';
-        cb.onclick = e => { e.stopPropagation(); toggleOppgave(o.id); renderValgtDag(ds); };
+        cb.onclick = e => { e.stopPropagation(); _tilElementetsProsjekt(o); toggleOppgave(o.id); renderValgtDag(ds); };
 
         const info = document.createElement('div');
         info.className = 'oppgave-info';
 
         let metaHtml = '';
+        if (kd.multi && o._prosjektNavn) {
+          const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--grønn)';
+          metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
+        }
         if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
         if (akt) {
           metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
         } else if (o.kategoriId) {
-          const katV = getKat(o.kategoriId);
-          if (katV) metaHtml += `<span class="tilknyttet-chip chip-${katV.id}">${katV.label}</span>`;
+          const katV = _kalKat(kd, o.kategoriId, o._prosjektId);
+          if (katV) metaHtml += `<span class="tilknyttet-chip chip-${katV.id}">${escapeHtml(katV.label)}</span>`;
         }
 
-        info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
+        info.innerHTML = `<div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
           ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
 
         kort.appendChild(cb);
@@ -3955,7 +3995,9 @@
         ytre.appendChild(slettBg);
         ytre.appendChild(wrapper);
         leggTilSveipSlett(ytre, wrapper, slettBg, () => {
+          _tilElementetsProsjekt(o);
           _papirkurvLegg('oppgave', o);
+          todos.forEach(t => { if (t.oppgaveId === o.id) t.oppgaveId = null; });
           oppgaver = oppgaver.filter(x => x.id !== o.id);
           lagre();
           renderValgtDag(ds);
@@ -9027,6 +9069,9 @@
   // kjører i prosjektets kjede (ellers ville den ventet på seg selv).
   async function _lagreNå(userId, pid) {
     const pk = s => 'lp_' + pid + '_' + s;
+    // Er prosjektet slettet (her eller på en annen enhet), skal en gammel
+    // lokal kopi ikke gjenopprette dokumentet i skyen.
+    if (!((window._getProsjekter && window._getProsjekter()) || []).some(p => p && p.id === pid)) return true;
     if (!navigator.onLine) {
       visSynkStatus('Lagret lokalt, synkes når du er på nett', '#e08a3c', 4000);
       return false;   // dirty står: sendes ved 'online' eller neste lagring
@@ -9082,37 +9127,63 @@
     }
   }
 
-  // Prosjektlista på brukernivå (navn, farger, aktivt prosjekt, fangstprosjekt).
+  // ── Prosjektlista: samme fletting (v4.94) ──
+  // Lista over prosjekter (navn, farge, arkivert) ligger i brukerdokumentet. Før
+  // ble den slått sammen med skyens ved hver lagring, så et slettet prosjekt kom
+  // alltid tilbake, og lytteren overskrev lista lokalt (et prosjekt laget her
+  // før synk forsvant). Nå flettes den mot et eget grunnlag, som elementene.
+  function _lesProsjektBase() {
+    try { return JSON.parse(localStorage.getItem('lp_prosjekter_base') || 'null'); } catch (e) { return null; }
+  }
+  function _skrivProsjektBase(liste) {
+    try { localStorage.setItem('lp_prosjekter_base', JSON.stringify(Array.isArray(liste) ? liste : [])); } catch (e) { /* union neste gang */ }
+  }
+  // Ta skyens prosjektliste inn med fletting. Er det aktive prosjektet slettet
+  // på en annen enhet, lastes appen på nytt på et gjenværende prosjekt, i stedet
+  // for å bli stående på (og ved neste lagring gjenopprette) et prosjekt som ikke
+  // finnes lenger.
+  function _adopterProsjektliste(skyListe) {
+    if (!Array.isArray(skyListe)) return false;
+    const lokal = (window._getProsjekter && window._getProsjekter()) || [];
+    const ny = _flett3(_lesProsjektBase(), lokal, skyListe);
+    _skrivProsjektBase(skyListe);
+    if (JSON.stringify(ny) === JSON.stringify(lokal)) return false;
+    const aktiv = window._getAktivtProsjektId();
+    if (ny.length && !ny.some(p => p && p.id === aktiv)) {
+      const neste = ny.find(p => p && !p.arkivert) || ny[0];
+      window._settProsjektFraSky(ny, neste.id);
+      location.reload();
+      return true;
+    }
+    window._settProsjektFraSky(ny, null);
+    if (typeof oppdaterProsjektTittel === 'function') oppdaterProsjektTittel();
+    if (typeof renderAlleLister === 'function') renderAlleLister();
+    return true;
+  }
+
+  // Prosjektlista på brukernivå (navn, farger, aktivt prosjekt, fangstprosjekt),
+  // lest og skrevet i én transaksjon.
   async function _synkProsjektliste(userId, pid) {
-    const lokaleProsjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
-    let mergedProsjekter = [...lokaleProsjekter];
-    let skyFangst = null;
-    try {
-      const brukerSnap = await getDoc(doc(db, 'brukere', userId));
-      if (brukerSnap.exists() && brukerSnap.data().fangstProsjekt) skyFangst = brukerSnap.data().fangstProsjekt;
-      if (brukerSnap.exists() && brukerSnap.data().prosjekter) {
-        const skyProsjekter = brukerSnap.data().prosjekter;
-        // Legg til sky-prosjekter som ikke finnes lokalt
-        skyProsjekter.forEach(sp => {
-          if (!mergedProsjekter.find(lp => lp.id === sp.id)) mergedProsjekter.push(sp);
-        });
-        // Oppdater eksisterende med lokale verdier (navn, farge)
-        mergedProsjekter = mergedProsjekter.map(mp => {
-          const lokal = lokaleProsjekter.find(lp => lp.id === mp.id);
-          return lokal || mp;
-        });
-      }
-    } catch(e) { /* ignorer merge-feil, bruk lokale */ }
-    // aktivtProsjekt skal alltid peke på det FAKTISK aktive prosjektet, ikke
-    // nødvendigvis pid-en vi bakgrunnssynker.
-    await setDoc(doc(db, 'brukere', userId), {
-      prosjekter: mergedProsjekter,
-      aktivtProsjekt: window._getAktivtProsjektId() || pid,
-      // Fangstprosjektet deles mellom enhetene. Skrivet er uten merge, så
-      // sky-verdien må bæres videre når denne enheten ikke har satt noe selv.
-      fangstProsjekt: localStorage.getItem('lp_fangstProsjekt') || skyFangst || null,
-      oppdatert: new Date().toISOString()
+    const ref = doc(db, 'brukere', userId);
+    const lokal = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
+    const base = _lesProsjektBase();
+    const flettet = await runTransaction(db, async tx => {
+      const snap = await tx.get(ref);
+      const data = snap.exists() ? snap.data() : {};
+      const liste = Array.isArray(data.prosjekter) ? _flett3(base, lokal, data.prosjekter) : lokal;
+      tx.set(ref, {
+        prosjekter: liste,
+        // aktivtProsjekt peker alltid på det FAKTISK aktive prosjektet, ikke
+        // nødvendigvis pid-en vi bakgrunnssynker.
+        aktivtProsjekt: window._getAktivtProsjektId() || pid,
+        // Fangstprosjektet deles mellom enhetene; skyens verdi bæres videre når
+        // denne enheten ikke har satt noe selv.
+        fangstProsjekt: localStorage.getItem('lp_fangstProsjekt') || data.fangstProsjekt || null,
+        oppdatert: new Date().toISOString()
+      }, { merge: true });
+      return liste;
     });
+    _adopterProsjektliste(flettet);
   }
 
   window._lagreTilSky = lagreTilSky;
@@ -9712,10 +9783,7 @@
         if (snap.exists()) {
           const data = snap.data();
           if (data.fangstProsjekt) localStorage.setItem('lp_fangstProsjekt', data.fangstProsjekt);
-          if (data.prosjekter && JSON.stringify(data.prosjekter) !== JSON.stringify(window._getProsjekter() || [])) {
-            window._settProsjektFraSky(data.prosjekter, null);
-            if (typeof oppdaterProsjektTittel === 'function') oppdaterProsjektTittel();
-          }
+          if (data.prosjekter) _adopterProsjektliste(data.prosjekter);
         }
       } catch(e) { /* offline: lokale data blir stående */ }
 
@@ -9815,11 +9883,10 @@
           const skyProsjekter = brukerData.prosjekter;
           const lokaleProsjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
 
-          // Slå sammen: sky er master, men legg til lokale prosjekter som ikke finnes i sky
-          const merged = [...skyProsjekter];
-          lokaleProsjekter.forEach(lp => {
-            if (!merged.find(sp => sp.id === lp.id)) merged.push(lp);
-          });
+          // Flett mot grunnlaget: nye lokale prosjekter beholdes, prosjekter
+          // slettet på en annen enhet forsvinner også her. (Uten grunnlag, første
+          // gang etter v4.94: union, som før.)
+          const merged = _flett3(_lesProsjektBase(), lokaleProsjekter, skyProsjekter);
 
           // Sjekk om lokale prosjekter har ID-er som ikke matcher sky
           // (skjer ved migrering på flere enheter – ulike random ID-er)
@@ -9851,6 +9918,7 @@
           }
 
           window._settProsjektFraSky(merged, nyttAktivt);
+          _skrivProsjektBase(skyProsjekter);
           console.log('[SYNK] Prosjektliste synket, aktivt:', nyttAktivt, 'prosjekter:', merged.length);
         }
       }
@@ -9894,16 +9962,8 @@
         if (firstBrukerSnap) { firstBrukerSnap = false; return; }
         if (!snap.exists()) return;
         const data = snap.data();
-        if (data.prosjekter) {
-          const skyProsjekter = data.prosjekter;
-          const lokalt = JSON.stringify(window._getProsjekter() || []);
-          const sky = JSON.stringify(skyProsjekter);
-          if (sky !== lokalt) {
-            console.log('[SYNK] Prosjektliste oppdatert fra sky');
-            window._settProsjektFraSky(skyProsjekter, null);
-            if (typeof oppdaterProsjektTittel === 'function') oppdaterProsjektTittel();
-          }
-        }
+        // Flett i stedet for å overskrive (et prosjekt laget her før synk består).
+        if (data.prosjekter) _adopterProsjektliste(data.prosjekter);
       });
 
     } else {
