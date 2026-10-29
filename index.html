@@ -1845,6 +1845,43 @@
     .login-knapp { display: inline-flex; align-items: center; gap: 10px; }
     .plan-rad { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--linje); cursor: pointer; }
     .plan-rad:last-child { border-bottom: none; }
+    /* Timeplan fra løytnanten (v5.8): tid | hva | prosjekt, pågående blokk i gult */
+    .tp { margin: 0 0 4px; font-family: var(--font-body); }
+    .tp-rad { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; align-items: baseline; column-gap: 14px; padding: 10px 8px; margin: 0 -8px; border-bottom: 1px solid var(--linje); }
+    .tp-rad:last-child { border-bottom: none; }
+    .tp-tid { grid-column: 1; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--blå); white-space: nowrap; }
+    .tp-hva { grid-column: 2; font-size: 16px; font-weight: 600; color: var(--blekk); }
+    .tp-prosjekter { grid-column: 3; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 12px; }
+    .tp-igjen { grid-column: 2 / -1; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blekk); padding-top: 4px; }
+    .tp-igjen:empty { display: none; }
+    .tp-rad.pause { padding-top: 6px; padding-bottom: 6px; }
+    .tp-rad.pause .tp-tid, .tp-rad.pause .tp-hva { font-size: 12px; font-weight: 500; color: var(--dempet); }
+    .tp-rad.forbi .tp-tid, .tp-rad.forbi .tp-hva { color: var(--dempet); }
+    .tp-rad.forbi .tp-hva { font-weight: 500; }
+    .tp-rad.forbi .start-prosjekt { opacity: .45; }
+    .tp-rad.naa { background: var(--gul); box-shadow: inset 4px 0 0 var(--blekk); }
+    .tp-rad.naa .tp-tid, .tp-rad.naa .tp-hva { color: var(--blekk); }
+    .tp-rad.neste .tp-igjen { color: var(--blå); }
+    .tp-merknad > summary, .tp-imorgen > summary {
+      cursor: pointer; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--blå); padding: 8px 0; list-style: none;
+    }
+    .tp-merknad > summary::-webkit-details-marker, .tp-imorgen > summary::-webkit-details-marker { display: none; }
+    .tp-merknad > summary::before, .tp-imorgen > summary::before { content: '▸'; display: inline-block; width: 1.4em; }
+    .tp-merknad[open] > summary::before, .tp-imorgen[open] > summary::before { content: '▾'; }
+    .tp-merknad > summary:hover, .tp-imorgen > summary:hover { color: var(--blekk); }
+    .tp-merknad > div { white-space: pre-line; font-size: 14px; line-height: 1.5; color: var(--blekk); padding: 0 0 8px; }
+    .plan-under {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 12px 0 8px; padding-top: 12px;
+      border-top: 2px solid var(--blekk); font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em; color: var(--blekk);
+    }
+    .plan-under span:last-child { color: var(--blå); }
+    .plan-kort > .tp-imorgen { border-top: 1px solid var(--linje); margin-top: 6px; }
+    .plan-tom > .tp-imorgen { flex-basis: 100%; }
+    .plan-tom > .tp-imorgen[open] { background: var(--papir-lys); border: 2px solid var(--blekk); box-shadow: var(--skygge); padding: 0 16px 8px; }
+    .plan-tom > .tp-imorgen > summary { color: var(--dempet); padding: 2px 0; }
+    .plan-tom > .tp-imorgen[open] > summary { color: var(--blå); padding: 10px 0 6px; }
     .start-hake.sjekket, .slett-sirkel, .fullfor-sirkel { color: var(--lys); }
     .start-hake {
       width: 22px; height: 22px; border-radius: 2px; border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
@@ -1975,6 +2012,10 @@
       .plan-rad, #startInnhold .todo-kort { flex-wrap: wrap; row-gap: 6px; }
       .plan-rad .start-tekst, #startInnhold .todo-kort .start-tekst { flex: 1 1 calc(100% - 40px); white-space: normal; }
       .plan-rad .start-tekst + *, #startInnhold .todo-kort .start-tekst + * { margin-left: 36px; }
+      .tp-rad { grid-template-columns: 92px minmax(0, 1fr); row-gap: 4px; }
+      .tp-prosjekter { grid-column: 2; justify-content: flex-start; }
+      .tp-tid { font-size: 12px; }
+      .tp-hva { font-size: 15px; }
     }
 
     /* ── Felles: sprettvinduer, menyer, valglister, meldinger (v5.7) ──────── */
@@ -2222,7 +2263,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v5.7</div>
+<div class="versjon">Prosjekt-planlegger v5.8</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -5124,20 +5165,142 @@
     };
     return b;
   }
+
+  // ── Timeplan fra løytnanten (v5.8) ──
+  // Dagsplanen med klokkeslett lages i Obsidian (areas/dagsplan/) og kommer hit
+  // gjennom køen (fangst.mjs --dagsplan). Modulen lagrer den i
+  // brukere/<uid>/dagsplaner/<dato> og speiler dagens og senere planer til
+  // localStorage, så Start viser dem også uten nett. Planen endres i Obsidian
+  // og sendes på nytt; her er den bare til visning. Klokkeslettene er
+  // veggklokketid der du er, så de vises som de står, uten omregning.
+  const DAGSPLAN_NOKKEL = 'dagsplaner_cache';   // ikke lp_: skal ikke med i sikkerhetskopiene
+  let _imorgenÅpen = false, _tpTegnetDato = null;
+  function _dagsplaner() { return _parseSafe(localStorage.getItem(DAGSPLAN_NOKKEL), null) || {}; }
+  window._settDagsplaner = function(planer) {
+    const ny = JSON.stringify(planer || {});
+    if (ny === localStorage.getItem(DAGSPLAN_NOKKEL)) return;
+    localStorage.setItem(DAGSPLAN_NOKKEL, ny);
+    if (typeof renderStartside === 'function') renderStartside();
+  };
+  function _dagsplanFor(dato) {
+    const p = _dagsplaner()[dato];
+    return p && Array.isArray(p.blokker) && p.blokker.length ? { ...p, dato } : null;
+  }
+  const _tilMin = hm => { const [h, m] = String(hm).split(':').map(Number); return h * 60 + m; };
+  const _varighet = min => min < 60 ? min + ' min' : Math.floor(min / 60) + ' t' + (min % 60 ? ' ' + (min % 60) + ' min' : '');
+  const _erPause = hva => /^(pause|lunsj|lunch|matpause|kaffe)\b/i.test(String(hva || '').trim());
+  const _tpSpenn = plan => plan.arbeidstid || (plan.blokker[0].fra + '–' + plan.blokker[plan.blokker.length - 1].til);
+
+  // «UiA / MishMash WP4» gir én merkelapp per prosjekt, i prosjektets farge når
+  // navnet finnes i appen (eksakt først, ellers unik delstreng).
+  function _tpProsjekter(tekst) {
+    const boks = document.createElement('span');
+    boks.className = 'tp-prosjekter';
+    const aktive = prosjekter.filter(p => !p.arkivert);
+    String(tekst || '').split(/\s*[\/,]\s*/).filter(Boolean).forEach(navn => {
+      const n = navn.toLowerCase();
+      let treff = aktive.filter(p => String(p.navn || '').toLowerCase() === n);
+      if (!treff.length) treff = aktive.filter(p => String(p.navn || '').toLowerCase().includes(n));
+      const p = treff.length === 1 ? treff[0] : null;
+      const chip = document.createElement('span');
+      chip.className = 'start-prosjekt';
+      chip.textContent = p ? p.navn : navn;
+      chip.style.setProperty('--kat', p ? (p.farge || 'var(--blekk)') : 'var(--dempet)');
+      boks.appendChild(chip);
+    });
+    return boks;
+  }
+  function _lagTimeplan(plan) {
+    const tp = document.createElement('div');
+    tp.className = 'tp';
+    tp.dataset.dato = plan.dato;
+    plan.blokker.forEach(b => {
+      const rad = document.createElement('div');
+      rad.className = 'tp-rad' + (_erPause(b.hva) ? ' pause' : '');
+      rad.dataset.fra = b.fra;
+      rad.dataset.til = b.til;
+      rad.innerHTML = `<span class="tp-tid">${escapeHtml(b.fra)}–${escapeHtml(b.til)}</span><span class="tp-hva"></span>`;
+      rad.querySelector('.tp-hva').textContent = b.hva;
+      if (b.prosjekt && !_erPause(b.hva)) rad.appendChild(_tpProsjekter(b.prosjekt));
+      rad.insertAdjacentHTML('beforeend', '<span class="tp-igjen"></span>');
+      tp.appendChild(rad);
+    });
+    _merkTimeplan(tp);
+    return tp;
+  }
+  function _lagTpMerknad(tekst) {
+    const d = document.createElement('details');
+    d.className = 'tp-merknad';
+    d.innerHTML = '<summary>Hvis noe endrer seg</summary><div></div>';
+    d.querySelector('div').textContent = tekst;
+    return d;
+  }
+  // Planen for i morgen ligger sammenslått nederst (den lages som regel
+  // kvelden før). Åpen/lukket huskes mens appen står åpen.
+  function _lagImorgen(plan) {
+    const d = document.createElement('details');
+    d.className = 'tp-imorgen';
+    d.open = _imorgenÅpen;
+    d.innerHTML = `<summary>Plan for i morgen, ${escapeHtml(_kortDato(plan.dato))} · ${escapeHtml(_tpSpenn(plan))}</summary>`;
+    d.appendChild(_lagTimeplan(plan));
+    if (plan.merknad) d.appendChild(_lagTpMerknad(plan.merknad));
+    d.addEventListener('toggle', () => { _imorgenÅpen = d.open; });
+    return d;
+  }
+  // Markerer blokka som pågår (med tid igjen) og blokkene som er over. Før
+  // dagen starter og mellom blokkene får neste blokk «om X min».
+  function _merkTimeplan(tp) {
+    if (tp.dataset.dato !== _datoOm(0)) return;
+    const nå = new Date(), m = nå.getHours() * 60 + nå.getMinutes();
+    const rader = [...tp.querySelectorAll('.tp-rad')];
+    const pågår = rader.some(r => _tilMin(r.dataset.fra) <= m && m < _tilMin(r.dataset.til));
+    let nesteFunnet = false;
+    rader.forEach(r => {
+      const fra = _tilMin(r.dataset.fra), til = _tilMin(r.dataset.til);
+      const naa = fra <= m && m < til;
+      const neste = !pågår && !nesteFunnet && fra > m;
+      if (neste) nesteFunnet = true;
+      r.classList.toggle('naa', naa);
+      r.classList.toggle('forbi', til <= m);
+      r.classList.toggle('neste', neste);
+      r.querySelector('.tp-igjen').textContent = naa ? _varighet(til - m) + ' igjen' : neste ? 'Om ' + _varighet(fra - m) : '';
+    });
+  }
+  // Hvert halve minutt mens appen vises. Har datoen skiftet siden Start ble
+  // tegnet, tegnes den på nytt, så morgendagens plan blir dagens.
+  function _tpTikk() {
+    if (_tpTegnetDato && _tpTegnetDato !== _datoOm(0)) { renderStartside(); return; }
+    document.querySelectorAll('.tp[data-dato]').forEach(_merkTimeplan);
+  }
+  setInterval(() => { if (document.visibilityState === 'visible') _tpTikk(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') _tpTikk(); });
+
   function _lagDagensPlan(plan, isMulti) {
+    _tpTegnetDato = _datoOm(0);
+    const tp = _dagsplanFor(_datoOm(0)), imorgen = _dagsplanFor(_datoOm(1));
     const n = plan.åpne.length + plan.gjort.length;
-    if (!n) {
+    if (!n && !tp) {
       const tom = document.createElement('div');
       tom.className = 'plan-tom';
       tom.innerHTML = `Ingen plan for i dag. Trykk ${_IKON_PLAN} på en to-do for å legge den i planen.`;
+      if (imorgen) tom.appendChild(_lagImorgen(imorgen));
       return tom;
     }
     const kort = document.createElement('div');
     kort.className = 'plan-kort';
-    const pst = Math.round(plan.gjort.length / n * 100);
+    const pst = n ? Math.round(plan.gjort.length / n * 100) : 0;
+    const telling = `${_to(plan.gjort.length)} av ${_to(n)} gjort`;
+    // Med timeplan står arbeidstiden i hodet og to-do-tellingen over to-do-ene.
     kort.innerHTML = `<div class="plan-hode"><span class="plan-tittel">Dagens plan</span>`
-      + `<span class="plan-telling">${_to(plan.gjort.length)} av ${_to(n)} gjort</span></div>`
-      + `<div class="plan-stolpe"><span style="width:${pst}%"></span></div>`;
+      + `<span class="plan-telling">${tp ? escapeHtml(_tpSpenn(tp)) : telling}</span></div>`;
+    if (tp) {
+      kort.appendChild(_lagTimeplan(tp));
+      if (tp.merknad) kort.appendChild(_lagTpMerknad(tp.merknad));
+    }
+    if (n) {
+      if (tp) kort.insertAdjacentHTML('beforeend', `<div class="plan-under"><span>To-dos i planen</span><span>${telling}</span></div>`);
+      kort.insertAdjacentHTML('beforeend', `<div class="plan-stolpe"><span style="width:${pst}%"></span></div>`);
+    }
     const lagRad = (item, gjort) => {
       const pid = item._prosjektId || aktivtProsjektId;
       const rad = document.createElement('div');
@@ -5178,7 +5341,8 @@
     };
     plan.åpne.forEach(t => kort.appendChild(lagRad(t, false)));
     plan.gjort.forEach(t => kort.appendChild(lagRad(t, true)));
-    if (!plan.åpne.length) kort.insertAdjacentHTML('beforeend', '<div class="plan-ferdig">Alt i planen er gjort.</div>');
+    if (n && !plan.åpne.length) kort.insertAdjacentHTML('beforeend', '<div class="plan-ferdig">Alt i planen er gjort.</div>');
+    if (imorgen) kort.appendChild(_lagImorgen(imorgen));
     return kort;
   }
 
@@ -10079,7 +10243,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc, collection, getDocs, runTransaction }
+  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc, collection, getDocs, runTransaction, query, where, documentId }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -10560,6 +10724,11 @@
   //     nyTittel?, frist?, dato?, datoTil?, notat? }  endrer KUN oppgitte felt
   //     på et eksisterende element, aldri koblinger.
   //   { type:'migrer', prosjektId, plan }  engangs strukturflytting, se under
+  //   { type:'dagsplan', dato, plan?, fjern? }  (nivå 3) timeplan for en dag fra
+  //     løytnanten. plan = JSON {arbeidstid, blokker:[{fra,til,hva,prosjekt}],
+  //     merknad}. Lagres i brukere/<uid>/dagsplaner/<dato> og erstatter en
+  //     tidligere plan for samme dato; fjern:true tar planen bort. Hører ikke
+  //     til noe prosjekt og utføres derfor utenfor prosjektsveipene.
   // `kategori` er kategoriens NAVN i målprosjektet; ukjent navn ignoreres.
   // `under` er en leveranses TITTEL i målprosjektet og gir aktivitetId; ukjent
   // eller flertydig navn gir null (elementet havner ukoblet, aldri feilkoblet).
@@ -10574,12 +10743,33 @@
   // bekreftet skriv, og id-er avledes av dokument-id (inn_<id>) slik at en
   // re-kjøring aldri dupliserer.
   // Køens funksjonsnivå. Heves når køen får nye felt eller typer som en eldre
-  // app ville feiltolke (v4.90: to-do under milepæl via navn, tid på leveranse).
+  // app ville feiltolke (v4.90: to-do under milepæl via navn, tid på leveranse;
+  // v5.8: nivå 3, dagsplan).
   // Verktøyet merker slike forespørsler med krevNiva, så en gammel fane lar dem
   // ligge til den er oppdatert i stedet for å utføre dem halvveis.
-  const KO_NIVA = 2;
+  const KO_NIVA = 3;
   let _tommerInnboks = false;
   let _innboksPaNytt = false;
+
+  // Dagsplan fra køen: ugyldig gir undefined (forespørselen ryddes bort uten
+  // å gjøre noe), fjern:true gir null, ellers en renset plan.
+  function _rensDagsplan(r) {
+    const dato = typeof r.dato === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.dato) ? r.dato : null;
+    if (!dato) return undefined;
+    if (r.fjern === true) return null;
+    let p;
+    try { p = JSON.parse(r.plan || ''); } catch (e) { return undefined; }
+    const tid = v => typeof v === 'string' && /^\d{2}:\d{2}$/.test(v);
+    const tekst = (v, n) => String(v || '').trim().slice(0, n);
+    const blokker = (Array.isArray(p && p.blokker) ? p.blokker : [])
+      .filter(b => b && tid(b.fra) && tid(b.til) && tekst(b.hva, 300))
+      .slice(0, 40)
+      .map(b => ({ fra: b.fra, til: b.til, hva: tekst(b.hva, 300), prosjekt: tekst(b.prosjekt, 120) }))
+      .sort((a, b) => a.fra.localeCompare(b.fra));
+    if (!blokker.length) return undefined;
+    return { dato, blokker, arbeidstid: tekst(p.arbeidstid, 40), merknad: tekst(p.merknad, 2000),
+             oppdatert: tekst(r.opprettet, 40) };
+  }
 
   async function _tommInnboks(userId) {
     if (!userId) return;
@@ -10601,8 +10791,10 @@
       // Grupper forespørslene per målprosjekt; ugyldig mål → fangstprosjektet.
       // Uten noe gyldig mål i det hele tatt blir dokumentet stående til senere.
       const grupper = new Map();
+      const dagsplanForesp = [];
       innboks.forEach(d => {
         const r = d.data() || {};
+        if (r.type === 'dagsplan') { dagsplanForesp.push({ dokId: d.id, r }); return; }
         const pid = (r.prosjektId && kjente.has(r.prosjektId)) ? r.prosjektId : fangstPid;
         if (!pid) return;
         if (!grupper.has(pid)) grupper.set(pid, []);
@@ -10612,6 +10804,24 @@
       const iDag = window._lokalDatoStr ? window._lokalDatoStr() : new Date().toISOString().slice(0, 10);
       const behandlet = [];
       let lagtTil = 0, fullfortAntall = 0, migrert = 0, oppdatertAntall = 0;
+
+      // Dagsplaner: eldste først, så den nyeste for en dato blir stående.
+      // Forespørselen slettes først når planen er skrevet.
+      let dagsplanAntall = 0;
+      dagsplanForesp.sort((a, b) => String(a.r.opprettet || '').localeCompare(String(b.r.opprettet || '')));
+      for (const { dokId, r } of dagsplanForesp) {
+        if (Number(r.krevNiva || 0) > KO_NIVA) continue;   // fra et nyere verktøy: venter
+        const plan = _rensDagsplan(r);
+        try {
+          if (plan === null) await deleteDoc(doc(db, 'brukere', userId, 'dagsplaner', r.dato));
+          else if (plan) await setDoc(doc(db, 'brukere', userId, 'dagsplaner', plan.dato), plan);
+          else console.warn('[INNBOKS] Ugyldig dagsplan ryddes bort:', dokId);
+          await deleteDoc(doc(db, 'brukere', userId, 'innboks', dokId));
+          if (plan !== undefined) dagsplanAntall++;
+        } catch (e) {
+          console.warn('[INNBOKS] Dagsplan feilet, prøver igjen senere:', e.code || e.message);
+        }
+      }
 
       for (const [pid, gruppe] of grupper) {
         // Hele sveipet av ett prosjekt kjøres i prosjektets synk-kjede, så det
@@ -10924,10 +11134,11 @@
         catch (e) { /* står igjen, ryddes ved neste tømming (id-ene er idempotente) */ }
       }
 
-      if (lagtTil > 0 || fullfortAntall > 0 || migrert > 0 || oppdatertAntall > 0) {
+      if (lagtTil > 0 || fullfortAntall > 0 || migrert > 0 || oppdatertAntall > 0 || dagsplanAntall > 0) {
         _oppdaterAppFraSky();
         if (typeof renderStartside === 'function') renderStartside();
         const deler = [];
+        if (dagsplanAntall > 0) deler.push(dagsplanAntall === 1 ? 'dagsplan' : dagsplanAntall + ' dagsplaner');
         if (lagtTil > 0)        deler.push(lagtTil + (lagtTil === 1 ? ' ny' : ' nye'));
         if (fullfortAntall > 0) deler.push(fullfortAntall + (fullfortAntall === 1 ? ' fullført' : ' fullførte'));
         if (oppdatertAntall > 0) deler.push(oppdatertAntall + ' oppdatert');
@@ -10950,6 +11161,25 @@
       _tommInnboks(userId);
     }, e => console.warn('[INNBOKS] Lytter feilet:', e.code || e.message));
   }
+
+  // Dagsplaner fra og med i dag (som regel én eller to). Speiles til
+  // localStorage, der Start leser dem. Ny dag: start lytteren på nytt, så
+  // gamle planer ikke leses med.
+  let _dagsplanFraDato = null;
+  function _startDagsplanLytter(userId) {
+    if (window._unsubDagsplan) window._unsubDagsplan();
+    _dagsplanFraDato = window._lokalDatoStr();
+    const q = query(collection(db, 'brukere', userId, 'dagsplaner'), where(documentId(), '>=', _dagsplanFraDato));
+    window._unsubDagsplan = onSnapshot(q, snap => {
+      const planer = {};
+      snap.forEach(d => { planer[d.id] = d.data(); });
+      if (window._settDagsplaner) window._settDagsplaner(planer);
+    }, e => console.warn('[DAGSPLAN] Lytter feilet:', e.code || e.message));
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && window._currentUid && _dagsplanFraDato
+        && _dagsplanFraDato !== window._lokalDatoStr()) _startDagsplanLytter(window._currentUid);
+  });
 
   // ── Bytt sky-prosjekt (kalles fra byttProsjekt()) ──
   window._byttSkyProsjekt = async function() {
@@ -11165,6 +11395,7 @@
       // ellers appenderes fangsten til en utdatert liste.
       await _tommInnboks(bruker.uid);
       _startInnboksLytter(bruker.uid);
+      _startDagsplanLytter(bruker.uid);
 
       // Lytt på endringer i prosjektlisten fra andre enheter
       let firstBrukerSnap = true;
@@ -11181,6 +11412,7 @@
       if (window._unsub) window._unsub();
       if (window._unsubBruker) window._unsubBruker();
       if (window._unsubInnboks) window._unsubInnboks();
+      if (window._unsubDagsplan) window._unsubDagsplan();
       loginOverlay.style.display = 'flex';
       const innstBruker = document.getElementById('innstillingerBruker');
       if (innstBruker) innstBruker.style.display = 'none';

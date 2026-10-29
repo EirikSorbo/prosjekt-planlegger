@@ -19,7 +19,11 @@ Obsidian-vaulten «Jobb-hjernen»:
   node tools/fangst.mjs "Skrive utkast" --prosjekt "UiA"             # todo i navngitt prosjekt
   node tools/fangst.mjs "Rapport" --oppgave --prosjekt UiA --frist 2026-09-01
   node tools/fangst.mjs --fullfor "Send epost" --prosjekt "MishMash WP4"
+  node tools/fangst.mjs --dagsplan ".../areas/dagsplan/2026-10-30.md" [--vis]   # timeplan på Start
   ```
+  Dagsplanen (kønivå 3, appen v5.8+) lagres i `brukere/<uid>/dagsplaner/<dato>`
+  og vises øverst på Start. En ny sending for samme dato erstatter den forrige;
+  `--dagsplan-fjern ÅÅÅÅ-MM-DD` tar den bort.
 - **Kill switch:** deaktiver Claude-brukeren i Firebase-konsollen
   (Authentication → Users → ⋮ → Disable account), så er all tilgang død.
 

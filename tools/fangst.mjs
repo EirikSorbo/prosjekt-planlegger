@@ -19,6 +19,15 @@
 //   node fangst.mjs --fullfor "Rapport" --milepael --prosjekt UiA  fullfør milepæl
 //   node fangst.mjs --migrer plan.json                         engangs strukturflytting
 //
+// Dagsplan med klokkeslett (vises øverst på Start i appen):
+//   node fangst.mjs --dagsplan .../areas/dagsplan/2026-10-30.md   send (eller erstatt) planen
+//   node fangst.mjs --dagsplan fil.md --vis                       bare vis hva som leses, send ingenting
+//   node fangst.mjs --dagsplan-fjern 2026-10-30                   ta planen bort fra appen
+//   Datoen hentes fra filnavnet (eller --dato). Fila følger malen i
+//   areas/dagsplan/README.md: første tabell med kolonnene Tid | Hva | Prosjekt,
+//   linja «Arbeidstid HH:MM–HH:MM» og seksjonen «## Hvis noe endrer seg».
+//   En ny sending for samme dato erstatter den forrige.
+//
 // Bruk (mange element i én omgang, én innlogging):
 //   node fangst.mjs --fil plan.json
 //   plan.json: { "prosjekt": "UiA", "kategori": "Såkorn", "elementer": [
@@ -43,6 +52,7 @@ const arg = process.argv.slice(2);
 let tittel = '', prosjektNavn = '', frist = '', url = '', fullforTittel = '', kategori = '';
 let under = '', notat = '', dato = '', datoTil = '', fil = '', migrerFil = '';
 let somMilepael = false, somAktivitet = false, somResultat = false;
+let dagsplanFil = '', dagsplanFjern = '', bareVis = false;
 for (let i = 0; i < arg.length; i++) {
   if (arg[i] === '--prosjekt') prosjektNavn = arg[++i] || '';
   else if (arg[i] === '--frist') frist = arg[++i] || '';
@@ -55,6 +65,9 @@ for (let i = 0; i < arg.length; i++) {
   else if (arg[i] === '--datoTil') datoTil = arg[++i] || '';
   else if (arg[i] === '--fil') fil = arg[++i] || '';
   else if (arg[i] === '--migrer') migrerFil = arg[++i] || '';
+  else if (arg[i] === '--dagsplan') dagsplanFil = arg[++i] || '';
+  else if (arg[i] === '--dagsplan-fjern') dagsplanFjern = arg[++i] || '';
+  else if (arg[i] === '--vis') bareVis = true;
   else if (arg[i] === '--milepael' || arg[i] === '--oppgave') somMilepael = true;  // --oppgave = eldre alias
   else if (arg[i] === '--aktivitet') somAktivitet = true;
   else if (arg[i] === '--resultat') somResultat = true;
@@ -62,12 +75,19 @@ for (let i = 0; i < arg.length; i++) {
 }
 
 const gyldigDato = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+// Strengere: også en dato som finnes (dagsplanen bruker datoen som dokument-id).
+const ekteDato = s => {
+  if (!gyldigDato(s)) return false;
+  const d = new Date(s + 'T12:00:00Z');
+  return !isNaN(d) && d.toISOString().slice(0, 10) === s;
+};
 
-if (!fil && !migrerFil && !fullforTittel && (!tittel || !tittel.trim())) {
+if (!fil && !migrerFil && !fullforTittel && !dagsplanFil && !dagsplanFjern && (!tittel || !tittel.trim())) {
   console.error('Bruk: node fangst.mjs "tekst" [--prosjekt N] [--kategori K] [--milepael] [--frist YYYY-MM-DD] [--under L] [--url U]');
   console.error('      node fangst.mjs "tittel" --aktivitet|--resultat --dato YYYY-MM-DD [--datoTil D] [--prosjekt N]');
   console.error('      node fangst.mjs --fullfor "tittel" [--milepael] [--prosjekt N]');
   console.error('      node fangst.mjs --fil plan.json   |   --migrer migrasjon.json');
+  console.error('      node fangst.mjs --dagsplan ÅÅÅÅ-MM-DD.md [--vis]   |   --dagsplan-fjern ÅÅÅÅ-MM-DD');
   process.exit(1);
 }
 for (const [navn, verdi] of [['--frist', frist], ['--dato', dato], ['--datoTil', datoTil]]) {
@@ -77,6 +97,89 @@ if ((somAktivitet || somResultat) && !dato) {
   console.error('En leveranse (--aktivitet/--resultat) trenger --dato YYYY-MM-DD.');
   process.exit(1);
 }
+// ── Dagsplan fra markdown ───────────────────────────────────────────────────
+// Leser fila løytnanten skriver i areas/dagsplan/. Bare første tabell med
+// kolonnene Tid og Hva teller; Prosjekt er valgfri. Lenker og utheving
+// skrelles av, så appen viser ren tekst.
+function rensMd(s) {
+  return String(s || '')
+    .replace(/\\\|/g, '|')
+    .replace(/\[\[([^\]|]*\|)?([^\]]*)\]\]/g, '$2')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\*\*|__|`/g, '')
+    .trim();
+}
+function lesDagsplan(tekst, filnavn) {
+  const kropp = tekst.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  const linjer = kropp.split(/\r?\n/);
+  const datoFraNavn = (String(filnavn).match(/(\d{4}-\d{2}-\d{2})\.md$/) || [])[1] || '';
+  const tid = (t, m) => t.padStart(2, '0') + ':' + m;
+  const arbeid = kropp.match(/Arbeidstid:?\s*(\d{1,2})[:.](\d{2})\s*[–—-]\s*(\d{1,2})[:.](\d{2})/i);
+
+  const blokker = [];
+  let kol = null;
+  for (const l of linjer) {
+    const erRad = /^\s*\|/.test(l);
+    if (!erRad) { if (kol && blokker.length) break; continue; }
+    const celler = l.trim().replace(/^\|/, '').replace(/\|$/, '').split(/(?<!\\)\|/).map(c => c.trim());
+    if (!kol) {
+      const lav = celler.map(c => rensMd(c).toLowerCase());
+      if (lav.includes('tid') && lav.includes('hva'))
+        kol = { tid: lav.indexOf('tid'), hva: lav.indexOf('hva'), prosjekt: lav.indexOf('prosjekt') };
+      continue;
+    }
+    if (celler.every(c => /^:?-{2,}:?$/.test(c))) continue;            // skillelinja under overskriften
+    const m = rensMd(celler[kol.tid]).match(/^(\d{1,2})[:.](\d{2})\s*[–—-]\s*(\d{1,2})[:.](\d{2})$/);
+    if (!m) throw new Error('Fant ikke «HH:MM–HH:MM» i raden: ' + l.trim());
+    const b = { fra: tid(m[1], m[2]), til: tid(m[3], m[4]), hva: rensMd(celler[kol.hva]),
+                prosjekt: kol.prosjekt >= 0 ? rensMd(celler[kol.prosjekt]) : '' };
+    if (!b.hva) throw new Error('Raden mangler «Hva»: ' + l.trim());
+    if (b.til <= b.fra) throw new Error('Slutt før start i raden: ' + l.trim());
+    blokker.push(b);
+  }
+  if (!blokker.length) throw new Error('Fant ingen tabell med kolonnene Tid og Hva.');
+
+  // «## Hvis noe endrer seg»: alt fram til neste overskrift.
+  let merknad = '';
+  const start = linjer.findIndex(l => /^#{2,}\s+hvis noe endrer seg/i.test(l));
+  if (start >= 0) {
+    const rest = [];
+    for (const l of linjer.slice(start + 1)) { if (/^#{1,6}\s/.test(l)) break; rest.push(rensMd(l)); }
+    merknad = rest.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  return {
+    dato: datoFraNavn,
+    arbeidstid: arbeid ? tid(arbeid[1], arbeid[2]) + '–' + tid(arbeid[3], arbeid[4]) : '',
+    blokker: blokker.sort((a, b) => a.fra.localeCompare(b.fra)),
+    merknad
+  };
+}
+
+let dagsplan = null;
+if (dagsplanFil) {
+  if (!existsSync(dagsplanFil)) { console.error('Fant ikke fila:', dagsplanFil); process.exit(1); }
+  try { dagsplan = lesDagsplan(readFileSync(dagsplanFil, 'utf8'), dagsplanFil); }
+  catch (e) { console.error('Kunne ikke lese dagsplanen:', e.message); process.exit(1); }
+  if (dato) dagsplan.dato = dato;
+  if (!ekteDato(dagsplan.dato)) {
+    console.error('Fant ingen dato: filnavnet må være ÅÅÅÅ-MM-DD.md, ellers oppgi --dato.');
+    process.exit(1);
+  }
+  const overlapp = dagsplan.blokker.find((b, i) => i && b.fra < dagsplan.blokker[i - 1].til);
+  if (overlapp) console.warn('Merk: «' + overlapp.hva + '» starter før blokka foran er ferdig.');
+  if (bareVis) {
+    console.log('Dagsplan ' + dagsplan.dato + (dagsplan.arbeidstid ? ', arbeidstid ' + dagsplan.arbeidstid : '') + ':');
+    for (const b of dagsplan.blokker) console.log('  ' + b.fra + '–' + b.til + '  ' + b.hva + (b.prosjekt ? '  [' + b.prosjekt + ']' : ''));
+    if (dagsplan.merknad) console.log('\nHvis noe endrer seg:\n' + dagsplan.merknad);
+    console.log('\n(--vis: ingenting sendt)');
+    process.exit(0);
+  }
+}
+if (dagsplanFjern && !ekteDato(dagsplanFjern)) {
+  console.error('Ugyldig dato for --dagsplan-fjern (bruk ÅÅÅÅ-MM-DD):', dagsplanFjern);
+  process.exit(1);
+}
+
 if (!existsSync(NOKKEL_STI)) {
   console.error('nokkel.json mangler; se SETUP-CLAUDE.md.');
   process.exit(1);
@@ -201,6 +304,26 @@ async function prosjektIdFor(navn) {
     prosjekterCache = ((bruker && bruker.prosjekter) || []).filter(p => p && p.id && !p.arkivert);
   }
   return finnUnik(prosjekterCache, navn, 'prosjekter').id;
+}
+
+// ── Dagsplan ────────────────────────────────────────────────────────────────
+// Krever kønivå 3: en eldre app lar forespørselen ligge til den er oppdatert.
+if (dagsplan || dagsplanFjern) {
+  const felter = {
+    kilde: { stringValue: 'claude' },
+    opprettet: { stringValue: new Date().toISOString() },
+    type: { stringValue: 'dagsplan' },
+    krevNiva: { integerValue: '3' },
+    dato: { stringValue: dagsplan ? dagsplan.dato : dagsplanFjern }
+  };
+  if (dagsplan) felter.plan = { stringValue: JSON.stringify({ arbeidstid: dagsplan.arbeidstid, blokker: dagsplan.blokker, merknad: dagsplan.merknad }) };
+  else felter.fjern = { booleanValue: true };
+  try { await sendForespørsel(token, felter); }
+  catch (e) { console.error('Skriving feilet:', e.message); process.exit(1); }
+  console.log(dagsplan
+    ? 'Dagsplan for ' + dagsplan.dato + ' (' + dagsplan.blokker.length + ' blokker) lagt i køen, vises på Start når appen er åpen.'
+    : 'Fjerning av dagsplanen for ' + dagsplanFjern + ' lagt i køen, utføres når appen er åpen.');
+  process.exit(0);
 }
 
 // ── Batch fra fil ───────────────────────────────────────────────────────────
