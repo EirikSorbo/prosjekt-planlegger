@@ -135,7 +135,12 @@ function frontmatter(tittel, created, status) {
 function radTodo(t) {
   const deler = [t.tittel || '(uten tittel)'];
   if (t.frist) deler.push('(frist ' + t.frist + ')');
-  return '- [' + (t.fullfort ? 'x' : ' ') + '] ' + deler.join(' ');
+  if (t.planlagt && !t.fullfort) deler.push('(planlagt ' + t.planlagt + ')');
+  if (t.venter && !t.fullfort) deler.push('(venter på ' + t.venter + (t.purreDato ? ', purr ' + t.purreDato : '') + ')');
+  let rad = '- [' + (t.fullfort ? 'x' : ' ') + '] ' + deler.join(' ');
+  // Sjekklista som underpunkter.
+  (t.sjekkliste || []).forEach(x => { rad += '\n  - [' + (x && x.ferdig ? 'x' : ' ') + '] ' + ((x && x.tekst) || ''); });
+  return rad;
 }
 function radOppgave(o) {
   const deler = [o.beskrivelse || o.navn || '(uten navn)'];
@@ -209,6 +214,8 @@ async function hentAlt() {
       dataPerPid: {
         demo1: {
           todos: [{ tittel: 'Ringe Vålerenga', frist: '2026-08-20', fullfort: false },
+                  { tittel: 'Sende utkast', planlagt: '2026-08-18', venter: 'Hilde', purreDato: '2026-08-21', fullfort: false,
+                    sjekkliste: [{ tekst: 'Kapittel 1', ferdig: true }, { tekst: 'Kapittel 2', ferdig: false }] },
                   { tittel: 'Ferdig ting', fullfort: true }],
           oppgaver: [{ beskrivelse: 'Skrive rapport', frist: '2026-09-01', fullfort: false }],
           aktiviteter: [{ navn: 'Høstplanlegging', start: '2026-08-01', slutt: '2026-10-01' }]
