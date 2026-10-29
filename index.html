@@ -1751,7 +1751,6 @@
       padding: 20px 10px; gap: 18px; align-items: center;
     }
     .oppgave-kort { border-left: 0; padding-left: 14px; }
-    .oppgave-kort:not(.fullfort)::before { content: ''; width: 13px; height: 13px; flex-shrink: 0; background: var(--kat, var(--linje)); transform: rotate(45deg); }
     /* Hvert kort ligger alene i sin sveip-beholder, så en eldre :last-child-regel
        fjernet streken på alle. */
     .todo-kort:last-child, .oppgave-kort:last-child { border-bottom: 2px solid var(--blekk); }
@@ -1895,6 +1894,46 @@
     .type-badge { border-radius: 2px; border-width: 2px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; padding: 3px 8px; min-width: 124px; text-align: center; }
     .aktivitet-kort .ikon-knapp { border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); color: var(--blekk) !important; height: 30px; min-width: 30px; }
     .aktivitet-kort .ikon-knapp:hover { background: var(--gul); border-color: var(--blekk); }
+
+    /* ── Datomeny, infoblokker, gruppehandling (v5.1) ───────────────────── */
+    /* Milepælene kan fullføres rett fra lista (avkrysningen var skjult). Rund, så den skilles fra to-do. */
+    .oppgave-kort .checkbox { display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; font-size: 14px; font-weight: 800; }
+    .oppgave-kort .checkbox:hover:not(.sjekket) { background: var(--gul); }
+    .frist-tekst.klikkbar, .planlagt-merke.klikkbar { cursor: pointer; }
+    .frist-tekst.klikkbar:hover, .planlagt-merke.klikkbar:hover { outline: 2px solid var(--blekk); outline-offset: 1px; }
+    .dato-meny {
+      position: fixed; z-index: 10001; min-width: 230px; background: var(--papir-lys);
+      border: 2px solid var(--blekk); box-shadow: var(--skygge); padding: 6px; font-family: var(--font-ui);
+    }
+    .dato-meny-tittel { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); padding: 6px 8px 8px; }
+    .dato-meny button, .dato-meny-velg {
+      display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 14px;
+      background: none; border: 0; padding: 9px 8px; font: 600 15px var(--font-ui); color: var(--blekk); cursor: pointer; text-align: left;
+    }
+    .dato-meny button:hover, .dato-meny-velg:hover { background: var(--gul); }
+    .dato-meny-dato { font-family: var(--font-mono); font-size: 12px; color: var(--dempet); font-weight: 500; }
+    .dato-meny-velg input { font: 500 13px var(--font-mono); border: 1.5px solid var(--blekk); background: var(--papir-lys); padding: 3px 4px; max-width: 140px; }
+    .dato-meny .dato-meny-fjern { border-top: 1px solid var(--linje); margin-top: 4px; color: var(--fare); }
+    .info-blokk { margin: 0 0 18px; }
+    .info-etikett { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin-bottom: 8px; }
+    .info-linje { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; font-size: 15px; }
+    .info-dato { font-family: var(--font-mono); font-size: 13px; color: var(--blekk); }
+    .info-knapper { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mini-knapp {
+      border: 2px solid var(--blekk); background: var(--papir-lys); color: var(--blekk); border-radius: 2px;
+      padding: 6px 11px; font: 700 13px var(--font-ui); cursor: pointer;
+    }
+    .mini-knapp:hover { background: var(--gul); }
+    .mini-knapp.primær { background: var(--aksent); color: #fff; }
+    .gruppe-handling {
+      flex-shrink: 0; border: 2px solid var(--fare); background: var(--papir-lys); color: var(--fare); border-radius: 2px;
+      padding: 4px 9px; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; cursor: pointer;
+    }
+    .gruppe-handling:hover { background: var(--fare); color: #fff; }
+    @media (max-width: 899px) {
+      .gruppe-etikett { flex-wrap: wrap; row-gap: 8px; }
+      .gruppe-handling { order: 5; }
+    }
   </style>
 </head>
 <body>
@@ -1973,7 +2012,7 @@
   <div id="panel-start" class="panel aktiv">
     <div class="side-hode" id="sideHode-start"></div>
     <div class="start-sok-rad">
-      <input type="search" id="startSokInput" placeholder="Søk i alt — alle prosjekter" autocomplete="off" oninput="_sokStartside(this.value)" />
+      <input type="search" id="startSokInput" placeholder="Søk i alt, også #tagger (snarvei: /)" autocomplete="off" oninput="_sokStartside(this.value)" />
     </div>
     <div id="startSokResultater" style="display:none;"></div>
     <div id="startInnhold"></div>
@@ -2075,7 +2114,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v5.0</div>
+<div class="versjon">Prosjekt-planlegger v5.1</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2185,7 +2224,7 @@
       <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--kant);font-family:var(--font-ui);letter-spacing:0.5px;margin-right:auto;">v.4.77</span>
+      <span style="font-size:11px;color:var(--kant);font-family:var(--font-ui);letter-spacing:0.5px;margin-right:auto;" id="innstVersjon"></span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -3354,6 +3393,13 @@
       }
     };
   }
+
+  // Innstillinger viser samme versjon som bunnteksten (før stod det et fast,
+  // utdatert nummer der).
+  (() => {
+    const el = document.getElementById('innstVersjon');
+    if (el) el.textContent = (document.querySelector('.versjon')?.textContent || '').replace(/^Prosjekt-planlegger\s*/, '');
+  })();
 
   function renderRamme() {
     try { renderSidepanel(); renderSideHode(); } catch (e) { console.warn('[RAMME]', e); }
@@ -4813,12 +4859,14 @@
     resDiv.style.display = '';
 
     const match = s => (s || '').toLowerCase().includes(ql);
+    // Tagger treffer både med og uten #.
+    const tagTreff = x => (x.tagger || []).some(tg => match('#' + tg));
     const treff = [];
     prosjekter.filter(p => !p.arkivert).forEach(p => {
       const erAktivt = p.id === aktivtProsjektId;
       const d = erAktivt ? { todos, oppgaver, aktiviteter } : _hentProsjektData(p.id);
-      (d.todos || []).forEach(t     => { if (match(t.tittel) || match(t.beskrivelse)) treff.push({ type: 'todo', item: t, p }); });
-      (d.oppgaver || []).forEach(o  => { if (match(o.beskrivelse) || match(o.notat)) treff.push({ type: 'oppgave', item: o, p }); });
+      (d.todos || []).forEach(t     => { if (match(t.tittel) || match(t.beskrivelse) || tagTreff(t)) treff.push({ type: 'todo', item: t, p }); });
+      (d.oppgaver || []).forEach(o  => { if (match(o.beskrivelse) || match(o.notat) || tagTreff(o)) treff.push({ type: 'oppgave', item: o, p }); });
       (d.aktiviteter || []).forEach(a => { if (match(a.tittel) || match(a.beskrivelse)) treff.push({ type: 'aktivitet', item: a, p }); });
     });
 
@@ -5097,8 +5145,10 @@
       const lagSeksjon = (items, tittel, farge) => {
         if (items.length === 0) return;
         // Rød etikett for forfalt, svart ellers (fargene fra paletten, ikke lister-fargen).
-        kortCont.appendChild(_gruppeEtikett(tittel, items.length, items.length === 1 ? 'punkt' : 'punkter',
-          /forfalt/i.test(tittel) ? 'var(--fare)' : null));
+        const etikett = _gruppeEtikett(tittel, items.length, items.length === 1 ? 'punkt' : 'punkter',
+          /forfalt/i.test(tittel) ? 'var(--fare)' : null);
+        if (/forfalt/i.test(tittel)) etikett.appendChild(_skyvAlleKnapp(items));
+        kortCont.appendChild(etikett);
         items.forEach(item => kortCont.appendChild(_lagStartRad(item, iDag, iDagStr, isMulti)));
       };
 
@@ -5145,14 +5195,18 @@
       const diff = Math.abs(arbeidsdagerMellom(fd, iDag));
       const badge = document.createElement('span');
       badge.textContent = calDiff === 1 ? 'i går' : `${diff}d siden`;
-      badge.className = 'frist-tekst frist-forfalt start-merke';
+      badge.className = 'frist-tekst frist-forfalt start-merke klikkbar';
+      badge.dataset.datoFelt = 'frist';
+      badge.title = 'Flytt fristen';
       row.appendChild(badge);
     } else if (item.frist) {
       const fl = fristLabel(item.frist);
       if (fl) {
         const badge = document.createElement('span');
         badge.textContent = fl.tekst;
-        badge.className = `frist-tekst frist-${fl.nivå || 'senere'} start-merke`;
+        badge.className = `frist-tekst frist-${fl.nivå || 'senere'} start-merke klikkbar`;
+        badge.dataset.datoFelt = 'frist';
+        badge.title = 'Flytt fristen';
         row.appendChild(badge);
       }
     }
@@ -5165,7 +5219,21 @@
       row.appendChild(chip);
     }
 
+    _bindDatoMerker(row, { type: erTodo ? 'todo' : 'oppgave', id: item.id, pid });
     return row;
+  }
+
+  // «Skyv alle til i dag» for forfalte elementer (blandet to-do/milepæl,
+  // fra alle prosjektene Start viser).
+  function _skyvAlleKnapp(items) {
+    const b = document.createElement('button');
+    b.className = 'gruppe-handling';
+    b.textContent = 'Skyv alle til i dag';
+    b.onclick = e => {
+      e.stopPropagation();
+      _settDato(items.map(i => ({ type: 'tittel' in i ? 'todo' : 'oppgave', id: i.id, pid: i._prosjektId })), 'frist', _datoOm(0));
+    };
+    return b;
   }
 
   function _toggleStartItem(erTodo, itemId, prosjektId) {
@@ -5656,7 +5724,7 @@
         const pFarge = prosjekter.find(p => p.id === t._prosjektId)?.farge || 'var(--grønn)';
         metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(t._prosjektNavn)}</span>`;
       }
-      if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort);
+      if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort, true);
       metaHtml += _gjentaChip(t.gjenta);
       if (t.oppgaveId) {
         const opp = fOppgaver.find(o => o.id === t.oppgaveId);
@@ -5669,6 +5737,7 @@
       info.innerHTML = `<div class="todo-tittel">${escapeHtml(t.tittel)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
       _bindTagChips(info);
+      _bindDatoMerker(info, { type: 'todo', id: t.id, pid: t._prosjektId });
       const tTit = info.querySelector('.todo-tittel');
       if (tTit) _gjørTittelRedigerbar(tTit, t, 'todo', () => {
         if (t._prosjektId && t._prosjektId !== aktivtProsjektId) byttProsjekt(t._prosjektId);
@@ -5732,7 +5801,7 @@
         const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--grønn)';
         metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
       }
-      metaHtml += fristSpan(o.frist, o.fullfort);
+      metaHtml += fristSpan(o.frist, o.fullfort, true);
       metaHtml += _gjentaChip(o.gjenta);
       metaHtml += _tidChipHtml(o);
       if (akt) {
@@ -5748,6 +5817,7 @@
       info.innerHTML = `<div class="todo-tittel">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="todo-meta">' + metaHtml + '</div>' : ''}`;
       _bindTagChips(info);
+      _bindDatoMerker(info, { type: 'oppgave', id: o.id, pid: o._prosjektId });
       const oTit = info.querySelector('.todo-tittel');
       if (oTit) _gjørTittelRedigerbar(oTit, o, 'oppgave', () => {
         if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
@@ -6218,9 +6288,11 @@
     document.getElementById('todoInfoModalTittel').textContent = t.tittel;
 
     let html = '';
-    if (t.frist) {
-      const lbl = fristLabel(t.frist, t.fullfort);
-      html += `<div style="padding:10px 12px;border-radius:var(--rs);background:${lbl.farge === '#c0392b' ? '#fdeaea' : 'var(--grønn-lys)'};font-size:13px;color:${lbl.farge};font-weight:${lbl.vekt};margin-bottom:14px;">${lbl.tekst}</div>`;
+    if (!t.fullfort) {
+      const fristTekst = t.frist ? `${fristSpan(t.frist)} <span class="info-dato">${_kortDato(t.frist)}</span>` : '<span class="info-dato">Ingen frist</span>';
+      html += _infoBlokk('Frist', `<div class="info-linje">${fristTekst}</div>` + _datoKnapperHtml('todo', id, 'frist'));
+    } else if (t.frist) {
+      html += _infoBlokk('Frist', `<div class="info-linje"><span class="info-dato">${_kortDato(t.frist)}</span></div>`);
     }
     if (t.beskrivelse) {
       html += `<div style="padding:12px;background:var(--grønn-lys);border-radius:var(--rs);font-size:13px;color:var(--tekst);line-height:1.5;margin-bottom:14px;">${t.beskrivelse}</div>`;
@@ -6241,9 +6313,6 @@
       html += `<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
         ${t.tagger.map(x => `<span class="tilknyttet-chip" style="border-color:var(--grønn);color:var(--grønn);">#${escapeHtml(x)}</span>`).join('')}
       </div>`;
-    }
-    if (!t.frist && !t.beskrivelse && !t.oppgaveId && !t.kategoriId && !(t.tagger && t.tagger.length)) {
-      html = `<div style="font-size:13px;color:var(--tekst-sek);">Ingen tilleggsinformasjon.</div>`;
     }
     if (t.frist && !t.fullfort) html += _snoozeKnapperHtml(id);
 
@@ -6488,6 +6557,151 @@
   const _DAGNAVN = ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
 
   /* ──────────────────────────────
+     DATOVALG (frist og planlagt dag)
+  ────────────────────────────── */
+  function _datoOm(n) {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n);
+    return _lokalDatoStr(d);
+  }
+  // Neste gitte ukedag (0 = søndag), alltid fram i tid: på en mandag gir
+  // «mandag» neste ukes mandag.
+  function _nesteUkedag(dag) {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + (((dag - d.getDay() + 7) % 7) || 7));
+    return _lokalDatoStr(d);
+  }
+  // «tor 30. okt»
+  function _kortDato(ds) {
+    const d = new Date(ds + 'T00:00:00');
+    return UKEDAGER_K[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()].slice(0, 3);
+  }
+  function _datoValg() {
+    return [['I dag', _datoOm(0)], ['I morgen', _datoOm(1)], ['Mandag', _nesteUkedag(1)], ['Om en uke', _datoOm(7)]];
+  }
+
+  // Endrer ett eller flere elementer, også i prosjekter som ikke er aktive
+  // (Start og «Alle prosjekter» viser elementer fra alle). refs: [{ type:
+  // 'todo'|'oppgave', id, pid }]. Andre prosjekter skrives rett i sin lokale
+  // lagring og merkes usynket, som _toggleStartItem; lagringen fletter mot
+  // grunnlaget, så bare endringen sendes. Returnerer antall endrede.
+  function _endreElementer(refs, fn) {
+    const perPid = {};
+    refs.forEach(r => { const pid = r.pid || aktivtProsjektId; (perPid[pid] = perPid[pid] || []).push(r); });
+    let antall = 0, aktivtEndret = false;
+    Object.entries(perPid).forEach(([pid, rs]) => {
+      if (pid === aktivtProsjektId) {
+        rs.forEach(r => {
+          const item = (r.type === 'todo' ? todos : oppgaver).find(x => x.id === r.id);
+          if (item) { fn(item, r); antall++; aktivtEndret = true; }
+        });
+        return;
+      }
+      const pk = s => 'lp_' + pid + '_' + s;
+      let endret = false;
+      [['t', 'todo'], ['o', 'oppgave']].forEach(([kode, type]) => {
+        const mine = rs.filter(r => r.type === type);
+        if (!mine.length) return;
+        const liste = _parseSafe(localStorage.getItem(pk(kode)), []) || [];
+        let her = false;
+        mine.forEach(r => { const item = liste.find(x => x.id === r.id); if (item) { fn(item, r); antall++; her = true; } });
+        if (her) { localStorage.setItem(pk(kode), JSON.stringify(liste)); endret = true; }
+      });
+      if (endret) {
+        localStorage.setItem(pk('dirty'), Date.now().toString());
+        if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid, pid);
+      }
+    });
+    if (aktivtEndret) lagre(); else if (antall) renderAlleLister();
+    return antall;
+  }
+
+  // Setter et datofelt ('frist' eller 'planlagt') på elementene, med angre.
+  // etterpå kjøres etter endringen og etter angring (f.eks. friske opp et
+  // åpent infovindu).
+  function _settDato(refs, felt, ny, etterpå) {
+    const gamle = {};
+    const n = _endreElementer(refs, (item, r) => { gamle[r.id] = item[felt] || null; item[felt] = ny || null; });
+    if (!n) return;
+    if (etterpå) etterpå();
+    const navn = felt === 'frist' ? 'Frist' : 'Planlagt';
+    const tekst = (n > 1 ? n + ' elementer · ' : '')
+      + (ny ? navn + ': ' + _kortDato(ny) : (felt === 'frist' ? 'Fristen fjernet' : 'Planlagt dag fjernet'));
+    visAngreToast(tekst, () => {
+      _endreElementer(refs, (item, r) => { item[felt] = gamle[r.id]; });
+      if (etterpå) etterpå();
+    });
+  }
+
+  // Liten meny ved et merke eller en knapp: I dag / I morgen / Mandag /
+  // Om en uke / velg dato / fjern.
+  let _datoMenyLukk = null;
+  function _lukkDatoMeny() {
+    document.getElementById('datoMeny')?.remove();
+    if (_datoMenyLukk) { document.removeEventListener('click', _datoMenyLukk); _datoMenyLukk = null; }
+  }
+  function _visDatoMeny(anker, refs, felt, etterpå) {
+    _lukkDatoMeny();
+    const meny = document.createElement('div');
+    meny.className = 'dato-meny';
+    meny.id = 'datoMeny';
+    let html = `<div class="dato-meny-tittel">${felt === 'frist' ? 'Flytt fristen' : 'Når gjør du den?'}</div>`;
+    _datoValg().forEach(([lbl, ds]) => {
+      html += `<button data-dato="${ds}"><span>${lbl}</span><span class="dato-meny-dato">${_kortDato(ds)}</span></button>`;
+    });
+    html += `<label class="dato-meny-velg"><span>Velg dato</span><input type="date"></label>`;
+    html += `<button data-dato="" class="dato-meny-fjern">${felt === 'frist' ? 'Fjern fristen' : 'Fjern planlagt dag'}</button>`;
+    meny.innerHTML = html;
+    meny.onclick = e => {
+      e.stopPropagation();
+      const b = e.target.closest('button[data-dato]');
+      if (!b) return;
+      _lukkDatoMeny();
+      _settDato(refs, felt, b.dataset.dato || null, etterpå);
+    };
+    meny.querySelector('input').onchange = e => {
+      if (!e.target.value) return;
+      const v = e.target.value;
+      _lukkDatoMeny();
+      _settDato(refs, felt, v, etterpå);
+    };
+    document.body.appendChild(meny);
+    const ra = anker.getBoundingClientRect(), rm = meny.getBoundingClientRect();
+    const venstre = Math.max(12, Math.min(ra.left, innerWidth - rm.width - 12));
+    let topp = ra.bottom + 6;
+    if (topp + rm.height > innerHeight - 12) topp = Math.max(12, ra.top - rm.height - 6);
+    meny.style.left = venstre + 'px';
+    meny.style.top = topp + 'px';
+    setTimeout(() => { _datoMenyLukk = () => _lukkDatoMeny(); document.addEventListener('click', _datoMenyLukk); }, 0);
+  }
+
+  // Gjør datomerker i en rad klikkbare. Merket bærer data-dato-felt.
+  function _bindDatoMerker(el, ref) {
+    el.querySelectorAll('[data-dato-felt]').forEach(m => {
+      m.onclick = e => { e.stopPropagation(); _visDatoMeny(m, [ref], m.dataset.datoFelt); };
+    });
+  }
+
+  // Infovinduene: knapperad for et datofelt. Elementet ligger alltid i det
+  // aktive prosjektet her (vinduet åpnes etter prosjektbytte).
+  function _oppfriskInfo(type, id) {
+    const modal = document.getElementById(type === 'todo' ? 'todoInfoModal' : 'oppgaveInfoModal');
+    if (!modal || !modal.classList.contains('vis')) return;
+    if (type === 'todo') åpneTodoInfo(id); else åpneOppgaveInfo(id);
+  }
+  function _datoKnapperHtml(type, id, felt) {
+    const kall = ds => `_settDato([{type:'${type}',id:'${id}'}],'${felt}',${ds ? `'${ds}'` : 'null'},()=>_oppfriskInfo('${type}','${id}'))`;
+    return '<div class="info-knapper">'
+      + _datoValg().map(([lbl, ds]) => `<button class="mini-knapp" onclick="${kall(ds)}">${lbl}</button>`).join('')
+      + `<button class="mini-knapp" onclick="event.stopPropagation();_visDatoMeny(this,[{type:'${type}',id:'${id}'}],'${felt}',()=>_oppfriskInfo('${type}','${id}'))">Annen dato…</button>`
+      + '</div>';
+  }
+
+  // Blokk i infovinduene: etikett + innhold.
+  function _infoBlokk(etikett, innhold, ekstraKlasse) {
+    return `<div class="info-blokk${ekstraKlasse ? ' ' + ekstraKlasse : ''}"><div class="info-etikett">${etikett}</div>${innhold}</div>`;
+  }
+
+  /* ──────────────────────────────
      FRIST HELPER
   ────────────────────────────── */
   function fristLabel(fristStr, fullfort = false) {
@@ -6510,10 +6724,12 @@
     return { tekst: datoStr, farge: 'var(--tekst-sek)', vekt: '500', nivå: 'senere' };
   }
 
-  function fristSpan(fristStr, fullfort = false) {
+  // klikkbar: merket åpner datomenyen (bindes med _bindDatoMerker).
+  function fristSpan(fristStr, fullfort = false, klikkbar = false) {
     const lbl = fristLabel(fristStr, fullfort);
     if (!lbl) return '';
-    return `<span class="frist-tekst frist-${lbl.nivå || 'senere'}">${lbl.tekst}</span>`;
+    const kl = klikkbar && !fullfort;
+    return `<span class="frist-tekst frist-${lbl.nivå || 'senere'}${kl ? ' klikkbar' : ''}"${kl ? ' data-dato-felt="frist" title="Flytt fristen"' : ''}>${lbl.tekst}</span>`;
   }
 
   /* ──────────────────────────────
@@ -6975,7 +7191,7 @@
         const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--grønn)';
         metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
       }
-      if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
+      if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort, true);
       if (o.aktivitetId) {
         const aktM = fAktiviteter.find(a => a.id === o.aktivitetId);
         if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${aktM.type || "fri"}">${escapeHtml(aktM.tittel)}</span>`;
@@ -7000,6 +7216,7 @@
         <div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
         ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
       _bindTagChips(info);
+      _bindDatoMerker(info, { type: 'oppgave', id: o.id, pid: o._prosjektId });
       const obTit = info.querySelector('.oppgave-besk');
       if (obTit) _gjørTittelRedigerbar(obTit, o, 'oppgave', () => {
         if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
@@ -7059,11 +7276,11 @@
     }
 
     // Frist
-    if (fd) {
-      const lbl = fristLabel(o.frist, o.fullfort);
-      html += `<div style="padding:10px 12px;border-radius:var(--rs);background:${forfalt ? '#fdeaea' : 'var(--grønn-lys)'};font-size:13px;color:${lbl.farge};font-weight:${lbl.vekt};margin-bottom:14px;">
-        ${lbl.tekst}
-      </div>`;
+    if (!o.fullfort) {
+      const fristTekst = fd ? `${fristSpan(o.frist)} <span class="info-dato">${_kortDato(o.frist)}</span>` : '<span class="info-dato">Ingen frist</span>';
+      html += _infoBlokk('Frist', `<div class="info-linje">${fristTekst}</div>` + _datoKnapperHtml('oppgave', id, 'frist'));
+    } else if (fd) {
+      html += _infoBlokk('Frist', `<div class="info-linje"><span class="info-dato">${_kortDato(o.frist)}</span></div>`);
     }
 
     // Tilknyttet aktivitet
@@ -7841,9 +8058,10 @@
 
   // ESC lukker modal
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape')
-      document.querySelectorAll('.modal-overlay.vis')
-        .forEach(m => m.classList.remove('vis'));
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('datoMeny')) { _lukkDatoMeny(); return; }
+    document.querySelectorAll('.modal-overlay.vis')
+      .forEach(m => m.classList.remove('vis'));
   });
 
   // Når appen kommer i forgrunn: re-planlegg + hent inn påminnelser som passerte
@@ -7875,6 +8093,9 @@
       const idx = +e.key - 1;
       const el = document.querySelectorAll('.fane')[idx];
       if (el) { byttFane(faner[idx], el); e.preventDefault(); }
+    } else if (e.key === '/') {
+      gåTilSøk();
+      e.preventDefault();
     } else if (e.key === 'n' || e.key === 'N') {
       const panel = document.querySelector('.panel.aktiv')?.id || '';
       if (panel === 'panel-oppgaver')     åpneOppgaveModal();
