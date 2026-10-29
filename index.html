@@ -1934,6 +1934,19 @@
       .gruppe-etikett { flex-wrap: wrap; row-gap: 8px; }
       .gruppe-handling { order: 5; }
     }
+
+    /* ── Hurtigfeltets tolkning og gjentakelse (v5.2) ───────────────────── */
+    .hurtig-tolkning { display: none; flex-wrap: wrap; gap: 8px; margin: -20px 0 26px; }
+    .hurtig-tolkning.vis { display: flex; }
+    .tolk-chip { font-family: var(--font-mono); font-size: 12px; color: var(--blå); border: 1.5px solid var(--blå); padding: 3px 8px; background: var(--papir-lys); }
+    .tolk-chip b { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-right: 4px; }
+    .gjenta-chip { border-color: var(--linje); color: var(--dempet); }
+    .gjenta-dager { display: none; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .gjenta-dager button {
+      border: 2px solid var(--blekk); background: var(--papir-lys); color: var(--blekk); border-radius: 2px;
+      padding: 5px 9px; font: 700 12px var(--font-mono); text-transform: uppercase; cursor: pointer;
+    }
+    .gjenta-dager button.valgt { background: var(--blekk); color: #fff; }
   </style>
 </head>
 <body>
@@ -2030,9 +2043,11 @@
       </button>
     </div>
     <div class="hurtig-todo-rad">
-      <input type="text" id="hurtigTodoInput" placeholder="Skriv inn en to-do her…" autocomplete="off"
+      <input type="text" id="hurtigTodoInput" placeholder="Skriv inn en to-do her… (prøv «fre #kategori !»)" autocomplete="off"
+        oninput="_visHurtigTolkning(this.value)"
         onkeydown="if(event.key==='Enter'){hurtigLeggTilTodo(this.value);this.value='';}" />
     </div>
+    <div class="hurtig-tolkning" id="hurtigTolkning"></div>
     <div class="kort-container" id="todoListe"></div>
   </div>
 
@@ -2114,7 +2129,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v5.1</div>
+<div class="versjon">Prosjekt-planlegger v5.2</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -5928,35 +5943,120 @@
   }
 
   // ── Gjentakelse (recurring) ──
-  // gjenta-felt: 'daglig' | 'ukentlig' | 'månedlig' | null/'' = aldri.
-  const GJENTA_LABEL = { daglig: 'Daglig', ukentlig: 'Ukentlig', 'månedlig': 'Månedlig' };
+  // gjenta-felt: 'daglig' | 'arbeidsdager' | 'ukentlig' | 'annenhver' |
+  // 'ukedager:1,3' (0 = søndag) | 'månedlig' | 'månedlig-ukedag' | 'årlig' |
+  // null/'' = aldri. De tre første fantes før v5.2.
+  const GJENTA_VALG = [
+    ['', 'Aldri'], ['daglig', 'Hver dag'], ['arbeidsdager', 'Hver arbeidsdag (man–fre)'],
+    ['ukentlig', 'Hver uke'], ['annenhver', 'Annenhver uke'], ['ukedager', 'Bestemte ukedager …'],
+    ['månedlig', 'Hver måned, samme dato'], ['månedlig-ukedag', 'Hver måned, samme ukedag (f.eks. første mandag)'],
+    ['årlig', 'Hvert år'],
+  ];
+  const _GJENTA_KORT = { daglig: 'Daglig', arbeidsdager: 'Arbeidsdager', ukentlig: 'Ukentlig', annenhver: 'Annenhver uke',
+    'månedlig': 'Månedlig', 'månedlig-ukedag': 'Månedlig (ukedag)', 'årlig': 'Årlig' };
+  function _gjentaDager(gjenta) {
+    if (!gjenta || !gjenta.startsWith('ukedager:')) return null;
+    const d = gjenta.slice(9).split(',').map(Number).filter(n => Number.isInteger(n) && n >= 0 && n <= 6);
+    return d.length ? d : null;
+  }
+  // Kort navn til merket, null for ukjent (eller ingen) gjentakelse.
+  function _gjentaLabel(gjenta) {
+    if (!gjenta) return null;
+    if (_GJENTA_KORT[gjenta]) return _GJENTA_KORT[gjenta];
+    const dager = _gjentaDager(gjenta);
+    if (!dager) return null;
+    return [1, 2, 3, 4, 5, 6, 0].filter(n => dager.includes(n)).map(n => UKEDAGER_K[n]).join(', ');
+  }
 
   // Liten chip som markerer at et element er gjentakende.
   function _gjentaChip(gjenta) {
-    if (!gjenta || !GJENTA_LABEL[gjenta]) return '';
-    return `<span class="tilknyttet-chip chip-fri" style="border-color:var(--grønn-mid);color:var(--tekst-sek);">${_svgIkon('gjenta', 11)} ${GJENTA_LABEL[gjenta]}</span>`;
+    const lbl = _gjentaLabel(gjenta);
+    if (!lbl) return '';
+    return `<span class="tilknyttet-chip chip-fri gjenta-chip">${_svgIkon('gjenta', 11)} ${lbl}</span>`;
   }
 
   // Neste frist: gammel frist + ett intervall, hopper frem til første dato >= i dag
   // (etterskudd). Uten gammel frist ankres den på fullføringsdato (i dag).
+  // Månedene regnes fra ankeret, så 31. januar gir 28./29. februar og så
+  // 31. mars (før drev datoen: 31.1 → 3.3 → 3.4).
   function _nesteFrist(gammelFrist, gjenta) {
     const iDag = _lokalDatoStr();
-    const d = gammelFrist ? new Date(gammelFrist + 'T00:00:00') : new Date();
-    d.setHours(0, 0, 0, 0);
+    const anker = gammelFrist ? new Date(gammelFrist + 'T00:00:00') : new Date();
+    anker.setHours(0, 0, 0, 0);
+    const dager = _gjentaDager(gjenta);
+    const nTe = Math.ceil(anker.getDate() / 7);
+    let d = new Date(anker), k = 0;
     const steg = () => {
+      k++;
       if (gjenta === 'daglig') d.setDate(d.getDate() + 1);
+      else if (gjenta === 'arbeidsdager') { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6); }
       else if (gjenta === 'ukentlig') d.setDate(d.getDate() + 7);
-      else if (gjenta === 'månedlig') d.setMonth(d.getMonth() + 1);
+      else if (gjenta === 'annenhver') d.setDate(d.getDate() + 14);
+      else if (dager) { do { d.setDate(d.getDate() + 1); } while (!dager.includes(d.getDay())); }
+      else if (gjenta === 'månedlig') d = _mndPluss(anker, k);
+      else if (gjenta === 'månedlig-ukedag') d = _nteUkedag(anker, k, nTe);
+      else if (gjenta === 'årlig') d = _mndPluss(anker, 12 * k);
+      else d.setDate(d.getDate() + 1);   // ukjent verdi: aldri evig løkke
     };
     do { steg(); } while (_lokalDatoStr(d) < iDag);
     return _lokalDatoStr(d);
+  }
+  // Samme dato k måneder fram; 31. blir siste dag i korte måneder.
+  function _mndPluss(anker, k) {
+    const d = new Date(anker.getFullYear(), anker.getMonth() + k, 1);
+    const sist = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(anker.getDate(), sist));
+    return d;
+  }
+  // Samme ukedag og nummer i måneden (første, andre …) k måneder fram.
+  // Nummer 5 finnes ikke alltid; da blir det den siste i måneden.
+  function _nteUkedag(anker, k, n) {
+    const første = new Date(anker.getFullYear(), anker.getMonth() + k, 1);
+    const sist = new Date(første.getFullYear(), første.getMonth() + 1, 0).getDate();
+    let dag = 1 + (anker.getDay() - første.getDay() + 7) % 7 + (n - 1) * 7;
+    while (dag > sist) dag -= 7;
+    return new Date(første.getFullYear(), første.getMonth(), dag);
+  }
+
+  // Skjemaene: nedtrekkslisten bygges her, med ukedagsvalg under for
+  // «Bestemte ukedager».
+  function _byggGjentaFelt(selId) {
+    const sel = document.getElementById(selId);
+    if (!sel || sel.dataset.bygd) return;
+    sel.dataset.bygd = '1';
+    sel.innerHTML = GJENTA_VALG.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+    const rad = document.createElement('div');
+    rad.className = 'gjenta-dager';
+    rad.id = selId + 'Dager';
+    rad.innerHTML = [1, 2, 3, 4, 5, 6, 0].map(n =>
+      `<button type="button" data-dag="${n}">${UKEDAGER_K[n]}</button>`).join('');
+    rad.onclick = e => { const b = e.target.closest('button'); if (b) b.classList.toggle('valgt'); };
+    sel.insertAdjacentElement('afterend', rad);
+    sel.addEventListener('change', () => { rad.style.display = sel.value === 'ukedager' ? 'flex' : 'none'; });
+    rad.style.display = 'none';
+  }
+  function _settGjentaFelt(selId, gjenta) {
+    _byggGjentaFelt(selId);
+    const sel = document.getElementById(selId), rad = document.getElementById(selId + 'Dager');
+    const dager = _gjentaDager(gjenta);
+    sel.value = dager ? 'ukedager' : (_GJENTA_KORT[gjenta] ? gjenta : '');
+    rad.querySelectorAll('button').forEach(b => b.classList.toggle('valgt', !!dager && dager.includes(+b.dataset.dag)));
+    rad.style.display = dager ? 'flex' : 'none';
+  }
+  // Ingen ukedag valgt ⇒ som «hver uke».
+  function _lesGjentaFelt(selId) {
+    const sel = document.getElementById(selId);
+    if (!sel || !sel.value) return null;
+    if (sel.value !== 'ukedager') return sel.value;
+    const dager = [...document.querySelectorAll('#' + selId + 'Dager button.valgt')].map(b => b.dataset.dag);
+    return dager.length ? 'ukedager:' + dager.join(',') : 'ukentlig';
   }
 
   // Ved fullføring av en gjentakende item: spawn ny åpen forekomst med neste frist.
   // Den fullførte raden blir stående (historikk/streak) men mister gjenta, så
   // serien flyttes til den nye raden og angre→re-fullfør ikke lager duplikater.
   function _spawnGjentakelse(item, type) {
-    if (!item.gjenta || !GJENTA_LABEL[item.gjenta]) return;
+    if (!_gjentaLabel(item.gjenta)) return;
     const gjenta = item.gjenta;
     const nyFrist = _nesteFrist(item.frist, gjenta);
     if (type === 'todo') {
@@ -6201,7 +6301,7 @@
       document.getElementById('todoFeltTittel').value = t.tittel;
       document.getElementById('todoFeltBesk').value   = t.beskrivelse || '';
       document.getElementById('todoFeltFrist').value  = t.frist || '';
-      document.getElementById('todoFeltGjenta').value = t.gjenta || '';
+      _settGjentaFelt('todoFeltGjenta', t.gjenta);
       document.getElementById('todoFeltTagger').value = (t.tagger || []).map(x => '#' + x).join(' ');
       todoKatSelect.value = t.kategoriId || '';
       _oppdaterTodoLevSelect(t.aktivitetId || '');  // filtrert på kategori
@@ -6213,7 +6313,7 @@
       document.getElementById('todoFeltTittel').value = '';
       document.getElementById('todoFeltBesk').value   = '';
       document.getElementById('todoFeltFrist').value  = '';
-      document.getElementById('todoFeltGjenta').value = '';
+      _settGjentaFelt('todoFeltGjenta', null);
       document.getElementById('todoFeltTagger').value = '';
       slettKnapp.style.display = 'none';
 
@@ -6241,16 +6341,126 @@
     setTimeout(() => document.getElementById('todoFeltTittel').focus(), 100);
   }
 
-  // Hurtig-opprett: skriv rett i lista, Enter lagrer med bare tittel.
-  // Full modal (åpneTodoModal) forblir for frist/kobling.
-  function hurtigLeggTilTodo(tittel) {
-    tittel = (tittel || '').trim();
-    if (!tittel) return;
-    if (_alleAktiv() && !_prosjektValgtForNy) { _velgProsjektForNy(() => hurtigLeggTilTodo(tittel)); return; }
-    todos.push({ id: uid(), tittel, beskrivelse: '', frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, tagger: [], opprettet: _lokalDatoStr(), fullfort: false });
+  // ── Hurtigfeltet forstår litt tekst (v5.2) ──
+  // «Ring Hilde fre #veiledning !» gir frist fredag, kategorien som matcher
+  // «veiledning» og stjerne. # som ikke matcher nøyaktig én kategori blir en
+  // tagg. Datoen må stå til slutt (bortsett fra # og !), så «Spør Tor om …»
+  // ikke får frist; «man» og «tor» godtas bare skrevet ut (mandag/torsdag),
+  // siden de også er vanlige ord og navn.
+  const _HURTIG_DAGER = { søndag: 0, søn: 0, mandag: 1, tirsdag: 2, tir: 2, tirs: 2, onsdag: 3, ons: 3,
+    torsdag: 4, fredag: 5, fre: 5, lørdag: 6, lør: 6 };
+  const erDag = w => Object.prototype.hasOwnProperty.call(_HURTIG_DAGER, w);
+  function _tolkDatoSlutt(ord) {
+    const n = ord.length;
+    const s = i => (ord[n - i] || '').toLowerCase().replace(/[,;]$/, '');
+    if (!n) return null;
+    // Tre ord: «om 3 dager», «om 2 uker»
+    if (n >= 3 && s(3) === 'om' && /^\d{1,3}$/.test(s(2))) {
+      const tall = +s(2);
+      if (/^dag(er)?$/.test(s(1))) return { dato: _datoOm(tall), antall: 3 };
+      if (/^uker?$/.test(s(1))) return { dato: _datoOm(7 * tall), antall: 3 };
+    }
+    // To ord: «i dag», «i morgen», «neste uke», «neste fredag»
+    if (n >= 2) {
+      const to = s(2) + ' ' + s(1);
+      if (to === 'i dag') return { dato: _datoOm(0), antall: 2 };
+      if (to === 'i morgen') return { dato: _datoOm(1), antall: 2 };
+      if (to === 'neste uke') return { dato: _nesteUkedag(1), antall: 2 };
+      if (s(2) === 'neste' && erDag(s(1))) {
+        const dag = _HURTIG_DAGER[s(1)];
+        const d = new Date(_nesteUkedag(1) + 'T00:00:00');
+        d.setDate(d.getDate() + (dag === 0 ? 6 : dag - 1));
+        return { dato: _lokalDatoStr(d), antall: 2 };
+      }
+    }
+    const en = s(1);
+    if (en === 'idag') return { dato: _datoOm(0), antall: 1 };
+    if (en === 'imorgen') return { dato: _datoOm(1), antall: 1 };
+    if (en === 'overmorgen') return { dato: _datoOm(2), antall: 1 };
+    if (erDag(en)) return { dato: _nesteUkedag(_HURTIG_DAGER[en]), antall: 1 };
+    // 31.10, 31/10, 31.10.26, 31.10.2026
+    const m = en.match(/^(\d{1,2})[./](\d{1,2})(?:[./](\d{2}|\d{4}))?\.?$/);
+    if (m) {
+      const dag = +m[1], mnd = +m[2];
+      if (dag < 1 || dag > 31 || mnd < 1 || mnd > 12) return null;
+      let år = m[3] ? +m[3] : new Date().getFullYear();
+      if (år < 100) år += 2000;
+      const d = new Date(år, mnd - 1, dag);
+      if (d.getMonth() !== mnd - 1) return null;          // 31.11 o.l.
+      if (!m[3] && _lokalDatoStr(d) < _datoOm(0)) d.setFullYear(år + 1);
+      return { dato: _lokalDatoStr(d), antall: 1 };
+    }
+    return null;
+  }
+  function _tolkHurtigtekst(tekst, kats) {
+    const ut = { tittel: '', frist: null, kategoriId: null, kategoriNavn: null, viktig: false, tagger: [] };
+    const normer = x => (x || '').toLowerCase().normalize('NFC');
+    const deler = k => { const l = normer(k.label); return [l.replace(/[^a-z0-9æøå]/g, ''), ...l.split(/[^a-z0-9æøå]+/).filter(Boolean)]; };
+    const rest = [], tagger = [];
+    (tekst || '').trim().split(/\s+/).filter(Boolean).forEach(w => {
+      if (/^!+$/.test(w)) { ut.viktig = true; return; }
+      if (/^#./.test(w)) {
+        const navn = w.replace(/^#+/, '').replace(/[,.;:]+$/, '');
+        const n = normer(navn).replace(/[^a-z0-9æøå]/g, '');
+        if (!ut.kategoriId && n) {
+          const treff = (kats || []).filter(k => deler(k).some(x => x.startsWith(n)));
+          const eksakt = treff.filter(k => deler(k).includes(n));
+          const valgt = treff.length === 1 ? treff[0] : (eksakt.length === 1 ? eksakt[0] : null);
+          if (valgt) { ut.kategoriId = valgt.id; ut.kategoriNavn = valgt.label; return; }
+        }
+        if (navn) tagger.push(navn);
+        return;
+      }
+      rest.push(w);
+    });
+    const dato = _tolkDatoSlutt(rest);
+    if (dato && rest.length > dato.antall) {
+      const igjen = rest.slice(0, rest.length - dato.antall);
+      if (igjen.length > 1 && /^(innen|til|på|frist|før)$/i.test(igjen[igjen.length - 1])) igjen.pop();
+      ut.frist = dato.dato;
+      ut.tittel = igjen.join(' ');
+    } else {
+      ut.tittel = rest.join(' ');
+    }
+    ut.tagger = _parseTagger(tagger.join(' '));
+    return ut;
+  }
+  // Viser under feltet hva som blir tolket, før Enter.
+  function _visHurtigTolkning(tekst) {
+    const el = document.getElementById('hurtigTolkning');
+    if (!el) return;
+    const t = _tolkHurtigtekst(tekst, kategorier);
+    const biter = [];
+    if (t.frist) biter.push(`<span class="tolk-chip"><b>Frist</b> ${_kortDato(t.frist)}</span>`);
+    if (t.kategoriNavn) biter.push(`<span class="tolk-chip"><b>Kategori</b> ${escapeHtml(t.kategoriNavn)}</span>`);
+    if (t.viktig) biter.push('<span class="tolk-chip"><b>★</b> Viktig</span>');
+    t.tagger.forEach(x => biter.push(`<span class="tolk-chip">#${escapeHtml(x)}</span>`));
+    el.innerHTML = biter.join('');
+    el.classList.toggle('vis', biter.length > 0);
+  }
+
+  // Hurtig-opprett: skriv rett i lista, Enter lagrer. Teksten tolkes som over;
+  // full modal (åpneTodoModal) forblir for kobling og resten.
+  function hurtigLeggTilTodo(tekst) {
+    tekst = (tekst || '').trim();
+    if (!tekst) return;
+    if (_alleAktiv() && !_prosjektValgtForNy) { _velgProsjektForNy(() => hurtigLeggTilTodo(tekst)); return; }
+    const t = _tolkHurtigtekst(tekst, kategorier);
+    if (!t.tittel) t.tittel = tekst;
+    const ny = { id: uid(), tittel: t.tittel, beskrivelse: '', frist: t.frist, aktivitetId: null, oppgaveId: null,
+      kategoriId: t.kategoriId, gjenta: null, tagger: t.tagger, opprettet: _lokalDatoStr(), fullfort: false };
+    if (t.viktig) ny.viktig = true;
+    todos.push(ny);
     lagre(); renderTodos();
+    _visHurtigTolkning('');
     const inp = document.getElementById('hurtigTodoInput');
     if (inp) inp.focus();
+    const tolket = [t.frist && 'frist ' + _kortDato(t.frist), t.kategoriNavn, t.viktig && '★', ...t.tagger.map(x => '#' + x)].filter(Boolean);
+    if (tolket.length) visAngreToast(`La til «${t.tittel}» · ${tolket.join(' · ')}`, () => {
+      todos = todos.filter(x => x.id !== ny.id);
+      lagre();
+      if (inp) { inp.value = tekst; inp.focus(); _visHurtigTolkning(tekst); }
+    });
   }
 
   function lagreTodo() {
@@ -6261,7 +6471,7 @@
     const aktivitetId = document.getElementById('todoFeltLeveranse').value || null;
     const oppgaveId   = document.getElementById('todoFeltOppgave').value || null;
     const kategoriId  = document.getElementById('todoFeltKategori').value || null;
-    const gjenta      = document.getElementById('todoFeltGjenta').value || null;
+    const gjenta      = _lesGjentaFelt('todoFeltGjenta');
     const tagger      = _parseTagger(document.getElementById('todoFeltTagger').value);
 
     if (redigTodoId) {
@@ -7948,7 +8158,7 @@
     oppFristEl.value = '';
     oppFristEl.style.display = 'none';
     document.getElementById('fristRelativInfo').style.display = 'none';
-    document.getElementById('oppFeltGjenta').value = '';
+    _settGjentaFelt('oppFeltGjenta', null);
     document.getElementById('oppFeltTagger').value = '';
 
     if (id) {
@@ -7957,7 +8167,7 @@
       document.getElementById('oppgaveModalTittel').textContent = 'Rediger milepæl';
       document.getElementById('oppFeltBesk').value  = o.beskrivelse;
       document.getElementById('oppFeltNotat').value = o.notat || '';
-      document.getElementById('oppFeltGjenta').value = o.gjenta || '';
+      _settGjentaFelt('oppFeltGjenta', o.gjenta);
       document.getElementById('oppFeltTagger').value = (o.tagger || []).map(x => '#' + x).join(' ');
       // Sett kategori FØR leveranse-fylling slik at filteret er riktig
       katSelect.value = o.kategoriId || '';
@@ -7997,7 +8207,7 @@
     if (!besk) { alert('Tittel er påkrevd.'); return; }
 
     const frist = document.getElementById('oppFeltFrist').value || '';
-    const gjenta = document.getElementById('oppFeltGjenta').value || null;
+    const gjenta = _lesGjentaFelt('oppFeltGjenta');
     const tagger = _parseTagger(document.getElementById('oppFeltTagger').value);
 
     if (redigOppgaveId) {
