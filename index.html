@@ -1663,6 +1663,11 @@
     .sp-prosjekt.aktiv { background: var(--blekk); color: #fff; }
     .sp-prikk { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; background: var(--blekk); }
     .sp-prosjekt-navn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sp-prosjekt-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; }
+    .sp-prosjekt-tekst .sp-prosjekt-navn { flex: none; }
+    .sp-neste { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--dempet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sp-prosjekt.aktiv .sp-neste { color: rgba(255,255,255,.7); }
+    .sp-forfalt { flex-shrink: 0; min-width: 22px; padding: 2px 6px; background: var(--fare); color: #fff; font: 700 12px var(--font-mono); text-align: center; }
     .sp-ny { color: var(--dempet); font-size: 15px; }
 
     /* ── Sidehode: dato, stor tittel, undertittel, handlinger ───────────── */
@@ -2169,7 +2174,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v5.3</div>
+<div class="versjon">Prosjekt-planlegger v5.4</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -3426,6 +3431,18 @@
     }
   }
 
+  // Status per prosjekt i sidepanelet: antall forfalte (to-dos som venter på
+  // andre teller ikke) og neste åpne milepæl med frist.
+  function _prosjektStatus(pid) {
+    const d = pid === aktivtProsjektId ? { todos, oppgaver } : _hentProsjektData(pid);
+    const iDag = _lokalDatoStr();
+    const forfalt = (d.todos || []).filter(t => t && !t.fullfort && t.frist && t.frist < iDag && !_venter(t)).length
+                  + (d.oppgaver || []).filter(o => o && !o.fullfort && o.frist && o.frist < iDag).length;
+    const neste = (d.oppgaver || []).filter(o => o && !o.fullfort && o.frist && o.frist >= iDag)
+      .sort((a, b) => a.frist.localeCompare(b.frist))[0] || null;
+    return { forfalt, neste };
+  }
+
   function renderSidepanel() {
     const sp = document.getElementById('sidepanel');
     if (!sp || getComputedStyle(sp).display === 'none') return;
@@ -3447,9 +3464,13 @@
     }
     aktive.forEach(p => {
       const valgt = !_alleAktiv() && p.id === aktivtProsjektId;
+      const st = _prosjektStatus(p.id);
+      const neste = st.neste ? `<span class="sp-neste" title="Neste milepæl: ${escapeHtml(st.neste.beskrivelse || '')}">${_kortDato(st.neste.frist).replace(/^\S+ /, '')} · ${escapeHtml(st.neste.beskrivelse || '')}</span>` : '';
       html += `<button class="sp-lenke sp-prosjekt${valgt ? ' aktiv' : ''}" data-prosjekt="${escapeHtml(p.id)}">`
             + `<span class="sp-prikk" style="background:${/^#[0-9a-fA-F]{3,8}$/.test(p.farge || '') ? p.farge : 'var(--blekk)'}"></span>`
-            + `<span class="sp-prosjekt-navn">${escapeHtml(p.navn)}</span></button>`;
+            + `<span class="sp-prosjekt-tekst"><span class="sp-prosjekt-navn">${escapeHtml(p.navn)}</span>${neste}</span>`
+            + (st.forfalt ? `<span class="sp-forfalt" title="${st.forfalt} forfalt">${st.forfalt}</span>` : '')
+            + '</button>';
     });
     html += '<button class="sp-lenke sp-prosjekt sp-ny" data-nytt="1"><span class="sp-prikk" style="background:transparent;"></span><span>+ Nytt prosjekt</span></button>';
     sp.innerHTML = html;
