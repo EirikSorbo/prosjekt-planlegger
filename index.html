@@ -12,6 +12,14 @@
   <link rel="apple-touch-icon" href="" id="touchIconLink">
   <link rel="manifest" id="manifestLink">
   <script>
+    // Fargetema (utkast, v6.0): settes før CSS-en tegnes, så siden ikke blinker.
+    try {
+      const t = localStorage.getItem('tema');
+      if (t) document.documentElement.dataset.tema = t;
+      if (t === 'kontor') document.write('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&display=swap" rel="stylesheet">');
+    } catch (e) {}
+  </script>
+  <script>
     (function() {
       const FIGURE_PATH = "M466 999 c-4 0 -14 -2 -21 -3 -8 -1 -17 -3 -20 -4 -3 -1 -8 -2 -11 -3 -3 -1 -7 -2 -9 -3 -2 -1 -4 -2 -6 -2 -1 0 -4 -1 -7 -3 -3 -1 -7 -3 -9 -4 -2 -1 -7 -3 -11 -5 -7 -4 -9 -5 -18 -10 -2 -2 -5 -4 -6 -5 -2 -1 -5 -4 -7 -6 -5 -4 -20 -19 -23 -25 -4 -5 -10 -16 -13 -23 -2 -6 -6 -18 -9 -29 -1 -4 -3 -12 -5 -17 -1 -5 -2 -12 -3 -17 -1 -5 -2 -11 -2 -13 -2 -5 -2 -9 -5 -37 -2 -17 -2 -65 0 -83 2 -26 3 -33 5 -39 1 -4 2 -9 3 -12 1 -4 3 -10 6 -15 2 -5 4 -12 5 -17 1 -5 3 -11 4 -15 1 -4 3 -9 3 -12 2 -6 5 -16 7 -21 10 -28 11 -30 24 -56 4 -8 8 -15 8 -16 1 0 2 -2 3 -4 1 -3 3 -6 4 -8 1 -2 2 -5 2 -8 0 -6 -2 -19 -3 -22 -1 -1 -2 -6 -3 -11 -2 -5 -4 -13 -6 -16 -2 -6 -3 -8 -7 -11 -3 -1 -8 -3 -12 -4 -3 -1 -7 -3 -9 -4 -1 0 -4 -1 -7 -2 -2 -1 -7 -2 -9 -3 -2 -1 -7 -3 -10 -4 -3 -1 -9 -3 -14 -6 -5 -2 -11 -4 -14 -5 -3 -1 -6 -3 -7 -3 -2 -1 -5 -2 -7 -3 -3 -1 -7 -3 -8 -4 -1 -1 -3 -2 -4 -2 0 0 -4 -1 -7 -3 -3 -2 -7 -4 -9 -5 -2 0 -6 -3 -9 -4 -3 -2 -8 -5 -11 -6 -3 -2 -6 -4 -7 -4 -1 -1 -2 -2 -3 -2 -2 -1 -13 -8 -27 -17 -1 -2 -8 -7 -14 -13 -11 -9 -22 -20 -28 -29 -5 -7 -10 -17 -13 -25 -2 -5 -4 -14 -5 -19 -1 -6 -3 -14 -3 -17 -1 -4 -2 -11 -2 -15 -1 -5 -2 -14 -3 -21 -3 -19 -5 -73 -3 -103 l1 -24 2 -4 c2 -2 4 -5 6 -5 3 -1 781 -1 784 0 2 0 4 3 6 5 l3 4 0 23 c1 15 1 34 0 57 -1 19 -2 38 -3 43 0 5 -1 14 -2 21 -1 6 -2 15 -3 19 0 3 -2 11 -3 17 -1 6 -3 14 -5 19 -3 8 -8 18 -13 25 -5 7 -15 19 -22 25 -15 13 -18 15 -28 22 -6 4 -9 6 -14 9 -2 1 -5 3 -6 3 0 0 -1 1 -2 2 -1 1 -4 2 -6 4 -3 1 -8 4 -11 5 -4 2 -8 5 -10 5 -2 1 -6 3 -9 5 -3 2 -7 3 -7 3 -1 0 -3 1 -4 2 -1 1 -4 2 -6 3 -3 1 -7 3 -10 4 -3 2 -6 3 -7 3 -1 0 -3 1 -6 2 -6 3 -14 7 -21 9 -3 1 -7 2 -9 3 -1 1 -5 3 -9 3 -3 1 -7 3 -8 3 -2 1 -5 3 -9 3 -3 1 -9 3 -12 4 -5 3 -5 3 -8 10 -2 3 -5 11 -6 16 -4 11 -9 31 -9 35 0 2 1 5 4 9 5 9 10 17 13 23 1 3 3 6 3 7 1 1 2 3 3 6 1 2 2 4 3 5 0 1 1 2 1 2 0 1 1 4 3 7 1 2 3 7 4 10 1 3 3 8 4 11 5 12 8 21 9 26 1 3 2 7 3 8 0 1 2 6 2 11 1 4 3 9 3 12 1 2 2 6 3 8 1 2 2 6 4 9 2 2 3 4 3 5 0 0 1 1 2 3 1 1 2 4 2 5 1 1 2 6 4 10 5 13 8 29 10 50 1 17 2 21 4 23 1 2 4 4 18 11 10 5 27 17 36 24 10 8 17 15 21 21 2 4 5 9 7 13 1 3 2 8 2 11 0 3 -1 8 -2 11 -3 9 -11 17 -21 21 -7 4 -20 7 -34 9 -10 1 -37 1 -77 -1 -20 0 -58 -1 -83 -2 -26 -1 -50 -1 -52 -2 -3 0 -12 -2 -19 -3 -7 -1 -17 -3 -20 -4 -4 -1 -11 -3 -15 -4 -5 -1 -9 -3 -11 -3 -1 -1 -4 -2 -7 -3 -2 0 -6 -1 -8 -2 -2 -2 -6 -3 -7 -3 -4 -1 -11 -5 -30 -14 -16 -8 -23 -12 -26 -14 -1 -1 -2 -2 -4 -2 -1 -1 -3 -2 -5 -4 -2 -1 -5 -3 -7 -4 -3 -2 -19 -13 -24 -16 -10 -8 -11 -8 -12 -7 -1 1 -2 2 -2 3 0 1 2 5 4 8 6 7 22 23 33 31 14 11 18 14 31 22 4 2 9 5 10 6 3 2 18 10 21 10 1 1 3 2 4 2 1 1 3 2 6 3 2 1 5 2 7 3 1 1 5 3 8 3 3 1 8 3 12 4 3 2 6 3 7 3 1 0 4 1 7 2 2 1 9 3 14 4 5 1 13 3 16 3 4 1 12 2 18 3 6 1 14 1 18 2 11 1 34 2 94 3 29 0 53 0 53 1 2 1 1 5 -1 9 -1 2 -2 5 -2 5 0 2 -9 19 -12 25 -1 2 -5 7 -8 11 -7 7 -20 20 -21 20 -1 0 -3 1 -5 3 -4 3 -5 5 -15 10 -6 4 -20 11 -24 12 -3 1 -5 2 -6 3 -2 0 -5 2 -8 2 -3 1 -7 3 -9 3 -2 1 -7 3 -11 4 -4 0 -9 2 -11 3 -4 1 -18 3 -42 7 -13 1 -41 1 -52 -1z m125 -257 c27 -4 32 -5 40 -8 5 -2 9 -3 10 -5 2 -4 7 -23 9 -39 1 -9 3 -23 3 -32 0 -13 0 -16 -2 -27 -2 -6 -4 -14 -5 -16 0 -2 -2 -8 -3 -13 -2 -5 -3 -10 -4 -11 -1 -1 -2 -5 -3 -8 -2 -7 -5 -14 -9 -23 -1 -2 -2 -5 -2 -6 0 -1 -9 -19 -17 -32 -4 -9 -11 -20 -18 -29 -5 -6 -13 -16 -17 -21 -2 -2 -7 -5 -10 -6 -8 -4 -23 -9 -33 -10 -4 -1 -16 -1 -27 -2 -14 0 -27 0 -37 1 -9 1 -18 1 -20 2 -13 3 -24 6 -25 7 -1 1 -3 3 -6 3 -2 1 -6 5 -10 9 -11 12 -21 26 -28 39 -12 20 -20 38 -24 49 -5 11 -9 24 -11 28 0 2 -2 7 -3 9 0 2 -2 7 -3 11 0 3 -2 9 -4 13 -1 5 -2 11 -3 16 0 4 0 12 1 17 1 10 6 35 9 43 1 4 2 8 3 10 1 5 6 14 9 17 2 2 3 3 4 3 2 0 29 4 33 5 2 0 10 1 17 2 28 2 58 5 63 5 2 1 29 1 58 0 43 0 56 0 65 -1z m-199 -297 c2 -2 8 -6 12 -8 5 -2 13 -5 19 -7 5 -1 16 -4 23 -5 8 -1 21 -3 30 -3 12 -1 20 -1 32 0 17 1 44 5 49 8 2 0 5 2 8 2 5 1 18 8 21 10 1 1 2 2 2 2 1 0 3 1 5 3 1 1 4 2 4 2 1 0 3 -2 4 -4 1 -2 2 -5 3 -8 1 -2 2 -4 2 -5 0 -2 6 -16 10 -22 2 -4 2 -6 2 -15 0 -7 -1 -12 -2 -16 -1 -3 -2 -8 -3 -10 -1 -2 -3 -7 -5 -10 -1 -4 -6 -10 -10 -14 -5 -7 -12 -12 -23 -19 -2 -1 -5 -2 -7 -3 -3 -1 -5 -2 -7 -2 -1 -1 -5 -3 -10 -4 -4 -1 -10 -3 -12 -3 -3 -1 -15 -2 -26 -3 -15 -1 -24 -1 -41 0 -18 1 -22 1 -31 4 -6 2 -11 3 -12 3 -2 0 -4 1 -5 2 -1 0 -5 2 -8 3 -3 1 -6 3 -7 3 -1 1 -3 3 -5 4 -3 1 -9 6 -14 11 -12 12 -16 18 -21 34 -2 8 -3 12 -3 21 0 10 0 11 3 17 2 4 3 7 3 8 0 1 1 3 2 4 1 2 2 7 4 12 1 6 3 9 4 10 1 1 3 2 4 2 0 0 3 -2 6 -4z";
 
@@ -108,6 +116,13 @@
       --prosjekt-lys:#fbe7df;
       --skygge:      3px 3px 0 var(--blekk);
       --skygge-stor: 6px 6px 0 var(--blekk);
+      --skygge-liten:2px 2px 0 var(--blekk);
+      --ramme:       2px solid var(--blekk);   /* kort, knapper og felt */
+      --hjorne:      2px;
+      --motfarge:    var(--lys);   /* tekst på flater i blekkfarge */
+      --motfarge-dempet: var(--lys-dempet);
+      /* Overskriftene kan i tillegg styres med --tittel-bredde (font-stretch)
+         og --tittel-store (text-transform); uten dem gjelder hver regels egen verdi. */
 
       /* Avledede og faste toner. Kategori- og prosjektfargene velger du selv
          i appen; de ligger i dataene og er ikke her. */
@@ -136,6 +151,54 @@
       /* Hjørner */
       --r:           3px;
       --rs:          2px;
+    }
+
+    /* ── Fargetemaer, UTKAST (v6.0) ─────────────────────────────────────────
+       Velges per enhet under Innstillinger → Utseende (localStorage «tema»).
+       Uten valg gjelder :root over («Standard»). Bare variabler overstyres;
+       kategori- og prosjektfargene er dine egne og følger med uendret. */
+    :root[data-tema="fjord"] {
+      --blekk: #15202b; --papir: #f2f5f7; --papir-lys: #fbfcfd; --sand: #e2e9ee; --topp: #142231;
+      --aksent: #12807e; --aksent-lys: #d5ecea; --aksent-mid: #93cbc7;
+      --blå: #2f5bd3; --gul: #f3d27a; --laks: #e88f73; --fare: #c23b3b; --dempet: #5a6874; --linje: #cfd9e0;
+      --topp-tekst: #dde7ef; --topp-dempet: #b4c3cf; --topp-skille: #7a8a97; --kant-sterk: #394957;
+      --plassholder: #8291a0; --fare-lys: #f5dcdc;
+      --hover: rgba(243,210,122,.30); --hover-mork: rgba(21,32,43,.07); --overlay: rgba(21,32,43,.5);
+    }
+    :root[data-tema="skog"] {
+      --blekk: #1e2a20; --papir: #f3f0e6; --papir-lys: #fbf9f2; --sand: #e6e0cc; --topp: #1f3324;
+      --aksent: #2f6f47; --aksent-lys: #dbeadf; --aksent-mid: #a6caaf;
+      --blå: #2b5f8f; --gul: #e8c25e; --laks: #d4805a; --fare: #b2412c; --dempet: #636d5e; --linje: #d5cfbb;
+      --topp-tekst: #e3e9dc; --topp-dempet: #bfcab8; --topp-skille: #84907e; --kant-sterk: #3b4a3e;
+      --plassholder: #878f80; --fare-lys: #f3ddd5;
+      --hover: rgba(232,194,94,.30); --hover-mork: rgba(30,42,32,.07); --overlay: rgba(30,42,32,.5);
+      --hjorne: 4px;
+    }
+    :root[data-tema="kontor"] {
+      --blekk: #18181b; --papir: #f5f5f6; --papir-lys: #ffffff; --sand: #ececef; --topp: #18181b;
+      --aksent: #5b5bd6; --aksent-lys: #e8e8fb; --aksent-mid: #bdbdf0;
+      --blå: #2563eb; --gul: #fde68a; --laks: #f59e7b; --fare: #dc2626; --dempet: #6b6b74; --linje: #e3e3e8;
+      --topp-tekst: #e4e4e7; --topp-dempet: #a1a1aa; --topp-skille: #71717a; --kant-sterk: #a1a1aa;
+      --plassholder: #a1a1aa; --fare-lys: #fde2e2;
+      --hover: rgba(253,230,138,.38); --hover-mork: rgba(24,24,27,.05); --overlay: rgba(24,24,27,.4);
+      --skygge: 0 1px 2px rgba(24,24,27,.06), 0 4px 14px rgba(24,24,27,.07);
+      --skygge-stor: 0 12px 32px rgba(24,24,27,.14);
+      --skygge-liten: 0 1px 2px rgba(24,24,27,.08);
+      --ramme: 1px solid #d4d4d8; --hjorne: 6px;
+      --tittel-bredde: 100%; --tittel-store: none;
+      --font-body: 'Inter', system-ui, sans-serif; --font-ui: 'Inter', system-ui, sans-serif;
+    }
+    :root[data-tema="natt"] {
+      color-scheme: dark;
+      --blekk: #ebe6dd; --papir: #141518; --papir-lys: #1c1e22; --sand: #101114; --topp: #0b0c0e;
+      --aksent: #ff7b5c; --aksent-lys: #3a231d; --aksent-mid: #7c4434;
+      --blå: #86a2ff; --gul: #6e6224; --laks: #e88f73; --fare: #ff6a5a; --dempet: #9c968c; --linje: #2f3237;
+      --topp-tekst: #e2ddd4; --topp-dempet: #a9a399; --topp-skille: #6d6861; --kant-sterk: #8a857d;
+      --plassholder: #6f6a63; --fare-lys: #3d1f1b; --ok: #5cc08a; --varsel: #e3a04a; --stjerne: #e7b443;
+      --hover: rgba(110,98,36,.35); --hover-mork: rgba(255,255,255,.06); --hover-lys: rgba(255,255,255,.08);
+      --overlay: rgba(0,0,0,.62);
+      --skygge: 3px 3px 0 #000; --skygge-stor: 6px 6px 0 #000; --skygge-liten: 2px 2px 0 #000;
+      --ramme: 2px solid #5a5650; --motfarge: #141518; --motfarge-dempet: rgba(20,21,24,.68);
     }
 
     body {
@@ -291,7 +354,7 @@
       align-items: center;
       gap: 6px;
     }
-    .legg-til-knapp:hover { background: var(--blekk); }
+    .legg-til-knapp:hover { background: var(--blekk); color: var(--motfarge); }
 
     .kort-container {
       background: var(--papir-lys);
@@ -646,7 +709,7 @@
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       background: var(--blekk);
-      color: var(--lys);
+      color: var(--motfarge);
       border-radius: 12px;
       padding: 10px 12px 10px 16px;
       display: flex;
@@ -906,7 +969,7 @@
       cursor: pointer;
       transition: background .15s;
     }
-    .knapp-primær:hover { background: var(--blekk); }
+    .knapp-primær:hover { background: var(--blekk); color: var(--motfarge); }
 
     .knapp-sek {
       background: var(--papir-lys);
@@ -1578,13 +1641,13 @@
     }
     .logo { color: var(--lys); font-family: var(--font-ui); font-weight: 800; font-size: 15px; letter-spacing: .02em; gap: 12px; min-width: 0; }
     .logo-rute {
-      width: 34px; height: 34px; border-radius: 2px; flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: var(--hjorne); flex-shrink: 0;
       background: var(--prosjekt); color: var(--lys); display: flex; align-items: center; justify-content: center;
       font-weight: 900; font-size: 17px; text-transform: uppercase;
     }
     #prosjektTittel { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
     .brodsmule-skille { color: var(--topp-skille); font-weight: 400; }
-    .brodsmule-app { text-transform: uppercase; font-stretch: 85%; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
+    .brodsmule-app { text-transform: uppercase; font-stretch: var(--tittel-bredde, 85%); font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
     .logo > svg { color: var(--lys); opacity: .55; }
 
     body > header .faner {
@@ -1593,7 +1656,7 @@
     }
     body > header .fane {
       flex: 0 0 auto; color: var(--topp-dempet); font-family: var(--font-ui); font-weight: 800; font-size: 13px;
-      font-stretch: 90%; letter-spacing: .09em; padding: 8px 11px; border-bottom: 0; margin: 0;
+      font-stretch: var(--tittel-bredde, 90%); letter-spacing: .09em; padding: 8px 11px; border-bottom: 0; margin: 0;
     }
     body > header .fane:hover { color: var(--lys); }
     body > header .fane.aktiv { color: var(--aksent); }
@@ -1626,7 +1689,7 @@
     .sp-gruppe { font-family: var(--font-mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--dempet); margin: 0 0 12px 22px; }
     .sp-lenke {
       display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
-      padding: 14px 22px; margin-bottom: 4px; border: 0; border-radius: 2px; background: none; cursor: pointer;
+      padding: 14px 22px; margin-bottom: 4px; border: 0; border-radius: var(--hjorne); background: none; cursor: pointer;
       font-family: var(--font-ui); font-size: 17px; font-weight: 500; color: var(--blekk); text-align: left;
     }
     .sp-lenke:hover { background: var(--hover-mork); }
@@ -1636,13 +1699,13 @@
     .sp-pil { opacity: .7; }
     .sp-skille { height: 46px; }
     .sp-prosjekt { justify-content: flex-start; gap: 16px; padding: 12px 22px; }
-    .sp-prosjekt.aktiv { background: var(--blekk); color: var(--lys); }
+    .sp-prosjekt.aktiv { background: var(--blekk); color: var(--motfarge); }
     .sp-prikk { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; background: var(--blekk); }
     .sp-prosjekt-navn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sp-prosjekt-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; }
     .sp-prosjekt-tekst .sp-prosjekt-navn { flex: none; }
     .sp-neste { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--dempet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sp-prosjekt.aktiv .sp-neste { color: var(--lys-dempet); }
+    .sp-prosjekt.aktiv .sp-neste { color: var(--motfarge-dempet); }
     .sp-forfalt { flex-shrink: 0; min-width: 22px; padding: 2px 6px; background: var(--fare); color: var(--lys); font: 700 12px var(--font-mono); text-align: center; }
     .sp-ny { color: var(--dempet); font-size: 15px; }
 
@@ -1651,7 +1714,7 @@
     .side-hode:empty { display: none; }
     .side-dato { font-family: var(--font-mono); color: var(--blå); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }
     .side-tittel {
-      font-family: var(--font-ui); font-weight: 900; font-stretch: 72%; text-transform: uppercase;
+      font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 72%); text-transform: var(--tittel-store, uppercase);
       font-size: clamp(36px, 6vw, 62px); line-height: .92; letter-spacing: -0.035em; color: var(--blekk);
     }
     .side-under { color: var(--dempet); font-size: 17px; margin-top: 12px; }
@@ -1659,7 +1722,7 @@
 
     /* ── Knapper: svart kant og hard skygge ─────────────────────────────── */
     .knapp-blokk, .knapp-primær, .knapp-sek, .legg-til-knapp, .todo-hurtig-knapp, .knapp-fare, .knapp-slett {
-      border: 2px solid var(--blekk); border-radius: 2px; box-shadow: 2px 2px 0 var(--blekk);
+      border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge-liten);
       font-family: var(--font-ui); font-weight: 700; cursor: pointer;
       transition: transform .08s, box-shadow .08s, background .12s;
     }
@@ -1674,7 +1737,7 @@
     .knapp-blokk:active, .knapp-primær:active, .knapp-sek:active, .legg-til-knapp:active, .todo-hurtig-knapp:active {
       transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--blekk);
     }
-    .info-ikon-knapp { border-radius: 2px; }
+    .info-ikon-knapp { border-radius: var(--hjorne); }
     .info-ikon-knapp:hover { background: var(--gul); }
 
     /* ── Verktøyrad: kategorier + filter ────────────────────────────────── */
@@ -1682,7 +1745,7 @@
     .verktoy-rad .kat-oversikt-rad { margin: 0; }
     .kat-oversikt-rad { display: flex; gap: 12px; flex-wrap: wrap; }
     .kat-oversikt-knapp {
-      border: 2px solid var(--blekk); color: var(--blekk); background: var(--papir-lys); border-radius: 2px;
+      border: var(--ramme); color: var(--blekk); background: var(--papir-lys); border-radius: var(--hjorne);
       padding: 9px 17px; font-family: var(--font-ui); font-weight: 700; font-size: 15px;
       display: inline-flex; align-items: center; gap: 9px; opacity: 1; cursor: pointer;
     }
@@ -1698,7 +1761,7 @@
     /* ── Hurtiginntasting ───────────────────────────────────────────────── */
     .hurtig-todo-rad { position: relative; margin: 0 0 30px; }
     .hurtig-todo-rad input {
-      width: 100%; border: 2.5px solid var(--kant-sterk); border-radius: 2px; background: var(--papir-lys);
+      width: 100%; border: 2.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
       padding: 21px 130px 21px 26px; font-family: var(--font-body); font-size: 18px; color: var(--blekk);
     }
     .hurtig-todo-rad input:focus { outline: none; border: 2.5px solid var(--blekk); box-shadow: var(--skygge); }
@@ -1708,7 +1771,7 @@
       font-family: var(--font-mono); color: var(--blå); font-size: 16px; letter-spacing: .04em; pointer-events: none;
     }
     .start-sok-rad input {
-      border: 2.5px solid var(--kant-sterk); border-radius: 2px; background: var(--papir-lys);
+      border: 2.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
       font-family: var(--font-body); font-size: 16px; padding: 15px 20px;
     }
     .start-sok-rad input:focus { outline: none; border-color: var(--blekk); box-shadow: var(--skygge); }
@@ -1721,7 +1784,7 @@
     }
     .kort-container > .gruppe-etikett:first-child { margin-top: 4px; }
     .gruppe-navn {
-      background: var(--blekk); color: var(--lys); font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+      background: var(--blekk); color: var(--motfarge); font-family: var(--font-mono); font-size: 14px; font-weight: 700;
       letter-spacing: .2em; text-transform: uppercase; padding: 10px 18px; white-space: nowrap;
     }
     .gruppe-strek { flex: 1; height: 2px; background: var(--blekk); min-width: 20px; }
@@ -1740,7 +1803,7 @@
     .todo-tittel, .oppgave-besk { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); line-height: 1.3; }
     .todo-meta, .oppgave-meta { margin-top: 6px; gap: 8px; }
     .todo-cb, .oppgave-kort .checkbox {
-      width: 26px; height: 26px; border-radius: 2px; border: 2.5px solid var(--kat, var(--blekk));
+      width: 26px; height: 26px; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk));
       background: transparent; flex-shrink: 0;
     }
     .todo-cb.sjekket, .oppgave-kort .checkbox.sjekket { background: var(--kat, var(--blekk)); border-color: var(--kat, var(--blekk)); color: var(--lys); }
@@ -1753,7 +1816,7 @@
     .frist-idag    { background: var(--aksent); color: var(--lys); }
     .frist-snart   { background: var(--laks); color: var(--lys); }
     .frist-senere  { padding: 3px 0; font-family: var(--font-mono); font-weight: 500; text-transform: none; color: var(--dempet); letter-spacing: 0; }
-    .tilknyttet-chip { border-radius: 2px; border-width: 1.5px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .02em; padding: 2px 7px; }
+    .tilknyttet-chip { border-radius: var(--hjorne); border-width: 1.5px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .02em; padding: 2px 7px; }
     /* ── Tom liste ── */
     /* ── Seksjonsoverskrifter i Milepæler/Leveranser (tittelen står i sidehodet) */
     .tom-melding { font-size: 16px; color: var(--dempet); border: 2px dashed var(--linje); background: transparent; padding: 34px 20px; }
@@ -1762,19 +1825,19 @@
     .modal-overlay { background: var(--overlay); }
     .modal { border: 2.5px solid var(--blekk); border-radius: 3px; box-shadow: var(--skygge-stor); background: var(--papir); max-width: 520px; }
     .modal-header { border-bottom: 2px solid var(--blekk); }
-    .modal-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: 80%; font-size: 22px; letter-spacing: -0.02em; }
+    .modal-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 80%); font-size: 22px; letter-spacing: -0.02em; }
     .modal-footer { border-top: 2px solid var(--blekk); }
     .felt label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dempet); }
-    .felt input, .felt select, .felt textarea { border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); font-family: var(--font-body); }
+    .felt input, .felt select, .felt textarea { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); font-family: var(--font-body); }
     .felt input:focus, .felt select:focus, .felt textarea:focus { outline: none; box-shadow: var(--skygge); }
-    .angre-toast { background: var(--blekk); border-radius: 2px; box-shadow: 4px 4px 0 var(--aksent); font-family: var(--font-ui); }
+    .angre-toast { background: var(--blekk); border-radius: var(--hjorne); box-shadow: 4px 4px 0 var(--aksent); font-family: var(--font-ui); }
 
     /* ── Kalender ───────────────────────────────────────────────────────── */
-    .kal-visning-toggle { border: 2px solid var(--blekk); border-radius: 2px; overflow: hidden; background: var(--papir-lys); }
+    .kal-visning-toggle { border: var(--ramme); border-radius: var(--hjorne); overflow: hidden; background: var(--papir-lys); }
     .kal-visning-toggle button { border-radius: 0; font-family: var(--font-ui); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; }
-    .kal-visning-toggle button.aktiv { background: var(--blekk); color: var(--lys); }
-    .maaned-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: 80%; text-transform: uppercase; letter-spacing: -0.01em; font-size: 22px; }
-    .nav-knapp { border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); box-shadow: 2px 2px 0 var(--blekk); }
+    .kal-visning-toggle button.aktiv { background: var(--blekk); color: var(--motfarge); }
+    .maaned-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 80%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; font-size: 22px; }
+    .nav-knapp { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); box-shadow: var(--skygge-liten); }
 
     /* ── Mobil ──────────────────────────────────────────────────────────── */
     @media (max-width: 899px) {
@@ -1817,15 +1880,15 @@
     /* ── Start: filterpiller, dagens plan og rader ──────────────────────── */
     .start-filterrad { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px; }
     .start-pille {
-      border: 2px solid var(--blekk); background: var(--papir-lys); color: var(--blekk); border-radius: 2px;
+      border: var(--ramme); background: var(--papir-lys); color: var(--blekk); border-radius: var(--hjorne);
       padding: 8px 15px; font-family: var(--font-ui); font-weight: 700; font-size: 14px; cursor: pointer;
       display: inline-flex; align-items: center; gap: 6px;
     }
     .start-pille:hover { background: var(--aksent-lys); }
     .start-pille.aktiv { background: var(--gul); }
-    .plan-kort { background: var(--papir-lys); border: 2px solid var(--blekk); box-shadow: var(--skygge); padding: 6px 18px 12px; margin: 0 0 30px; }
+    .plan-kort { background: var(--papir-lys); border: var(--ramme); box-shadow: var(--skygge); padding: 6px 18px 12px; margin: 0 0 30px; }
     .plan-hode { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 10px 0 8px; }
-    .plan-tittel { font-family: var(--font-ui); font-size: 26px; font-weight: 900; font-stretch: 70%; text-transform: uppercase; letter-spacing: -0.01em; color: var(--blekk); }
+    .plan-tittel { font-family: var(--font-ui); font-size: 26px; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
     .plan-telling { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blå); white-space: nowrap; }
     .plan-stolpe { height: 6px; background: var(--linje); margin: 0 0 4px; }
     .plan-stolpe > span { display: block; height: 100%; background: var(--blå); transition: width .3s; }
@@ -1836,11 +1899,11 @@
     .plan-tom svg { width: 14px; height: 14px; }
     .plan-knapp {
       flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
-      background: none; border: 2px solid transparent; border-radius: 2px; color: var(--dempet); cursor: pointer;
+      background: none; border: 2px solid transparent; border-radius: var(--hjorne); color: var(--dempet); cursor: pointer;
     }
     .plan-knapp:hover { border-color: var(--blekk); color: var(--blekk); background: var(--gul); }
     .plan-knapp.aktiv { color: var(--blå); }
-    .login-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: 72%; text-transform: uppercase; font-size: 40px; letter-spacing: -0.02em; line-height: .95; color: var(--blekk); }
+    .login-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 72%); text-transform: var(--tittel-store, uppercase); font-size: 40px; letter-spacing: -0.02em; line-height: .95; color: var(--blekk); }
     .login-under { font-size: 15px; color: var(--dempet); margin-top: 8px; }
     .login-knapp { display: inline-flex; align-items: center; gap: 10px; }
     .plan-rad { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--linje); cursor: pointer; }
@@ -1884,12 +1947,12 @@
     .plan-under span:last-child { color: var(--blå); }
     .plan-kort > .tp-imorgen { border-top: 1px solid var(--linje); margin-top: 6px; }
     .plan-tom > .tp-imorgen { flex-basis: 100%; }
-    .plan-tom > .tp-imorgen[open] { background: var(--papir-lys); border: 2px solid var(--blekk); box-shadow: var(--skygge); padding: 0 16px 8px; }
+    .plan-tom > .tp-imorgen[open] { background: var(--papir-lys); border: var(--ramme); box-shadow: var(--skygge); padding: 0 16px 8px; }
     .plan-tom > .tp-imorgen > summary { color: var(--dempet); padding: 2px 0; }
     .plan-tom > .tp-imorgen[open] > summary { color: var(--blå); padding: 10px 0 6px; }
     .start-hake.sjekket, .slett-sirkel, .fullfor-sirkel { color: var(--lys); }
     .start-hake {
-      width: 22px; height: 22px; border-radius: 2px; border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
+      width: 22px; height: 22px; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
       display: flex; align-items: center; justify-content: center; transition: background .12s;
     }
     .start-hake-mp { border-radius: 50%; }
@@ -1907,7 +1970,7 @@
     /* ── Kategoripiller på Milepæler og Leveranser ──────────────────────── */
     .verktoy-rad .filter-rad { margin: 0; gap: 12px; }
     .filter-pill.filter-pill {
-      border: 2px solid var(--blekk); color: var(--blekk); background: var(--papir-lys); border-radius: 2px;
+      border: var(--ramme); color: var(--blekk); background: var(--papir-lys); border-radius: var(--hjorne);
       padding: 9px 17px; font-size: 15px; letter-spacing: 0; display: inline-flex; align-items: center; gap: 9px;
     }
     .filter-pill.filter-pill::before { content: ''; width: 10px; height: 10px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
@@ -1923,8 +1986,8 @@
     .aktivitet-kort:hover, .aktivitet-kort[class*="hover-"]:hover { background: var(--hover); }
     .aktivitet-tittel { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); }
     .aktivitet-meta { font-family: var(--font-mono); font-size: 13px; color: var(--dempet); margin-top: 4px; }
-    .type-badge { border-radius: 2px; border-width: 2px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; padding: 3px 8px; min-width: 124px; text-align: center; }
-    .aktivitet-kort .ikon-knapp { border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); color: var(--blekk) !important; height: 30px; min-width: 30px; }
+    .type-badge { border-radius: var(--hjorne); border-width: 2px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; padding: 3px 8px; min-width: 124px; text-align: center; }
+    .aktivitet-kort .ikon-knapp { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk) !important; height: 30px; min-width: 30px; }
     .aktivitet-kort .ikon-knapp:hover { background: var(--gul); border-color: var(--blekk); }
 
     /* ── Datomeny, infoblokker, gruppehandling (v5.1) ───────────────────── */
@@ -1935,7 +1998,7 @@
     .frist-tekst.klikkbar:hover, .planlagt-merke.klikkbar:hover { outline: 2px solid var(--blekk); outline-offset: 1px; }
     .dato-meny {
       position: fixed; z-index: 10001; min-width: 230px; background: var(--papir-lys);
-      border: 2px solid var(--blekk); box-shadow: var(--skygge); padding: 6px; font-family: var(--font-ui);
+      border: var(--ramme); box-shadow: var(--skygge); padding: 6px; font-family: var(--font-ui);
     }
     .dato-meny-tittel { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); padding: 6px 8px 8px; }
     .dato-meny button, .dato-meny-velg {
@@ -1952,13 +2015,13 @@
     .info-dato { font-family: var(--font-mono); font-size: 13px; color: var(--blekk); }
     .info-knapper { display: flex; flex-wrap: wrap; gap: 8px; }
     .mini-knapp {
-      border: 2px solid var(--blekk); background: var(--papir-lys); color: var(--blekk); border-radius: 2px;
+      border: var(--ramme); background: var(--papir-lys); color: var(--blekk); border-radius: var(--hjorne);
       padding: 6px 11px; font: 700 13px var(--font-ui); cursor: pointer;
     }
     .mini-knapp:hover { background: var(--gul); }
     .mini-knapp.primær { background: var(--aksent); color: var(--lys); }
     .gruppe-handling {
-      flex-shrink: 0; border: 2px solid var(--fare); background: var(--papir-lys); color: var(--fare); border-radius: 2px;
+      flex-shrink: 0; border: 2px solid var(--fare); background: var(--papir-lys); color: var(--fare); border-radius: var(--hjorne);
       padding: 4px 9px; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; cursor: pointer;
     }
     .gruppe-handling:hover { background: var(--fare); color: var(--lys); }
@@ -1975,10 +2038,10 @@
     .gjenta-chip { border-color: var(--linje); color: var(--dempet); }
     .gjenta-dager { display: none; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .gjenta-dager button {
-      border: 2px solid var(--blekk); background: var(--papir-lys); color: var(--blekk); border-radius: 2px;
+      border: var(--ramme); background: var(--papir-lys); color: var(--blekk); border-radius: var(--hjorne);
       padding: 5px 9px; font: 700 12px var(--font-mono); text-transform: uppercase; cursor: pointer;
     }
-    .gjenta-dager button.valgt { background: var(--blekk); color: var(--lys); }
+    .gjenta-dager button.valgt { background: var(--blekk); color: var(--motfarge); }
 
     /* ── Venter, planlagt dag, sjekkliste (v5.3) ───────────────────────── */
     .planlagt-merke, .venter-merke, .sjekk-merke {
@@ -1994,15 +2057,15 @@
     .plan-rad .frist-tekst, .plan-rad .planlagt-merke, .plan-rad .venter-merke, .plan-rad .sjekk-merke,
     .start-merke, .todo-kort > .planlagt-merke, .todo-kort > .venter-merke, .todo-kort > .sjekk-merke { font-size: 11px; flex-shrink: 0; }
     .info-tekst { font-size: 15px; line-height: 1.55; }
-    .info-lenke { border: 2px solid var(--blekk); background: var(--papir-lys); padding: 9px 12px; font-weight: 600; cursor: pointer; }
+    .info-lenke { border: var(--ramme); background: var(--papir-lys); padding: 9px 12px; font-weight: 600; cursor: pointer; }
     .info-lenke:hover { background: var(--gul); }
     .sjekk-rad { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--linje); }
     .sjekk-boks {
-      width: 22px; height: 22px; padding: 0; flex-shrink: 0; border: 2px solid var(--blekk); border-radius: 2px;
+      width: 22px; height: 22px; padding: 0; flex-shrink: 0; border: var(--ramme); border-radius: var(--hjorne);
       background: var(--papir-lys); color: var(--lys); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .sjekk-boks:hover { background: var(--gul); }
-    .sjekk-rad.ferdig .sjekk-boks { background: var(--blekk); }
+    .sjekk-rad.ferdig .sjekk-boks { background: var(--blekk); color: var(--motfarge); }
     .sjekk-tekst { flex: 1; min-width: 0; font-size: 15px; overflow-wrap: anywhere; }
     .sjekk-rad.ferdig .sjekk-tekst { text-decoration: line-through; color: var(--dempet); }
     .sjekk-slett { background: none; border: 0; font-size: 20px; line-height: 1; color: var(--dempet); cursor: pointer; padding: 0 4px; }
@@ -2029,13 +2092,13 @@
     }
 
     /* ── Felles: sprettvinduer, menyer, valglister, meldinger (v5.7) ──────── */
-    .popup-boks { background: var(--papir-lys); border: 2px solid var(--blekk); border-radius: 2px; box-shadow: var(--skygge); padding: 14px 16px; font-family: var(--font-ui); }
+    .popup-boks { background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge); padding: 14px 16px; font-family: var(--font-ui); }
     .popup-boks.popup-rad { display: flex; gap: 6px; padding: 8px; white-space: nowrap; }
     .popup-tittel { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin-bottom: 8px; }
     .popup-merknad { font-size: 13px; color: var(--dempet); line-height: 1.5; max-width: 240px; }
     .popup-valg { display: flex; align-items: center; gap: 9px; padding: 6px 0; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--blekk); }
     .popup-skille { margin-top: 12px; border-top: 1px solid var(--linje); padding-top: 12px; }
-    .popup-dato { flex: 1; min-width: 0; font: 13px var(--font-mono); padding: 6px 8px; border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); color: var(--blekk); }
+    .popup-dato { flex: 1; min-width: 0; font: 13px var(--font-mono); padding: 6px 8px; border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk); }
     .popup-boks .knapp-full { margin-top: 12px; }
     .knapp-full { width: 100%; justify-content: center; }
     .mini-knapp { display: inline-flex; align-items: center; gap: 6px; }
@@ -2053,14 +2116,14 @@
     .filter-merke { font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--lys); background: var(--kat, var(--dempet)); padding: 3px 8px; cursor: pointer; }
     .offline-pille {
       position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 500; align-items: center; gap: 8px;
-      background: var(--blekk); color: var(--lys); font: 500 13px var(--font-mono); padding: 8px 14px; box-shadow: 3px 3px 0 var(--varsel);
+      background: var(--blekk); color: var(--motfarge); font: 500 13px var(--font-mono); padding: 8px 14px; box-shadow: 3px 3px 0 var(--varsel);
     }
     .offline-prikk { width: 9px; height: 9px; background: var(--varsel); flex-shrink: 0; }
     .varsel-banner { align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 16px; background: var(--gul); border-bottom: 2px solid var(--blekk); }
     .varsel-tekst { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--blekk); }
     .synk-pille {
       position: fixed; bottom: 10px; right: 10px; z-index: 9999; pointer-events: none; transition: opacity .5s; max-width: 80vw; word-break: break-word;
-      padding: 6px 11px; font: 700 12px var(--font-mono); letter-spacing: .02em; border: 2px solid var(--blekk);
+      padding: 6px 11px; font: 700 12px var(--font-mono); letter-spacing: .02em; border: var(--ramme);
     }
     .tag-banner { display: flex; align-items: center; gap: 10px; padding: 0 0 16px; font: 12px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--dempet); }
     .resultat-merke {
@@ -2078,7 +2141,7 @@
     .sjekk-rad .frist-tekst { font-size: 11px; flex-shrink: 0; }
     .valg-rad {
       display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; text-align: left; cursor: pointer;
-      border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); font-family: var(--font-ui); color: var(--blekk);
+      border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); font-family: var(--font-ui); color: var(--blekk);
     }
     .valg-rad:hover { background: var(--gul); }
     .valg-rad.valgt { background: var(--aksent-lys); box-shadow: var(--skygge); }
@@ -2091,6 +2154,23 @@
     .todo-cb.mp { border-radius: 50%; }
     .fremdrift { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font: 500 12px var(--font-mono); color: var(--dempet); }
     .fremdrift .plan-stolpe { width: 52px; height: 6px; margin: 0; }
+
+    /* ── Utseende i Innstillinger (v6.0) ─────────────────────────────────── */
+    .tema-seksjon { padding: 14px 22px; border-bottom: 1px solid var(--linje); }
+    .tema-etikett { font: 700 10px var(--font-ui); text-transform: uppercase; letter-spacing: .8px; color: var(--dempet); margin-bottom: 10px; }
+    .tema-etikett span { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 6px; }
+    .tema-valg { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .tema-knapp {
+      display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; align-items: center; text-align: left;
+      padding: 8px; background: var(--papir-lys); border: 1px solid var(--linje); border-radius: var(--hjorne);
+      cursor: pointer; color: var(--blekk); font-family: var(--font-ui);
+    }
+    .tema-knapp:hover { border-color: var(--blekk); }
+    .tema-knapp.valgt { border: var(--ramme); box-shadow: var(--skygge-liten); }
+    .tema-prøve { grid-row: 1 / 3; width: 44px; height: 32px; display: flex; gap: 3px; padding: 5px; border: 1px solid rgba(0,0,0,.18); box-sizing: border-box; }
+    .tema-prøve i { flex: 1; }
+    .tema-navn { font-size: 13px; font-weight: 800; }
+    .tema-om { font-size: 11px; color: var(--dempet); line-height: 1.3; }
   </style>
 </head>
 <body>
@@ -2273,7 +2353,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v5.9</div>
+<div class="versjon">Prosjekt-planlegger v6.0</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2298,6 +2378,10 @@
     </div>
     <div style="padding:14px 22px 12px;border-bottom:1px solid var(--linje);">
       <button onclick="lukkModal('kategoriModal');åpneKategoriRediger()" style="width:100%;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 14px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Kategorier</button>
+    </div>
+    <div class="tema-seksjon">
+      <div class="tema-etikett">Utseende <span>utkast, gjelder bare denne enheten</span></div>
+      <div id="temaValg" class="tema-valg"></div>
     </div>
     <div style="padding:14px 22px 14px;border-bottom:1px solid var(--linje);">
       <div style="font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:10px;">Tidslinje</div>
@@ -3587,6 +3671,59 @@
     const el = document.getElementById('innstVersjon');
     if (el) el.textContent = (document.querySelector('.versjon')?.textContent || '').replace(/^Prosjekt-planlegger\s*/, '');
   })();
+
+  // ── Fargetemaer (utkast, v6.0) ──
+  // Fire forslag ved siden av standardutseendet. Valget lagres per enhet
+  // (localStorage «tema», ikke lp_: skal ikke med i sikkerhetskopiene) og
+  // settes allerede i <head>, så siden ikke blinker ved oppstart. Fargene i
+  // prøvene er bare til knappene og må følge temaene i CSS-en.
+  const TEMAER = [
+    { id: '',       navn: 'Standard', om: 'Papir, blekk og oransje',         farger: ['#fbf7f0', '#1d1b19', '#e8654a', '#ebe27a'] },
+    { id: 'fjord',  navn: 'Fjord',    om: 'Kjølig blågrå med havgrønt',      farger: ['#f2f5f7', '#15202b', '#12807e', '#f3d27a'] },
+    { id: 'skog',   navn: 'Skog',     om: 'Varmt og naturlig, mosegrønt',    farger: ['#f3f0e6', '#1e2a20', '#2f6f47', '#e8c25e'] },
+    { id: 'kontor', navn: 'Kontor',   om: 'Nøytralt og luftig, myke kanter', farger: ['#ffffff', '#18181b', '#5b5bd6', '#fde68a'] },
+    { id: 'natt',   navn: 'Natt',     om: 'Mørkt, til kveldsbruk',           farger: ['#141518', '#ebe6dd', '#ff7b5c', '#6e6224'] },
+  ];
+  function _aktivtTema() { try { return localStorage.getItem('tema') || ''; } catch (e) { return ''; } }
+  function velgTema(id) {
+    try { if (id) localStorage.setItem('tema', id); else localStorage.removeItem('tema'); } catch (e) {}
+    if (id) document.documentElement.dataset.tema = id;
+    else delete document.documentElement.dataset.tema;
+    if (id === 'kontor' && !document.getElementById('temaFont')) {
+      const l = document.createElement('link');
+      l.id = 'temaFont';
+      l.rel = 'stylesheet';
+      l.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400..900&display=swap';
+      document.head.appendChild(l);
+    }
+    _temaMeta();
+    _tegnTemaValg();
+    try { renderAlleLister(); renderRamme(); } catch (e) { /* tegnes ved neste endring */ }
+  }
+  // Statuslinja på telefonen følger toppstripen.
+  function _temaMeta() {
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--topp').trim() || '#232120';
+  }
+  function _tegnTemaValg() {
+    const boks = document.getElementById('temaValg');
+    if (!boks) return;
+    const aktiv = _aktivtTema();
+    boks.innerHTML = '';
+    TEMAER.forEach(t => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tema-knapp' + (t.id === aktiv ? ' valgt' : '');
+      b.setAttribute('aria-pressed', String(t.id === aktiv));
+      b.innerHTML = `<span class="tema-prøve" style="background:${t.farger[0]}">`
+        + t.farger.slice(1).map(f => `<i style="background:${f}"></i>`).join('') + '</span>'
+        + `<span class="tema-navn">${t.navn}</span><span class="tema-om">${t.om}</span>`;
+      b.onclick = () => velgTema(t.id);
+      boks.appendChild(b);
+    });
+  }
+  _tegnTemaValg();
+  _temaMeta();
 
   function renderRamme() {
     try { renderSidepanel(); renderSideHode(); } catch (e) { console.warn('[RAMME]', e); }
@@ -5306,6 +5443,7 @@
       telling.textContent = `${_to(tall.g)} av ${_to(tall.n)} gjort`;
       if (stolpe) stolpe.style.width = Math.round(tall.g / tall.n * 100) + '%';
     }
+    _merkTimeplan(rad.closest('.tp'));
     if (window._dagsplanKryss) window._dagsplanKryss(dato, nøkkel, gjort);
   }
   function _lagTpMerknad(tekst) {
@@ -5337,13 +5475,14 @@
     let nesteFunnet = false;
     rader.forEach(r => {
       const fra = _tilMin(r.dataset.fra), til = _tilMin(r.dataset.til);
-      const naa = fra <= m && m < til;
-      const neste = !pågår && !nesteFunnet && fra > m;
+      const naa = fra <= m && m < til, gjort = r.classList.contains('gjort');
+      // «Om X min» gjelder neste blokk som ikke er pause og ikke allerede gjort.
+      const neste = !pågår && !nesteFunnet && fra > m && !gjort && !r.classList.contains('pause');
       if (neste) nesteFunnet = true;
       r.classList.toggle('naa', naa);
       r.classList.toggle('forbi', til <= m);
       r.classList.toggle('neste', neste);
-      r.querySelector('.tp-igjen').textContent = naa ? _varighet(til - m) + ' igjen' : neste ? 'Om ' + _varighet(fra - m) : '';
+      r.querySelector('.tp-igjen').textContent = naa && !gjort ? _varighet(til - m) + ' igjen' : neste ? 'Om ' + _varighet(fra - m) : '';
     });
   }
   // Hvert halve minutt mens appen vises. Har datoen skiftet siden Start ble
