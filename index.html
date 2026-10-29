@@ -1847,12 +1847,17 @@
     .plan-rad:last-child { border-bottom: none; }
     /* Timeplan fra løytnanten (v5.8): tid | hva | prosjekt, pågående blokk i gult */
     .tp { margin: 0 0 4px; font-family: var(--font-body); }
-    .tp-rad { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; align-items: baseline; column-gap: 14px; padding: 10px 8px; margin: 0 -8px; border-bottom: 1px solid var(--linje); }
+    .tp-rad { display: grid; grid-template-columns: 22px 104px minmax(0, 1fr) auto; align-items: center; column-gap: 14px; padding: 10px 8px; margin: 0 -8px; border-bottom: 1px solid var(--linje); }
+    .tp-rad:not(.pause) { cursor: pointer; }
     .tp-rad:last-child { border-bottom: none; }
-    .tp-tid { grid-column: 1; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--blå); white-space: nowrap; }
-    .tp-hva { grid-column: 2; font-size: 16px; font-weight: 600; color: var(--blekk); }
-    .tp-prosjekter { grid-column: 3; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 12px; }
-    .tp-igjen { grid-column: 2 / -1; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blekk); padding-top: 4px; }
+    .tp-hake, .tp-hake-tom { grid-column: 1; align-self: center; }
+    .tp-hake-tom { width: 22px; }
+    .tp-tid { grid-column: 2; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--blå); white-space: nowrap; }
+    .tp-hva { grid-column: 3; font-size: 16px; font-weight: 600; color: var(--blekk); }
+    .tp-prosjekter { grid-column: 4; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 12px; }
+    .tp-rad.gjort .tp-hva { text-decoration: line-through; color: var(--dempet); font-weight: 500; }
+    .tp-rad.gjort .start-prosjekt { opacity: .45; }
+    .tp-igjen { grid-column: 3 / -1; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blekk); padding-top: 4px; }
     .tp-igjen:empty { display: none; }
     .tp-rad.pause { padding-top: 6px; padding-bottom: 6px; }
     .tp-rad.pause .tp-tid, .tp-rad.pause .tp-hva { font-size: 12px; font-weight: 500; color: var(--dempet); }
@@ -2012,10 +2017,15 @@
       .plan-rad, #startInnhold .todo-kort { flex-wrap: wrap; row-gap: 6px; }
       .plan-rad .start-tekst, #startInnhold .todo-kort .start-tekst { flex: 1 1 calc(100% - 40px); white-space: normal; }
       .plan-rad .start-tekst + *, #startInnhold .todo-kort .start-tekst + * { margin-left: 36px; }
-      .tp-rad { grid-template-columns: 92px minmax(0, 1fr); row-gap: 4px; }
-      .tp-prosjekter { grid-column: 2; justify-content: flex-start; }
+      /* Smal skjerm: boksen til venstre, tid, tekst og prosjekt stablet ved siden av. */
+      .tp-rad { grid-template-columns: 22px minmax(0, 1fr); row-gap: 3px; column-gap: 12px; }
+      .tp-hake { grid-row: 1; align-self: start; margin-top: 1px; }
+      .tp-tid, .tp-hva, .tp-prosjekter, .tp-igjen { grid-column: 2; }
+      .tp-prosjekter { justify-content: flex-start; }
       .tp-tid { font-size: 12px; }
       .tp-hva { font-size: 15px; }
+      .tp-rad.pause { grid-template-columns: 22px auto minmax(0, 1fr); }
+      .tp-rad.pause .tp-hva { grid-column: 3; }
     }
 
     /* ── Felles: sprettvinduer, menyer, valglister, meldinger (v5.7) ──────── */
@@ -2263,7 +2273,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v5.8</div>
+<div class="versjon">Prosjekt-planlegger v5.9</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -5176,12 +5186,33 @@
   const DAGSPLAN_NOKKEL = 'dagsplaner_cache';   // ikke lp_: skal ikke med i sikkerhetskopiene
   let _imorgenÅpen = false, _tpTegnetDato = null;
   function _dagsplaner() { return _parseSafe(localStorage.getItem(DAGSPLAN_NOKKEL), null) || {}; }
-  window._settDagsplaner = function(planer) {
-    const ny = JSON.stringify(planer || {});
-    if (ny === localStorage.getItem(DAGSPLAN_NOKKEL)) return;
+  // Nøklene sorteres og kryssene likeså, så et ekko av egen avkrysning fra
+  // skyen (samme innhold, annen rekkefølge) ikke tegner Start på nytt.
+  const _kanon = v => Array.isArray(v) ? v.map(_kanon)
+    : (v && typeof v === 'object') ? Object.keys(v).sort().reduce((o, k) => (o[k] = _kanon(v[k]), o), {}) : v;
+  function _lagreDagsplaner(planer) {
+    Object.values(planer).forEach(p => { if (p && Array.isArray(p.gjort)) p.gjort.sort(); });
+    const ny = JSON.stringify(_kanon(planer));
+    if (ny === localStorage.getItem(DAGSPLAN_NOKKEL)) return false;
     localStorage.setItem(DAGSPLAN_NOKKEL, ny);
-    if (typeof renderStartside === 'function') renderStartside();
+    return true;
+  }
+  window._settDagsplaner = function(planer) {
+    if (_lagreDagsplaner(planer || {}) && typeof renderStartside === 'function') renderStartside();
   };
+  // Et kryss hører til blokkas tekst (små bokstaver), med løpenummer når samme
+  // tekst står flere ganger. Da følger krysset blokka også når løytnanten
+  // flytter den til et annet klokkeslett og sender planen på nytt.
+  function _tpNøkler(blokker) {
+    const sett = {};
+    return blokker.map(b => {
+      const t = String(b.hva || '').trim().toLowerCase();
+      sett[t] = (sett[t] || 0) + 1;
+      return t + '#' + sett[t];
+    });
+  }
+  window._tpNøkler = _tpNøkler;
+  const _HAKE_SVG = '<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function _dagsplanFor(dato) {
     const p = _dagsplaner()[dato];
     return p && Array.isArray(p.blokker) && p.blokker.length ? { ...p, dato } : null;
@@ -5193,15 +5224,20 @@
 
   // «UiA / MishMash WP4» gir én merkelapp per prosjekt, i prosjektets farge når
   // navnet finnes i appen (eksakt først, ellers unik delstreng).
+  const _tpNavn = tekst => String(tekst || '').split(/\s*[\/,]\s*/).filter(Boolean);
+  function _tpFinnProsjekt(navn) {
+    const n = String(navn || '').toLowerCase();
+    if (!n) return null;
+    const aktive = prosjekter.filter(p => !p.arkivert);
+    let treff = aktive.filter(p => String(p.navn || '').toLowerCase() === n);
+    if (!treff.length) treff = aktive.filter(p => String(p.navn || '').toLowerCase().includes(n));
+    return treff.length === 1 ? treff[0] : null;
+  }
   function _tpProsjekter(tekst) {
     const boks = document.createElement('span');
     boks.className = 'tp-prosjekter';
-    const aktive = prosjekter.filter(p => !p.arkivert);
-    String(tekst || '').split(/\s*[\/,]\s*/).filter(Boolean).forEach(navn => {
-      const n = navn.toLowerCase();
-      let treff = aktive.filter(p => String(p.navn || '').toLowerCase() === n);
-      if (!treff.length) treff = aktive.filter(p => String(p.navn || '').toLowerCase().includes(n));
-      const p = treff.length === 1 ? treff[0] : null;
+    _tpNavn(tekst).forEach(navn => {
+      const p = _tpFinnProsjekt(navn);
       const chip = document.createElement('span');
       chip.className = 'start-prosjekt';
       chip.textContent = p ? p.navn : navn;
@@ -5210,23 +5246,67 @@
     });
     return boks;
   }
+  // Antall blokker som kan krysses av (alt unntatt pauser) og hvor mange som er gjort.
+  function _tpTall(plan) {
+    const nøkler = _tpNøkler(plan.blokker), gjort = new Set(plan.gjort || []);
+    let n = 0, g = 0;
+    plan.blokker.forEach((b, i) => { if (!_erPause(b.hva)) { n++; if (gjort.has(nøkler[i])) g++; } });
+    return { n, g };
+  }
   function _lagTimeplan(plan) {
     const tp = document.createElement('div');
     tp.className = 'tp';
     tp.dataset.dato = plan.dato;
-    plan.blokker.forEach(b => {
+    const nøkler = _tpNøkler(plan.blokker), gjort = new Set(plan.gjort || []);
+    plan.blokker.forEach((b, i) => {
+      const pause = _erPause(b.hva), ferdig = !pause && gjort.has(nøkler[i]);
       const rad = document.createElement('div');
-      rad.className = 'tp-rad' + (_erPause(b.hva) ? ' pause' : '');
+      rad.className = 'tp-rad' + (pause ? ' pause' : '') + (ferdig ? ' gjort' : '');
       rad.dataset.fra = b.fra;
       rad.dataset.til = b.til;
       rad.innerHTML = `<span class="tp-tid">${escapeHtml(b.fra)}–${escapeHtml(b.til)}</span><span class="tp-hva"></span>`;
       rad.querySelector('.tp-hva').textContent = b.hva;
-      if (b.prosjekt && !_erPause(b.hva)) rad.appendChild(_tpProsjekter(b.prosjekt));
+      if (pause) rad.insertAdjacentHTML('afterbegin', '<span class="tp-hake-tom"></span>');
+      else {
+        // Hele raden krysser av (stort treffpunkt på telefonen); trykk igjen angrer.
+        const hake = document.createElement('span');
+        hake.className = 'start-hake tp-hake' + (ferdig ? ' sjekket' : '');
+        const p = _tpFinnProsjekt(_tpNavn(b.prosjekt)[0]);
+        hake.style.setProperty('--kat', (p && p.farge) || 'var(--blekk)');
+        if (ferdig) hake.innerHTML = _HAKE_SVG;
+        rad.prepend(hake);
+        rad.title = ferdig ? 'Angre avkrysning' : 'Kryss av';
+        rad.onclick = () => _tpKryss(plan.dato, nøkler[i], !rad.classList.contains('gjort'), rad);
+        if (b.prosjekt) rad.appendChild(_tpProsjekter(b.prosjekt));
+      }
       rad.insertAdjacentHTML('beforeend', '<span class="tp-igjen"></span>');
       tp.appendChild(rad);
     });
     _merkTimeplan(tp);
     return tp;
+  }
+  // Krysser av lokalt med en gang (også uten nett) og sender krysset til
+  // skyen, der de andre enhetene fanger det opp.
+  function _tpKryss(dato, nøkkel, gjort, rad) {
+    const planer = _dagsplaner(), p = planer[dato];
+    if (!p) return;
+    const sett = new Set(p.gjort || []);
+    if (gjort) sett.add(nøkkel); else sett.delete(nøkkel);
+    p.gjort = [...sett];
+    _lagreDagsplaner(planer);
+    rad.classList.toggle('gjort', gjort);
+    rad.title = gjort ? 'Angre avkrysning' : 'Kryss av';
+    const hake = rad.querySelector('.tp-hake');
+    hake.classList.toggle('sjekket', gjort);
+    hake.innerHTML = gjort ? _HAKE_SVG : '';
+    const kort = rad.closest('.plan-kort'), tall = _tpTall(p);
+    const telling = kort && kort.querySelector('[data-tp-telling]');
+    const stolpe = kort && kort.querySelector('[data-tp-stolpe] > span');
+    if (telling && rad.closest('.tp').dataset.dato === _datoOm(0)) {
+      telling.textContent = `${_to(tall.g)} av ${_to(tall.n)} gjort`;
+      if (stolpe) stolpe.style.width = Math.round(tall.g / tall.n * 100) + '%';
+    }
+    if (window._dagsplanKryss) window._dagsplanKryss(dato, nøkkel, gjort);
   }
   function _lagTpMerknad(tekst) {
     const d = document.createElement('details');
@@ -5290,9 +5370,12 @@
     kort.className = 'plan-kort';
     const pst = n ? Math.round(plan.gjort.length / n * 100) : 0;
     const telling = `${_to(plan.gjort.length)} av ${_to(n)} gjort`;
-    // Med timeplan står arbeidstiden i hodet og to-do-tellingen over to-do-ene.
+    // Med timeplan teller hodet blokkene i den, og to-do-tellingen står over to-do-ene.
+    const tpTall = tp ? _tpTall(tp) : null;
     kort.innerHTML = `<div class="plan-hode"><span class="plan-tittel">Dagens plan</span>`
-      + `<span class="plan-telling">${tp ? escapeHtml(_tpSpenn(tp)) : telling}</span></div>`;
+      + (tp && tpTall.n ? `<span class="plan-telling" data-tp-telling>${_to(tpTall.g)} av ${_to(tpTall.n)} gjort</span></div>`
+          + `<div class="plan-stolpe" data-tp-stolpe><span style="width:${Math.round(tpTall.g / tpTall.n * 100)}%"></span></div>`
+        : `<span class="plan-telling">${tp ? escapeHtml(_tpSpenn(tp)) : telling}</span></div>`);
     if (tp) {
       kort.appendChild(_lagTimeplan(tp));
       if (tp.merknad) kort.appendChild(_lagTpMerknad(tp.merknad));
@@ -10243,7 +10326,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc, collection, getDocs, runTransaction, query, where, documentId }
+  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot, deleteDoc, collection, getDocs, runTransaction, query, where, documentId, updateDoc, arrayUnion, arrayRemove }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -10727,7 +10810,8 @@
   //   { type:'dagsplan', dato, plan?, fjern? }  (nivå 3) timeplan for en dag fra
   //     løytnanten. plan = JSON {arbeidstid, blokker:[{fra,til,hva,prosjekt}],
   //     merknad}. Lagres i brukere/<uid>/dagsplaner/<dato> og erstatter en
-  //     tidligere plan for samme dato; fjern:true tar planen bort. Hører ikke
+  //     tidligere plan for samme dato (kryss i gjort[] beholdes for blokker med
+  //     samme tekst); fjern:true tar planen bort. Hører ikke
   //     til noe prosjekt og utføres derfor utenfor prosjektsveipene.
   // `kategori` er kategoriens NAVN i målprosjektet; ukjent navn ignoreres.
   // `under` er en leveranses TITTEL i målprosjektet og gir aktivitetId; ukjent
@@ -10814,7 +10898,18 @@
         const plan = _rensDagsplan(r);
         try {
           if (plan === null) await deleteDoc(doc(db, 'brukere', userId, 'dagsplaner', r.dato));
-          else if (plan) await setDoc(doc(db, 'brukere', userId, 'dagsplaner', plan.dato), plan);
+          else if (plan) {
+            // Kryss fra en tidligere versjon av planen blir stående for blokker
+            // som fortsatt finnes (samme tekst), selv om klokkeslettet er flyttet.
+            const ref = doc(db, 'brukere', userId, 'dagsplaner', plan.dato);
+            plan.gjort = [];
+            try {
+              const gml = await getDoc(ref);
+              const nye = new Set(window._tpNøkler ? window._tpNøkler(plan.blokker) : []);
+              if (gml.exists()) plan.gjort = (gml.data().gjort || []).filter(k => nye.has(k));
+            } catch (e) { /* uten den gamle planen: start uten kryss */ }
+            await setDoc(ref, plan);
+          }
           else console.warn('[INNBOKS] Ugyldig dagsplan ryddes bort:', dokId);
           await deleteDoc(doc(db, 'brukere', userId, 'innboks', dokId));
           if (plan !== undefined) dagsplanAntall++;
@@ -11166,6 +11261,15 @@
   // localStorage, der Start leser dem. Ny dag: start lytteren på nytt, så
   // gamle planer ikke leses med.
   let _dagsplanFraDato = null;
+  // Avkrysning i timeplanen. arrayUnion/arrayRemove, så kryss fra telefon og
+  // Mac samtidig ikke skriver over hverandre. Uten nett ligger skrivingen i
+  // Firestores lokale kø og sendes når nettet er tilbake.
+  window._dagsplanKryss = function(dato, nøkkel, gjort) {
+    const uid = window._currentUid;
+    if (!uid) return;
+    updateDoc(doc(db, 'brukere', uid, 'dagsplaner', dato), { gjort: gjort ? arrayUnion(nøkkel) : arrayRemove(nøkkel) })
+      .catch(e => console.warn('[DAGSPLAN] Avkrysning feilet:', e.code || e.message));
+  };
   function _startDagsplanLytter(userId) {
     if (window._unsubDagsplan) window._unsubDagsplan();
     _dagsplanFraDato = window._lokalDatoStr();
