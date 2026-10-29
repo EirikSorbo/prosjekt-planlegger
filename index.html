@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Prosjekt-planlegger</title>
-  <meta name="theme-color" content="#232120">
+  <meta name="theme-color" content="#232120"><!-- lik --topp; meta-tagger kan ikke bruke CSS-variabler -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Planlegger">
@@ -60,6 +60,8 @@
           const manifest = {
             name: 'Prosjekt-planlegger', short_name: 'Planlegger',
             start_url: base, scope: base.replace(/[^/]*$/, ''),
+            // Faste verdier: manifestet lages før CSS-en er lest, så det kan
+            // ikke bruke variablene. Hold dem lik --papir og --topp.
             display: 'standalone', background_color: '#fbf7f0', theme_color: '#232120',
             icons: [
               { src: png, sizes: '192x192', type: 'image/png', purpose: 'any' },
@@ -1584,7 +1586,6 @@
     .brodsmule-skille { color: var(--topp-skille); font-weight: 400; }
     .brodsmule-app { text-transform: uppercase; font-stretch: 85%; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
     .logo > svg { color: var(--lys); opacity: .55; }
-    #prosjektMeny { border: 2px solid var(--blekk) !important; border-radius: 2px !important; box-shadow: var(--skygge-stor) !important; }
 
     body > header .faner {
       position: static; background: transparent; border: 0; margin: 0 auto 0 14px; padding: 0;
@@ -1759,7 +1760,7 @@
 
     /* ── Vinduer ────────────────────────────────────────────────────────── */
     .modal-overlay { background: var(--overlay); }
-    .modal { border: 2.5px solid var(--blekk); border-radius: 3px; box-shadow: var(--skygge-stor); background: var(--papir); }
+    .modal { border: 2.5px solid var(--blekk); border-radius: 3px; box-shadow: var(--skygge-stor); background: var(--papir); max-width: 520px; }
     .modal-header { border-bottom: 2px solid var(--blekk); }
     .modal-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: 80%; font-size: 22px; letter-spacing: -0.02em; }
     .modal-footer { border-top: 2px solid var(--blekk); }
@@ -1788,7 +1789,7 @@
       body > header .fane { padding: 11px 6px 13px; font-size: 11.5px; letter-spacing: .04em; }
       .verktoy-rad { gap: 10px; margin-bottom: 16px; }
       .kat-oversikt-rad, .verktoy-rad .filter-rad, .start-filterrad { gap: 8px; }
-      .kat-oversikt-knapp, .filter-rad .filter-pill.filter-pill { padding: 7px 12px; font-size: 14px; gap: 7px; }
+      .kat-oversikt-knapp, .filter-pill.filter-pill { padding: 7px 12px; font-size: 14px; gap: 7px; }
       .start-pille { padding: 7px 11px; font-size: 13px; }
       .filtrer-knapp { font-size: 14px; padding: 4px 2px; }
       .plan-kort { padding: 4px 14px 10px; }
@@ -1863,14 +1864,14 @@
 
     /* ── Kategoripiller på Milepæler og Leveranser ──────────────────────── */
     .verktoy-rad .filter-rad { margin: 0; gap: 12px; }
-    .filter-rad .filter-pill.filter-pill {
+    .filter-pill.filter-pill {
       border: 2px solid var(--blekk); color: var(--blekk); background: var(--papir-lys); border-radius: 2px;
       padding: 9px 17px; font-size: 15px; letter-spacing: 0; display: inline-flex; align-items: center; gap: 9px;
     }
-    .filter-rad .filter-pill.filter-pill::before { content: ''; width: 10px; height: 10px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
-    .filter-rad .filter-pill.filter-pill:hover { background: var(--aksent-lys); }
-    .filter-rad .filter-pill[class*="aktiv"] { background: var(--gul); color: var(--blekk); border-color: var(--blekk); }
-    .filter-rad .filter-pill.ekskluder { opacity: .45; text-decoration: line-through; }
+    .filter-pill.filter-pill::before { content: ''; width: 10px; height: 10px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .filter-pill.filter-pill:hover { background: var(--aksent-lys); }
+    .filter-pill.filter-pill[class*="aktiv"] { background: var(--gul); color: var(--blekk); border-color: var(--blekk); }
+    .filter-pill.filter-pill.ekskluder { opacity: .45; text-decoration: line-through; }
 
     /* ── Leveranser ─────────────────────────────────────────────────────── */
     .aktivitet-kort, .aktivitet-kort:last-child {
@@ -1975,6 +1976,70 @@
       .plan-rad .start-tekst, #startInnhold .todo-kort .start-tekst { flex: 1 1 calc(100% - 40px); white-space: normal; }
       .plan-rad .start-tekst + *, #startInnhold .todo-kort .start-tekst + * { margin-left: 36px; }
     }
+
+    /* ── Felles: sprettvinduer, menyer, valglister, meldinger (v5.7) ──────── */
+    .popup-boks { background: var(--papir-lys); border: 2px solid var(--blekk); border-radius: 2px; box-shadow: var(--skygge); padding: 14px 16px; font-family: var(--font-ui); }
+    .popup-boks.popup-rad { display: flex; gap: 6px; padding: 8px; white-space: nowrap; }
+    .popup-tittel { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin-bottom: 8px; }
+    .popup-merknad { font-size: 13px; color: var(--dempet); line-height: 1.5; max-width: 240px; }
+    .popup-valg { display: flex; align-items: center; gap: 9px; padding: 6px 0; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--blekk); }
+    .popup-skille { margin-top: 12px; border-top: 1px solid var(--linje); padding-top: 12px; }
+    .popup-dato { flex: 1; min-width: 0; font: 13px var(--font-mono); padding: 6px 8px; border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); color: var(--blekk); }
+    .popup-boks .knapp-full { margin-top: 12px; }
+    .knapp-full { width: 100%; justify-content: center; }
+    .mini-knapp { display: inline-flex; align-items: center; gap: 6px; }
+    .mini-knapp.aktiv { background: var(--gul); }
+    .mini-knapp.fare { border-color: var(--fare); color: var(--fare); }
+    .mini-knapp.fare:hover { background: var(--fare); color: var(--lys); }
+    .knapp-blokk.fare { background: var(--fare); color: var(--lys); display: inline-flex; align-items: center; gap: 8px; }
+    .prikk { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; background: var(--kat, var(--blekk)); }
+    .meny-boks { position: absolute; top: 100%; left: 0; margin-top: 8px; min-width: 240px; z-index: 200; overflow: hidden; padding: 4px 0; box-shadow: var(--skygge-stor); }
+    .meny-valg { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 15px; font-weight: 500; color: var(--blekk); cursor: pointer; }
+    .meny-valg:hover { background: var(--gul); }
+    .meny-valg.valgt { font-weight: 800; }
+    .meny-valg + .meny-valg { border-top: 1px solid var(--linje); }
+    .meny-hake { margin-left: auto; color: var(--aksent); font-weight: 800; }
+    .filter-merke { font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--lys); background: var(--kat, var(--dempet)); padding: 3px 8px; cursor: pointer; }
+    .offline-pille {
+      position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 500; align-items: center; gap: 8px;
+      background: var(--blekk); color: var(--lys); font: 500 13px var(--font-mono); padding: 8px 14px; box-shadow: 3px 3px 0 var(--varsel);
+    }
+    .offline-prikk { width: 9px; height: 9px; background: var(--varsel); flex-shrink: 0; }
+    .varsel-banner { align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 16px; background: var(--gul); border-bottom: 2px solid var(--blekk); }
+    .varsel-tekst { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--blekk); }
+    .synk-pille {
+      position: fixed; bottom: 10px; right: 10px; z-index: 9999; pointer-events: none; transition: opacity .5s; max-width: 80vw; word-break: break-word;
+      padding: 6px 11px; font: 700 12px var(--font-mono); letter-spacing: .02em; border: 2px solid var(--blekk);
+    }
+    .tag-banner { display: flex; align-items: center; gap: 10px; padding: 0 0 16px; font: 12px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--dempet); }
+    .resultat-merke {
+      display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; white-space: nowrap; padding: 3px 9px;
+      font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; background: var(--kat, var(--dempet)); color: var(--lys);
+    }
+    .arkiv-rad:hover { background: var(--hover); }
+    .info-fullfort { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ok); }
+    .info-lenke-rad { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .info-lenke-tittel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .info-lenke.konflikt { border-color: var(--fare); background: var(--fare-lys); }
+    .konflikt-tekst { flex-shrink: 0; white-space: nowrap; font: 700 11px var(--font-mono); text-transform: uppercase; color: var(--fare); }
+    .sjekk-rad.klikkbar { cursor: pointer; }
+    .sjekk-rad.klikkbar:hover { background: var(--hover); }
+    .sjekk-rad .frist-tekst { font-size: 11px; flex-shrink: 0; }
+    .valg-rad {
+      display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; text-align: left; cursor: pointer;
+      border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); font-family: var(--font-ui); color: var(--blekk);
+    }
+    .valg-rad:hover { background: var(--gul); }
+    .valg-rad.valgt { background: var(--aksent-lys); box-shadow: var(--skygge); }
+    .valg-tittel { flex: 1; font-weight: 700; font-size: 15px; color: var(--blekk); }
+    .valg-under { font-size: 13px; color: var(--dempet); margin-top: 2px; font-weight: 400; }
+    .valg-pil { color: var(--dempet); font-size: 18px; }
+    /* Vinduenes knapperad tåler mange knapper */
+    .modal-footer { flex-wrap: wrap; gap: 8px; }
+    .modal-footer button { white-space: nowrap; }
+    .todo-cb.mp { border-radius: 50%; }
+    .fremdrift { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font: 500 12px var(--font-mono); color: var(--dempet); }
+    .fremdrift .plan-stolpe { width: 52px; height: 6px; margin: 0; }
   </style>
 </head>
 <body>
@@ -2005,7 +2070,7 @@
     <span id="prosjektTittel">Prosjekter</span>
     <span class="brodsmule-skille">/</span><span class="brodsmule-app">Prosjektplanlegger</span>
     <svg width="10" height="10" viewBox="0 0 10 10" style="opacity:0.5;flex-shrink:0;"><path d="M2 3.5L5 6.5L8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <div id="prosjektMeny" style="display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--papir-lys);border:1px solid var(--linje);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px;z-index:200;overflow:hidden;"></div>
+    <div id="prosjektMeny" class="popup-boks meny-boks" style="display:none;"></div>
   </div>
   <nav class="faner">
     <button class="fane aktiv" data-fane="start" onclick="byttFane('start', this)">Start</button>
@@ -2016,7 +2081,7 @@
   </nav>
   <div class="header-handlinger">
     <span id="dagerIgjenBadge" style="display:none;font-family:var(--font-ui);font-weight:600;font-size:11px;color:var(--dempet);letter-spacing:0.3px;white-space:nowrap;opacity:0.7;"></span>
-    <span id="filterBadge" style="display:none;font-family:var(--font-ui);font-weight:700;font-size:10px;color:white;padding:3px 8px;border-radius:10px;letter-spacing:0.3px;cursor:pointer;text-transform:uppercase;" onclick="åpneKategoriModal()"></span>
+    <span id="filterBadge" class="filter-merke" style="display:none;" onclick="åpneKategoriModal()"></span>
     <button class="header-knapp" id="sokKnapp" onclick="gåTilSøk()" title="Søk i alt">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
@@ -2032,16 +2097,16 @@
   </div>
 </header>
 
-<div id="offlineIndikator" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:500;background:var(--blekk);color:var(--papir-lys);font-size:12px;font-family:var(--font-body);padding:8px 14px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,0.2);align-items:center;gap:8px;">
-  <span style="width:8px;height:8px;border-radius:50%;background:var(--varsel);flex-shrink:0;"></span>
+<div id="offlineIndikator" class="offline-pille" style="display:none;">
+  <span class="offline-prikk"></span>
   Frakoblet — lagres lokalt, synkes senere
 </div>
 
-<div id="varselBanner" style="display:none;background:var(--aksent-lys);border-bottom:1px solid var(--aksent-mid);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;">
-  <span style="font-size:12px;color:var(--blekk);font-family:var(--font-body);">🔔 Tillat varsler for å se forfalte gjøremål på ikonet</span>
-  <div style="display:flex;gap:8px;flex-shrink:0;">
-    <button onclick="avvisVarsel()" style="background:none;border:1px solid var(--aksent-mid);border-radius:6px;padding:5px 10px;font-size:11px;font-family:var(--font-ui);font-weight:700;color:var(--dempet);cursor:pointer;">Ikke nå</button>
-    <button onclick="beOmVarsel()" style="background:var(--aksent);border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-family:var(--font-ui);font-weight:700;color:white;cursor:pointer;">Tillat</button>
+<div id="varselBanner" class="varsel-banner" style="display:none;">
+  <span class="varsel-tekst"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Tillat varsler for å se forfalte gjøremål på ikonet</span>
+  <div class="info-knapper">
+    <button class="mini-knapp" onclick="avvisVarsel()">Ikke nå</button>
+    <button class="mini-knapp primær" onclick="beOmVarsel()">Tillat</button>
   </div>
 </div>
 
@@ -2157,7 +2222,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v5.6</div>
+<div class="versjon">Prosjekt-planlegger v5.7</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2234,7 +2299,7 @@
         <button onclick="lukkModal('kategoriModal');åpneBackup()" style="flex:1;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sikkerhetskopier</button>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px;">
-        <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="flex:1;font-size:12px;background:var(--aksent);color:white;border:none;border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
+        <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="flex:1;font-size:12px;background:var(--aksent);color:var(--lys);border:none;border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
         <button onclick="lukkModal('kategoriModal');åpnePrintTidslinje()" style="flex:1;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Print</button>
       </div>
     </div>
@@ -2416,7 +2481,7 @@
     <div class="modal-body" style="padding:16px 22px;">
       <p style="font-size:13px;color:var(--dempet);margin:0 0 16px;line-height:1.5;" id="slettProsjektBeskrivelse"></p>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <button id="slettProsjektSlettKnapp" style="width:100%;font-size:13px;background:#e74c3c;color:white;border:none;border-radius:var(--rs);padding:12px 14px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">🗑 Slett permanent</button>
+        <button id="slettProsjektSlettKnapp" class="knapp-blokk fare knapp-full"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Slett permanent</button>
         <button onclick="lukkModal('slettProsjektModal')" class="knapp-sek" style="width:100%;font-size:12px;padding:10px 14px;">Avbryt</button>
       </div>
     </div>
@@ -2983,17 +3048,11 @@
       // Valider fargen: kun #rrggbb slipper inn i <style> (importerte/synkede
       // data kan ellers smugle inn ekstra CSS-regler). Ugyldig → nøytral default.
       const f = /^#[0-9a-fA-F]{6}$/.test(k.farge) ? k.farge : '#9490d4';
-      // Lys hover-bakgrunn (bland hvit 85%)
-      const hex2rgb = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
-      const [r,g,b] = hex2rgb(f);
-      const lysHex = `rgba(${r},${g},${b},0.1)`;
+      // Bare det som bærer kategorifargen; markering, filterpiller og hover
+      // styres av designet (piller og avkrysninger leser --kat).
       css += `
       .type-badge.${id}          { border-color:${f}; color:${f}; }
-      .aktivitet-kort.hover-${id}:hover { background:${lysHex}; }
-      .filter-pill.farge-${id}   { border-color:${f}; color:${f}; }
-      .filter-pill.aktiv-${id}   { background:${f}; color:white; border-color:${f}; }
-      .oppgave-kort.stripe-${id} { border-left-color:${f}; --kat:${f}; }
-      .oppgave-kort.stripe-${id}:hover { background:${lysHex}; }
+      .oppgave-kort.stripe-${id} { --kat:${f}; }
       .oppgave-badge.badge-${id} { border-color:${f}; color:${f}; }
       .tilknyttet-chip.chip-${id}{ border-color:${f}; color:${f}; }
       `;
@@ -3755,13 +3814,10 @@
     });
   }
   function _snoozeKnapperHtml(id) {
-    return `<div style="margin-top:14px;">
-      <div style="font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Utsett påminnelse</div>
-      <div style="display:flex;gap:8px;">
-        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 3600000)">${_svgIkon('klokke', 12)} 1 time</button>
-        <button class="knapp-sek" style="flex:1;font-size:12px;" onclick="_snoozVarsel('${id}', 86400000)">${_svgIkon('klokke', 12)} I morgen</button>
-      </div>
-    </div>`;
+    return _infoBlokk('Utsett påminnelsen', `<div class="info-knapper">
+        <button class="mini-knapp" onclick="_snoozVarsel('${id}', 3600000)">${_svgIkon('klokke', 12)} 1 time</button>
+        <button class="mini-knapp" onclick="_snoozVarsel('${id}', 86400000)">${_svgIkon('klokke', 12)} Til i morgen</button>
+      </div>`);
   }
 
   /* ──────────────────────────────
@@ -5385,7 +5441,8 @@
 
     const popup = document.createElement('div');
     popup.id = 'startProsjektPopup';
-    popup.style.cssText = 'position:absolute;z-index:300;background:var(--papir-lys);border:1.5px solid var(--linje);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:14px 16px;min-width:200px;';
+    popup.className = 'popup-boks';
+    popup.style.cssText = 'position:absolute;z-index:300;min-width:220px;';
 
     const rect = anchorBtn.getBoundingClientRect();
     popup.style.top = (rect.bottom + 6) + 'px';
@@ -5400,7 +5457,7 @@
     ['Alle', 'Ingen'].forEach(lbl => {
       const b = document.createElement('button');
       b.textContent = lbl;
-      b.style.cssText = "padding:4px 10px;border-radius:var(--rs);border:1px solid var(--linje);background:var(--papir-lys);color:var(--dempet);font-family:var(--font-ui);font-weight:700;font-size:10px;cursor:pointer;";
+      b.className = 'mini-knapp';
       b.onclick = () => {
         _startFilter.prosjekter = lbl === 'Alle' ? null : [];
         popup.remove();
@@ -5412,7 +5469,7 @@
 
     aktive.forEach(p => {
       const label = document.createElement('label');
-      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--blekk);font-weight:600;';
+      label.className = 'popup-valg';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = valgte.includes(p.id);
@@ -5443,19 +5500,19 @@
 
     // ── Prosjekter ──
     const pTit = document.createElement('div');
-    pTit.style.cssText = "font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:8px;";
+    pTit.className = 'popup-tittel';
     pTit.textContent = 'Prosjekter';
     container.appendChild(pTit);
     if (iAlle) {
       const n = document.createElement('div');
-      n.style.cssText = 'font-size:12px;color:var(--dempet);line-height:1.5;';
+      n.className = 'popup-merknad';
       n.textContent = 'Alle prosjekter vises. Velg ett prosjekt i menyen øverst for å avgrense.';
       container.appendChild(n);
     }
 
     (iAlle ? [] : prosjekter.filter(p => !p.arkivert)).forEach(p => {
       const label = document.createElement('label');
-      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--blekk);font-weight:600;';
+      label.className = 'popup-valg';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = _todoFilter.prosjekter.includes(p.id);
@@ -5475,9 +5532,9 @@
 
     // ── Periode ──
     const perDiv = document.createElement('div');
-    perDiv.style.cssText = 'margin-top:10px;border-top:1px solid var(--linje);padding-top:10px;';
+    perDiv.className = 'popup-skille';
     const perTit = document.createElement('div');
-    perTit.style.cssText = "font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:8px;";
+    perTit.className = 'popup-tittel';
     perTit.textContent = 'Periode';
     perDiv.appendChild(perTit);
 
@@ -5495,9 +5552,7 @@
     const oppdaterPeriodeBtns = () => {
       periodBtns.forEach(({ btn, val }) => {
         const aktiv = _todoFilter.periode === val;
-        btn.style.borderColor = aktiv ? 'var(--aksent)' : 'var(--linje)';
-        btn.style.background  = aktiv ? 'var(--aksent-lys)' : 'var(--papir-lys)';
-        btn.style.color       = aktiv ? 'var(--aksent)' : 'var(--dempet)';
+        btn.classList.toggle('aktiv', aktiv);
       });
     };
 
@@ -5509,7 +5564,7 @@
     const makeInput = (val, key) => {
       const inp = document.createElement('input');
       inp.type = 'date'; inp.value = val || '';
-      inp.style.cssText = "flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);box-sizing:border-box;";
+      inp.className = 'popup-dato';
       inp.oninput = () => {
         _todoFilter[key] = inp.value;
         clearTimeout(renderDebounce);
@@ -5523,7 +5578,7 @@
     perioder.forEach(({ val, label }) => {
       const btn = document.createElement('button');
       btn.textContent = label;
-      btn.style.cssText = "padding:5px 10px;border-radius:var(--rs);border:1.5px solid var(--linje);background:var(--papir-lys);color:var(--dempet);font-family:var(--font-ui);font-weight:700;font-size:11px;cursor:pointer;transition:all .1s;";
+      btn.className = 'mini-knapp';
       periodBtns.push({ btn, val });
       btn.onclick = () => {
         _todoFilter.periode = val;
@@ -5541,7 +5596,7 @@
     // ── Nullstill ──
     const reset = document.createElement('button');
     reset.textContent = 'Nullstill filter';
-    reset.style.cssText = "width:100%;margin-top:10px;padding:7px;border:1px solid var(--linje);border-radius:var(--rs);background:var(--papir-lys);color:var(--dempet);font-family:var(--font-ui);font-weight:700;font-size:11px;cursor:pointer;";
+    reset.className = 'mini-knapp knapp-full';
     reset.onclick = () => {
       _todoFilter = { prosjekter: null, periode: null, egStart: null, egSlutt: null };
       _oppdaterTodoFilterKnapp();
@@ -5556,7 +5611,8 @@
 
     const popup = document.createElement('div');
     popup.id = 'todoFilterPopup';
-    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--papir-lys);border:1.5px solid var(--linje);border-radius:var(--rs);padding:14px 16px;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
+    popup.className = 'popup-boks';
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;min-width:240px;margin-top:6px;';
     popup.addEventListener('click', e => e.stopPropagation());
 
     _renderFilterSeksjonInnhold(popup);
@@ -5683,23 +5739,24 @@
 
     const popup = document.createElement('div');
     popup.id = popupId;
-    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;background:var(--papir-lys);border:1.5px solid var(--linje);border-radius:var(--rs);padding:14px 16px;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.12);margin-top:4px;';
+    popup.className = 'popup-boks';
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;min-width:220px;margin-top:6px;';
     popup.addEventListener('click', e => e.stopPropagation());
 
     const pTittel = document.createElement('div');
-    pTittel.style.cssText = 'font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:8px;';
+    pTittel.className = 'popup-tittel';
     pTittel.textContent = 'Prosjekter';
     popup.appendChild(pTittel);
     if (iAlle) {
       const n = document.createElement('div');
-      n.style.cssText = 'font-size:12px;color:var(--dempet);line-height:1.5;max-width:210px;';
+      n.className = 'popup-merknad';
       n.textContent = 'Alle prosjekter vises. Velg ett prosjekt i menyen øverst for å avgrense.';
       popup.appendChild(n);
     }
 
     (iAlle ? [] : prosjekter.filter(p => !p.arkivert)).forEach(p => {
       const label = document.createElement('label');
-      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--blekk);font-weight:600;';
+      label.className = 'popup-valg';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = f.prosjekter.includes(p.id);
@@ -5723,7 +5780,7 @@
     // Nullstill
     const reset = document.createElement('button');
     reset.textContent = 'Nullstill filter';
-    reset.style.cssText = 'width:100%;margin-top:12px;padding:8px;border:1px solid var(--linje);border-radius:var(--rs);background:var(--papir-lys);color:var(--dempet);font-family:var(--font-ui);font-weight:700;font-size:11px;cursor:pointer;';
+    reset.className = 'mini-knapp knapp-full';
     reset.onclick = () => {
       if (tab === 'leveranse') _leveranseFilter = { prosjekter: null };
       else _oppgaveFilter = { prosjekter: null };
@@ -5906,15 +5963,17 @@
 
       const kort = document.createElement('div');
       kort.className = 'todo-kort' + (o.fullfort ? ' fullfort' : '');
-      kort.style.borderLeft = `3px solid ${getKat(oType)?.farge || 'var(--aksent-mid)'}`;
       kort.style.cursor = 'pointer';
       kort.onclick = () => {
         if (o._prosjektId && o._prosjektId !== aktivtProsjektId) byttProsjekt(o._prosjektId);
         åpneOppgaveInfo(o.id);
       };
 
+      // Milepæler har rund avkrysning (to-dos firkantet), i kategorifargen.
       const cb = document.createElement('div');
-      cb.className = 'todo-cb' + (o.fullfort ? ' sjekket' : '');
+      cb.className = 'todo-cb mp' + (o.fullfort ? ' sjekket' : '');
+      const katMp = getKat(oType);
+      if (katMp && katMp.farge) cb.style.setProperty('--kat', katMp.farge);
       cb.innerHTML = o.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
       cb.onclick = e => {
         e.stopPropagation();
@@ -6253,14 +6312,13 @@
   // Liten banner øverst i lista når et tag-filter er aktivt (med nullstill-knapp).
   function _tagFilterBanner() {
     const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 4px;';
+    div.className = 'tag-banner';
     const lbl = document.createElement('span');
-    lbl.style.cssText = 'font-size:12px;color:var(--dempet);';
-    lbl.textContent = 'Filtrert på tag:';
+    lbl.textContent = 'Filtrert på tagg';
     const pill = document.createElement('button');
-    pill.className = 'tilknyttet-chip';
-    pill.style.cssText = 'border-color:var(--aksent);color:var(--aksent);cursor:pointer;';
-    pill.textContent = '#' + _aktivTag + ' ✕';
+    pill.className = 'mini-knapp aktiv';
+    pill.title = 'Fjern filteret';
+    pill.textContent = '#' + _aktivTag + ' ×';
     pill.onclick = () => filtrerPaaTag(null);
     div.appendChild(lbl); div.appendChild(pill);
     return div;
@@ -6640,13 +6698,13 @@
 
     let html = '';
     if (!t.fullfort) {
-      const fristTekst = t.frist ? `${fristSpan(t.frist)} <span class="info-dato">${_kortDato(t.frist)}</span>` : '<span class="info-dato">Ingen frist</span>';
+      const fristTekst = _fristInfoLinje(t.frist);
       html += _infoBlokk('Frist', `<div class="info-linje">${fristTekst}</div>` + _datoKnapperHtml('todo', id, 'frist'));
     } else if (t.frist) {
       html += _infoBlokk('Frist', `<div class="info-linje"><span class="info-dato">${_kortDato(t.frist)}</span></div>`);
     }
     if (!t.fullfort) {
-      const pl = t.planlagt ? `${_planlagtMerke(t)} <span class="info-dato">${_kortDato(t.planlagt)}</span>` : '<span class="info-dato">Ikke planlagt</span>';
+      const pl = t.planlagt ? _planlagtMerke(t) : '<span class="info-dato">Ikke planlagt</span>';
       html += _infoBlokk('Når gjør du den?', `<div class="info-linje">${pl}</div>` + _datoKnapperHtml('todo', id, 'planlagt'));
       html += _venterBlokkHtml(t);
     }
@@ -7157,6 +7215,13 @@
       + '</div>';
   }
 
+  // Fristen i infovinduene: merket når fristen er nær, ellers bare datoen.
+  function _fristInfoLinje(frist, fullfort) {
+    if (!frist) return '<span class="info-dato">Ingen frist</span>';
+    const lbl = fristLabel(frist, fullfort);
+    return (!fullfort && lbl && lbl.nivå !== 'senere' ? fristSpan(frist) + ' ' : '') + `<span class="info-dato">${_kortDato(frist)}</span>`;
+  }
+
   // Blokk i infovinduene: etikett + innhold.
   function _infoBlokk(etikett, innhold, ekstraKlasse) {
     return `<div class="info-blokk${ekstraKlasse ? ' ' + ekstraKlasse : ''}"><div class="info-etikett">${etikett}</div>${innhold}</div>`;
@@ -7421,11 +7486,12 @@
       åpneAktivitetInfo(a.id);
     };
 
-    const erMilepel = a.leveranseType === 'milep\u00e6l';
+    const erMilepel = erResultatType(a);
     const badge = document.createElement('span');
     if (erMilepel) {
-      badge.style.cssText = `display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.3px;background:${getKat(a.type)?.farge || 'var(--dempet)'};color:white;white-space:nowrap;flex-shrink:0;`;
-      badge.textContent = '\u25c6 Milep\u00e6l';
+      badge.className = 'resultat-merke';
+      badge.style.setProperty('--kat', getKat(a.type)?.farge || 'var(--dempet)');
+      badge.textContent = '\u25c6 Resultat';
     } else if (a.type) {
       badge.className = `type-badge ${a.type}`;
       badge.textContent = getKat(a.type)?.label || a.type;
@@ -7439,7 +7505,7 @@
     }
     const tidStr = (!erMilepel && a.tid) ? ('kl.\u00a0' + a.tid + (a.tidTil ? '\u2013' + a.tidTil : '')) : '';
 
-    const prosjektChip = a._prosjektNavn ? `<span style="display:inline-block;margin-right:4px;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:${prosjekter.find(p=>p.id===a._prosjektId)?.farge||'var(--aksent)'}20;color:${prosjekter.find(p=>p.id===a._prosjektId)?.farge||'var(--aksent)'}">${a._prosjektNavn}</span>` : '';
+    const prosjektChip = a._prosjektNavn ? `<span class="start-prosjekt" style="--kat:${prosjekter.find(p => p.id === a._prosjektId)?.farge || 'var(--aksent)'};margin-right:6px;">${escapeHtml(a._prosjektNavn)}</span>` : '';
 
     const info = document.createElement('div');
     info.className = 'aktivitet-info';
@@ -7665,10 +7731,7 @@
       if (oppTodos.length > 0) {
         const fullf = oppTodos.filter(t => t.fullfort).length;
         const pst = Math.round(fullf / oppTodos.length * 100);
-        metaHtml += `<span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">`
-          + `<span style="width:44px;height:5px;border-radius:3px;background:var(--aksent-lys);overflow:hidden;display:inline-block;">`
-          + `<span style="display:block;height:100%;width:${pst}%;background:var(--aksent);border-radius:3px;"></span></span>`
-          + `<span style="font-size:11px;color:var(--dempet);">${fullf}/${oppTodos.length} to-do</span></span>`;
+        metaHtml += `<span class="fremdrift"><span class="plan-stolpe"><span style="width:${pst}%"></span></span>${fullf}/${oppTodos.length} to-do</span>`;
       }
       metaHtml += _tagChipsHtml(o.tagger);
       metaHtml += _tidChipHtml(o);
@@ -7726,95 +7789,58 @@
 
     let html = '';
 
-    // Status — kun vis hvis fullført
     if (o.fullfort) {
-      html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--aksent);flex-shrink:0;background:var(--aksent);display:flex;align-items:center;justify-content:center;">
-          <svg width="12" height="12" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <span style="font-size:13px;color:var(--dempet);">Fullført</span>
-      </div>`;
+      html += `<div class="info-blokk info-fullfort">Fullført${o.fullfortDato ? ' ' + _kortDato(o.fullfortDato) : ''}</div>`;
     }
 
     // Frist
     if (!o.fullfort) {
-      const fristTekst = fd ? `${fristSpan(o.frist)} <span class="info-dato">${_kortDato(o.frist)}</span>` : '<span class="info-dato">Ingen frist</span>';
-      html += _infoBlokk('Frist', `<div class="info-linje">${fristTekst}</div>` + _datoKnapperHtml('oppgave', id, 'frist'));
+      html += _infoBlokk('Frist', `<div class="info-linje">${_fristInfoLinje(o.frist)}</div>` + _datoKnapperHtml('oppgave', id, 'frist'));
     } else if (fd) {
       html += _infoBlokk('Frist', `<div class="info-linje"><span class="info-dato">${_kortDato(o.frist)}</span></div>`);
     }
 
-    // Tilknyttet aktivitet
+    // Tilknyttet leveranse, ellers kategori
     if (akt) {
-      const ad = new Date(akt.dato + 'T00:00:00');
-      html += `<div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tilknyttet leveranse</div>
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--aksent-lys);border-radius:var(--rs);cursor:pointer;" onclick="lukkModal('oppgaveInfoModal');åpneAktivitetInfo('${akt.id}')">
-          <span class="type-badge ${akt.type || ''}" style="font-size:10px;">${getKat(akt.type)?.label || ''}</span>
-          <span style="font-size:13px;font-weight:600;color:var(--blekk);">${akt.tittel}</span>
-          <span style="font-size:12px;color:var(--dempet);margin-left:auto;">${ad.getDate()}. ${MAANEDER[ad.getMonth()]}</span>
-        </div>
-      </div>`;
+      html += _infoBlokk('Leveranse', `<div class="info-lenke info-lenke-rad" onclick="lukkModal('oppgaveInfoModal');åpneAktivitetInfo('${akt.id}')">
+          <span class="type-badge ${akt.type || ''}">${escapeHtml(getKat(akt.type)?.label || '')}</span>
+          <span class="info-lenke-tittel">${escapeHtml(akt.tittel)}</span>
+          <span class="info-dato">${_kortDato(akt.dato)}</span>
+        </div>`);
     } else if (o.kategoriId) {
       const katI = getKat(o.kategoriId);
-      if (katI) html += `<div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Kategori</div>
-        <span class="type-badge ${katI.id}">${katI.label}</span>
-      </div>`;
+      if (katI) html += _infoBlokk('Kategori', `<span class="type-badge ${katI.id}">${escapeHtml(katI.label)}</span>`);
     }
 
-    // Notater
-    if (o.notat) {
-      html += `<div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Notater</div>
-        <div style="padding:12px;background:var(--aksent-lys);border-radius:var(--rs);font-size:13px;color:var(--blekk);line-height:1.5;">${o.notat}</div>
-      </div>`;
-    }
+    if (o.notat) html += _infoBlokk('Notater', `<div class="info-tekst">${o.notat}</div>`);
 
-    // Tagger
     if (o.tagger && o.tagger.length) {
-      html += `<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap;">
-        ${o.tagger.map(x => `<span class="tilknyttet-chip" style="border-color:var(--aksent);color:var(--aksent);">#${escapeHtml(x)}</span>`).join('')}
-      </div>`;
+      html += _infoBlokk('Tagger', `<div class="info-knapper">${o.tagger.map(x => `<span class="tilknyttet-chip">#${escapeHtml(x)}</span>`).join('')}</div>`);
     }
 
-    // Tidsestimat / faktisk tid
+    // Tidsestimat / faktisk tid (feltene er tatt ut av skjemaet, men vises
+    // når de finnes fra før)
     if (o.estimat || o.faktisk) {
       const rader = [];
-      if (o.estimat) rader.push(`Estimat: <strong>${_formatTid(o.estimat)}</strong>`);
-      if (o.faktisk) rader.push(`Faktisk: <strong>${_formatTid(o.faktisk)}</strong>`);
-      html += `<div style="margin-bottom:14px;padding:10px 12px;background:var(--aksent-lys);border-radius:var(--rs);font-size:13px;color:var(--blekk);display:flex;gap:16px;">${rader.join('')}</div>`;
+      if (o.estimat) rader.push(`Estimat ${_formatTid(o.estimat)}`);
+      if (o.faktisk) rader.push(`Faktisk ${_formatTid(o.faktisk)}`);
+      html += _infoBlokk('Tid', `<div class="info-linje"><span class="info-dato">${rader.join(' · ')}</span></div>`);
     }
 
-    // Utsett påminnelse (kun for åpne oppgaver med frist)
     if (o.frist && !o.fullfort) html += _snoozeKnapperHtml(id);
 
-    // Tilknyttede to-do elementer
+    // To-dos som hører til milepælen, med fremdrift
     const tilknyttedeTodos = todos.filter(t => t.oppgaveId === id);
     if (tilknyttedeTodos.length > 0) {
       const antallFullfort = tilknyttedeTodos.filter(t => t.fullfort).length;
-      const antallTotalt   = tilknyttedeTodos.length;
-      const prosent        = Math.round((antallFullfort / antallTotalt) * 100);
-
-      html += `<div style="margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <div style="font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;">To-do (${antallFullfort} av ${antallTotalt})</div>
-          <div style="font-size:11px;font-weight:700;color:var(--aksent);">${prosent}%</div>
-        </div>
-        <div style="height:5px;background:var(--linje);border-radius:3px;margin-bottom:10px;overflow:hidden;">
-          <div style="height:100%;width:${prosent}%;background:var(--aksent);border-radius:3px;transition:width .3s;"></div>
-        </div>`;
-
-      tilknyttedeTodos.forEach(t => {
-        html += `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--linje);cursor:pointer;" onclick="lukkModal('oppgaveInfoModal');åpneTodoInfo('${t.id}')">
-          <div style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.fullfort ? 'var(--aksent)' : 'var(--aksent-mid)'};flex-shrink:0;background:${t.fullfort ? 'var(--aksent)' : 'transparent'};display:flex;align-items:center;justify-content:center;">
-            ${t.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
-          </div>
-          <div style="flex:1;font-size:13px;color:var(--blekk);${t.fullfort ? 'opacity:0.4;text-decoration:line-through;' : ''}">${t.tittel}</div>
-          ${t.frist ? `<div style="font-size:11px;color:var(--dempet);">${fristLabel(t.frist, t.fullfort).tekst}</div>` : ''}
-        </div>`;
-      });
-      html += `</div>`;
+      const prosent = Math.round(antallFullfort / tilknyttedeTodos.length * 100);
+      const rader = tilknyttedeTodos.map(t => `<div class="sjekk-rad klikkbar${t.fullfort ? ' ferdig' : ''}" onclick="lukkModal('oppgaveInfoModal');åpneTodoInfo('${t.id}')">
+          <span class="sjekk-boks">${t.fullfort ? '✓' : ''}</span>
+          <span class="sjekk-tekst">${escapeHtml(t.tittel)}</span>
+          ${t.frist && !t.fullfort ? fristSpan(t.frist) : ''}
+        </div>`).join('');
+      html += _infoBlokk(`To-do · ${antallFullfort} av ${tilknyttedeTodos.length}`,
+        `<div class="plan-stolpe"><span style="width:${prosent}%"></span></div>` + rader);
     }
 
     document.getElementById('oppInfoModalBody').innerHTML = html;
@@ -7876,18 +7902,15 @@
     const body = document.getElementById('infoModalBody');
 
     const typeBadgeHtml = erMilepel
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.3px;background:${getKat(a.type)?.farge || 'var(--dempet)'};color:white;">◆ Milepæl</span>`
+      ? `<span class="resultat-merke" style="--kat:${getKat(a.type)?.farge || 'var(--dempet)'}">◆ Resultat</span>`
       : '';
     const katBadgeHtml = a.type ? `<span class="type-badge ${a.type}">${getKat(a.type)?.label || a.type}</span>` : '';
 
-    let html = `
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-        ${typeBadgeHtml}${katBadgeHtml}
-      </div>
-      <div style="font-size:13px;color:var(--dempet);margin-bottom:4px;">${datoStr}${tidStr ? ' · ' + tidStr : ''}</div>`;
+    let html = `<div class="info-knapper info-blokk">${typeBadgeHtml}${katBadgeHtml}</div>`
+      + _infoBlokk(erMilepel ? 'Dato' : 'Når', `<div class="info-linje"><span class="info-dato">${datoStr}${tidStr ? ' · ' + tidStr : ''}</span></div>`);
 
     if (a.beskrivelse) {
-      html += `<div style="margin-top:14px;padding:12px;background:var(--aksent-lys);border-radius:var(--rs);font-size:13px;color:var(--blekk);line-height:1.5;">${a.beskrivelse}</div>`;
+      html += _infoBlokk('Beskrivelse', `<div class="info-tekst">${a.beskrivelse}</div>`);
     }
 
     body.innerHTML = html;
@@ -7898,24 +7921,24 @@
     const konflikt = _avhengigKonflikt(a);
     if (avh.length || blokkerer.length) {
       const seksjon = document.createElement('div');
-      seksjon.style.cssText = 'margin-top:16px;';
+      seksjon.className = 'info-blokk';
       const lagLenke = (x, sjekkKonflikt) => {
         const iKonflikt = sjekkKonflikt && konflikt.some(p => p.id === x.id);
         const el = document.createElement('div');
-        el.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 10px;background:${iKonflikt ? '#fdeaea' : 'var(--aksent-lys)'};border-radius:var(--rs);font-size:13px;color:var(--blekk);cursor:pointer;margin-bottom:4px;`;
-        el.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${erResultatType(x) ? '◆ ' : ''}${escapeHtml(x.tittel)}</span>${iKonflikt ? '<span style="color:#c0392b;font-size:11px;margin-left:auto;white-space:nowrap;flex-shrink:0;">⚠ ikke ferdig i tide</span>' : ''}`;
+        el.className = 'info-lenke info-lenke-rad' + (iKonflikt ? ' konflikt' : '');
+        el.innerHTML = `<span class="info-lenke-tittel">${erResultatType(x) ? '◆ ' : ''}${escapeHtml(x.tittel)}</span>${iKonflikt ? '<span class="konflikt-tekst">Ikke ferdig i tide</span>' : ''}`;
         el.onclick = () => { lukkModal('aktivitetInfoModal'); åpneAktivitetInfo(x.id); };
         return el;
       };
       const overskrift = txt => {
         const h = document.createElement('div');
-        h.style.cssText = 'font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;';
+        h.className = 'info-etikett';
         h.textContent = txt;
         return h;
       };
       if (avh.length) { seksjon.appendChild(overskrift('Avhenger av')); avh.forEach(x => seksjon.appendChild(lagLenke(x, true))); }
       if (blokkerer.length) {
-        const h = overskrift('Blokkerer'); if (avh.length) h.style.marginTop = '10px';
+        const h = overskrift('Blokkerer'); if (avh.length) h.style.marginTop = '14px';
         seksjon.appendChild(h); blokkerer.forEach(x => seksjon.appendChild(lagLenke(x, false)));
       }
       body.appendChild(seksjon);
@@ -7925,7 +7948,7 @@
     const tilknyttede = oppgaver.filter(o => o.aktivitetId === a.id && !o.fullfort);
     if (tilknyttede.length > 0) {
       const header = document.createElement('div');
-      header.style.cssText = 'margin-top:18px;font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;';
+      header.className = 'info-etikett';
       header.textContent = `Milepæler (${tilknyttede.length})`;
       body.appendChild(header);
 
@@ -8005,7 +8028,8 @@
       const direkteTodos = todos.filter(t => t.aktivitetId === a.id && !t.oppgaveId);
       if (direkteTodos.length > 0) {
         const dtHeader = document.createElement('div');
-        dtHeader.style.cssText = 'margin-top:14px;font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;';
+        dtHeader.className = 'info-etikett';
+        dtHeader.style.marginTop = '18px';
         dtHeader.textContent = `To do (${direkteTodos.length})`;
         body.appendChild(dtHeader);
         const dtListe = document.createElement('div');
@@ -8144,16 +8168,17 @@
       const datoStr = d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
       const el = document.createElement('div');
       el.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--linje);cursor:pointer;';
-      el.onmouseover = () => el.style.background = 'var(--aksent-lys)';
-      el.onmouseout  = () => el.style.background = '';
+      el.classList.add('arkiv-rad');
       el.onclick = () => { lukkModal('arkivModal'); åpneAktivitetInfo(a.id); };
 
       const katPill = document.createElement('span');
       if (erMp && kat) {
-        katPill.style.cssText = `flex-shrink:0;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;font-family:var(--font-ui);background:${kat.farge};color:white;`;
+        katPill.className = 'resultat-merke';
+        katPill.style.setProperty('--kat', kat.farge);
         katPill.textContent = '◆';
       } else if (kat) {
-        katPill.style.cssText = `flex-shrink:0;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;font-family:var(--font-ui);border:1.5px solid ${kat.farge};color:${kat.farge};`;
+        katPill.className = 'type-badge';
+        katPill.style.cssText = `border-color:${kat.farge};color:${kat.farge};`;
         katPill.textContent = kat.label;
       }
       el.appendChild(katPill);
@@ -8289,9 +8314,10 @@
     if (gammel) { gammel.remove(); return; }
     const popup = document.createElement('div');
     popup.id = 'leveranseTypePopup';
-    popup.style.cssText = 'position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:var(--papir);border:1px solid var(--linje);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.13);z-index:999;display:flex;gap:4px;padding:6px;white-space:nowrap;';
-    popup.innerHTML = '<button class="todo-hurtig-knapp" style="font-size:12px;padding:6px 12px;" onclick="this.parentElement.remove();åpneAktivitetModal()">Aktivitet</button>'
-      + '<button class="todo-hurtig-knapp" style="font-size:12px;padding:6px 12px;" onclick="this.parentElement.remove();åpneMilepelModal()">Resultat</button>';
+    popup.className = 'popup-boks popup-rad';
+    popup.style.cssText = 'position:absolute;bottom:110%;left:50%;transform:translateX(-50%);z-index:999;';
+    popup.innerHTML = '<button class="mini-knapp" onclick="this.parentElement.remove();åpneAktivitetModal()">Aktivitet</button>'
+      + '<button class="mini-knapp" onclick="this.parentElement.remove();åpneMilepelModal()">Resultat</button>';
     btn.appendChild(popup);
     const lukk = e => { if (!popup.contains(e.target) && e.target !== btn) { popup.remove(); document.removeEventListener('click', lukk); } };
     setTimeout(() => document.addEventListener('click', lukk), 0);
@@ -9484,23 +9510,21 @@
 
     const lagValg = (label, sub, farge, onClick) => {
       const btn = document.createElement('button');
-      btn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--linje);border-radius:var(--rs);background:var(--papir-lys);cursor:pointer;text-align:left;transition:all .15s;font-family:var(--font-body);';
-      btn.onmouseover = () => { btn.style.borderColor = farge; btn.style.background = farge + '12'; };
-      btn.onmouseout  = () => { btn.style.borderColor = 'var(--linje)'; btn.style.background = 'var(--papir-lys)'; };
+      btn.className = 'valg-rad';
       btn.onclick = () => onClick();
 
       const dot = document.createElement('div');
-      dot.style.cssText = `width:14px;height:14px;border-radius:50%;background:${farge};flex-shrink:0;`;
+      dot.className = 'prikk';
+      dot.style.setProperty('--kat', farge);
       btn.appendChild(dot);
 
       const txt = document.createElement('div');
       txt.style.flex = '1';
-      txt.innerHTML = `<div style="font-weight:700;font-size:14px;color:var(--blekk);">${label}</div>
-        ${sub ? `<div style="font-size:11px;color:var(--dempet);margin-top:2px;">${sub}</div>` : ''}`;
+      txt.innerHTML = `<div class="valg-tittel">${label}</div>${sub ? `<div class="valg-under">${sub}</div>` : ''}`;
       btn.appendChild(txt);
 
       const pil = document.createElement('div');
-      pil.style.cssText = 'color:var(--dempet);font-size:16px;';
+      pil.className = 'valg-pil';
       pil.textContent = '›';
       btn.appendChild(pil);
 
@@ -9509,7 +9533,8 @@
 
     const lagSkille = (tekst) => {
       const skille = document.createElement('div');
-      skille.style.cssText = 'font-size:10px;font-weight:700;font-family:var(--font-ui);color:var(--dempet);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px;margin-bottom:-2px;padding:0 2px;';
+      skille.className = 'info-etikett';
+      skille.style.margin = '10px 0 0';
       skille.textContent = tekst;
       body.appendChild(skille);
     };
@@ -9523,34 +9548,35 @@
 
       const lagCheckbox = (p) => {
         const row = document.createElement('label');
-        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--linje);border-radius:var(--rs);background:var(--papir-lys);cursor:pointer;transition:all .15s;font-family:var(--font-body);';
+        row.className = 'valg-rad';
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.checked = valgte.has(p.id);
         cb.style.cssText = 'width:18px;height:18px;accent-color:' + p.farge + ';flex-shrink:0;cursor:pointer;';
         cb.onchange = () => {
           if (cb.checked) valgte.add(p.id); else valgte.delete(p.id);
-          row.style.borderColor = cb.checked ? p.farge : 'var(--linje)';
-          row.style.background = cb.checked ? p.farge + '12' : 'var(--papir-lys)';
+          row.classList.toggle('valgt', cb.checked);
           genBtn.disabled = valgte.size === 0;
           genBtn.style.opacity = valgte.size === 0 ? '0.5' : '1';
         };
         const dot = document.createElement('div');
-        dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${p.farge};flex-shrink:0;`;
+        dot.className = 'prikk';
+        dot.style.setProperty('--kat', p.farge);
         const txt = document.createElement('div');
-        txt.style.cssText = 'flex:1;font-weight:700;font-size:14px;color:var(--blekk);';
+        txt.className = 'valg-tittel';
         txt.textContent = p.navn;
         row.appendChild(cb);
         row.appendChild(dot);
         row.appendChild(txt);
-        if (cb.checked) { row.style.borderColor = p.farge; row.style.background = p.farge + '12'; }
+        if (cb.checked) row.classList.add('valgt');
         body.appendChild(row);
       };
 
       prosjekter.forEach(p => lagCheckbox(p));
 
       const genBtn = document.createElement('button');
-      genBtn.style.cssText = 'width:100%;padding:13px;margin-top:6px;background:var(--aksent);color:white;border:none;border-radius:var(--rs);font-family:var(--font-ui);font-weight:700;font-size:14px;cursor:pointer;';
+      genBtn.className = 'knapp-blokk primær knapp-full';
+      genBtn.style.marginTop = '10px';
       genBtn.textContent = 'Generer rapport';
       genBtn.onclick = () => {
         const ider = [...valgte];
@@ -9744,6 +9770,7 @@
     kategorier.forEach(k => {
       const btn = document.createElement('button');
       btn.className = 'filter-pill' + (globalKatFilter === k.id ? ' aktiv-' + k.id : ' farge-' + k.id);
+      btn.style.setProperty('--kat', k.farge);
       btn.textContent = k.label;
       btn.onclick = () => settGlobalFilter(k.id);
       knapper.appendChild(btn);
@@ -9761,7 +9788,7 @@
       if (kat) {
         badge.textContent = kat.label;
         badge.style.display = 'inline-block';
-        badge.style.background = kat.farge;
+        badge.style.setProperty('--kat', kat.farge);
       } else {
         badge.style.display = 'none';
       }
@@ -9787,13 +9814,11 @@
     const aktiveP = prosjekter.filter(p => !p.arkivert);
     if (aktiveP.length > 1) {
       const alle = document.createElement('div');
-      alle.style.cssText = `padding:10px 14px;font-size:13px;font-weight:${_alleAktiv()?'700':'500'};font-family:var(--font-body);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--blekk);transition:background .1s;border-bottom:1px solid var(--linje);`;
-      alle.onmouseenter = () => alle.style.background = 'var(--papir)';
-      alle.onmouseleave = () => alle.style.background = '';
+      alle.className = 'meny-valg' + (_alleAktiv() ? ' valgt' : '');
       alle.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span>Alle prosjekter</span>';
       if (_alleAktiv()) {
         const ck = document.createElement('span');
-        ck.style.cssText = 'margin-left:auto;font-size:14px;color:var(--aksent);';
+        ck.className = 'meny-hake';
         ck.textContent = '✓';
         alle.appendChild(ck);
       }
@@ -9802,16 +9827,15 @@
     }
     aktiveP.forEach(p => {
       const el = document.createElement('div');
-      el.style.cssText = `padding:10px 14px;font-size:13px;font-weight:${p.id===aktivtProsjektId && !_alleAktiv()?'700':'500'};font-family:var(--font-body);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--blekk);transition:background .1s;`;
-      el.onmouseenter = () => el.style.background = 'var(--papir)';
-      el.onmouseleave = () => el.style.background = '';
+      el.className = 'meny-valg' + (p.id === aktivtProsjektId && !_alleAktiv() ? ' valgt' : '');
       const dot = document.createElement('span');
-      dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${p.farge};flex-shrink:0;`;
+      dot.className = 'prikk';
+      dot.style.setProperty('--kat', p.farge);
       el.appendChild(dot);
       el.appendChild(document.createTextNode(p.navn));
       if (p.id === aktivtProsjektId && !_alleAktiv()) {
         const check = document.createElement('span');
-        check.style.cssText = 'margin-left:auto;font-size:14px;color:var(--aksent);';
+        check.className = 'meny-hake';
         check.textContent = '✓';
         el.appendChild(check);
       }
@@ -9855,11 +9879,11 @@
       navn.style.cssText = 'flex:1;font-size:12px;color:var(--blekk);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
       navn.textContent = p.navn;
       const arkBtn = document.createElement('button');
-      arkBtn.style.cssText = 'font-size:11px;padding:4px 10px;background:none;color:var(--dempet);border:1px solid var(--linje);border-radius:var(--rs);cursor:pointer;font-family:var(--font-ui);font-weight:600;flex-shrink:0;';
+      arkBtn.className = 'mini-knapp';
       arkBtn.textContent = 'Arkiver';
       arkBtn.onclick = () => arkiverProsjekt(p.id);
       const btn = document.createElement('button');
-      btn.style.cssText = 'font-size:11px;padding:4px 10px;background:none;color:#c0392b;border:1px solid #e6d0d0;border-radius:var(--rs);cursor:pointer;font-family:var(--font-ui);font-weight:600;flex-shrink:0;';
+      btn.className = 'mini-knapp fare';
       btn.textContent = 'Slett';
       btn.onclick = () => visSlettProsjektDialog(p.id);
       rad.appendChild(dot);
@@ -10111,7 +10135,7 @@
     if (!el) {
       el = document.createElement('div');
       el.id = 'synkStatus';
-      el.style.cssText = 'position:fixed;bottom:8px;right:8px;padding:6px 12px;border-radius:12px;font-size:11px;font-weight:700;font-family:var(--font-ui);z-index:9999;pointer-events:none;transition:opacity 0.5s;max-width:80vw;word-break:break-word;';
+      el.className = 'synk-pille';
       document.body.appendChild(el);
     }
     el.textContent = tekst;
