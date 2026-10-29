@@ -1633,6 +1633,7 @@
 
     /* ── Oppsett: sidepanel + innhold ───────────────────────────────────── */
     .oppsett { display: flex; align-items: stretch; min-height: calc(100vh - 64px); }
+    .oppsett > main { flex: 1; min-width: 0; }
     #sidepanel { display: none; }
     main { max-width: none; }
     @media (min-width: 900px) {
@@ -1749,7 +1750,8 @@
       background: transparent; border: 0; border-bottom: 2px solid var(--blekk); border-radius: 0;
       padding: 20px 10px; gap: 18px; align-items: center;
     }
-    .oppgave-kort { border-left: 6px solid var(--linje); padding-left: 14px; }
+    .oppgave-kort { border-left: 0; padding-left: 14px; }
+    .oppgave-kort:not(.fullfort)::before { content: ''; width: 13px; height: 13px; flex-shrink: 0; background: var(--kat, var(--linje)); transform: rotate(45deg); }
     /* Hvert kort ligger alene i sin sveip-beholder, så en eldre :last-child-regel
        fjernet streken på alle. */
     .todo-kort:last-child, .oppgave-kort:last-child { border-bottom: 2px solid var(--blekk); }
@@ -1772,10 +1774,8 @@
     .frist-snart   { background: var(--laks); color: #fff; }
     .frist-senere  { padding: 3px 0; font-family: var(--font-mono); font-weight: 500; text-transform: none; color: var(--dempet); letter-spacing: 0; }
     .tilknyttet-chip { border-radius: 2px; border-width: 1.5px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .02em; padding: 2px 7px; }
-
+    /* ── Tom liste ── */
     /* ── Seksjonsoverskrifter i Milepæler/Leveranser (tittelen står i sidehodet) */
-    #panel-oppgaver .seksjon-tittel, #panel-liste .seksjon-tittel { display: none; }
-    #panel-oppgaver .seksjon-header, #panel-liste .seksjon-header { justify-content: flex-end; margin-bottom: 18px; }
     .tom-melding { font-size: 16px; color: var(--dempet); border: 2px dashed var(--linje); background: transparent; padding: 34px 20px; }
 
     /* ── Vinduer ────────────────────────────────────────────────────────── */
@@ -1806,7 +1806,17 @@
         overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; justify-content: space-between;
       }
       body > header .faner::-webkit-scrollbar { display: none; }
-      body > header .fane { padding: 11px 9px 13px; font-size: 12px; letter-spacing: .07em; }
+      body > header .fane { padding: 11px 6px 13px; font-size: 11.5px; letter-spacing: .04em; }
+      .verktoy-rad { gap: 10px; margin-bottom: 16px; }
+      .kat-oversikt-rad, .verktoy-rad .filter-rad, .start-filterrad { gap: 8px; }
+      .kat-oversikt-knapp, .filter-rad .filter-pill.filter-pill { padding: 7px 12px; font-size: 14px; gap: 7px; }
+      .start-pille { padding: 7px 11px; font-size: 13px; }
+      .filtrer-knapp { font-size: 14px; padding: 4px 2px; }
+      .dagsplan-kort { padding: 4px 14px 10px; }
+      .dagsplan-tittel { font-size: 22px; }
+      .aktivitet-kort, .aktivitet-kort:last-child { padding: 14px 4px; gap: 10px; flex-wrap: wrap; }
+      .type-badge { min-width: 0; }
+      .aktivitet-tittel { font-size: 16px; }
       body > header .fane.aktiv { box-shadow: inset 0 -3px 0 var(--aksent); }
       .avatar-knapp, #sokKnapp { display: none; }
       .oppsett > main, main { padding: 20px 14px 72px; max-width: 640px; margin: 0 auto; }
@@ -1823,6 +1833,68 @@
       .gruppe-antall { font-size: 12px; }
       .maaned-label.gruppe-etikett { gap: 12px; margin-top: 24px; }
     }
+
+    /* ── Start: filterpiller, dagsplan og rader ─────────────────────────── */
+    .start-filterrad { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px; }
+    .start-pille {
+      border: 2px solid var(--blekk); background: var(--papir-lys); color: var(--blekk); border-radius: 2px;
+      padding: 8px 15px; font-family: var(--font-ui); font-weight: 700; font-size: 14px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .start-pille:hover { background: var(--aksent-lys); }
+    .start-pille.aktiv { background: var(--gul); }
+    .dagsplan-kort { background: var(--papir-lys); border: 2px solid var(--blekk); box-shadow: var(--skygge); padding: 6px 18px 14px; margin: 0 0 30px; }
+    .dagsplan-tittel { font-family: var(--font-ui); font-size: 26px; font-weight: 900; font-stretch: 70%; text-transform: uppercase; letter-spacing: -0.01em; color: var(--blekk); margin: 10px 0 4px; }
+    .dagsplan-rad .start-tekst { white-space: normal; }
+    .login-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: 72%; text-transform: uppercase; font-size: 40px; letter-spacing: -0.02em; line-height: .95; color: var(--blekk); }
+    .login-under { font-size: 15px; color: var(--dempet); margin-top: 8px; }
+    .login-knapp { display: inline-flex; align-items: center; gap: 10px; }
+    .dagsplan-tom { font-size: 15px; color: var(--dempet); padding: 4px 0; }
+    .dagsplan-seksjon { display: flex; align-items: center; gap: 12px; margin: 14px 0 2px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .dagsplan-seksjon .gruppe-strek { flex: 1; height: 2px; background: currentColor; opacity: .5; }
+    .dagsplan-forfalt { color: var(--fare); }
+    .dagsplan-idag { color: var(--aksent); }
+    .dagsplan-snart { color: var(--dempet); }
+    .dagsplan-rad { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--linje); }
+    .dagsplan-rad:last-child { border-bottom: none; }
+    .start-hake {
+      width: 22px; height: 22px; border-radius: 2px; border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: background .12s;
+    }
+    .start-hake-mp { border-radius: 50%; }
+    .start-hake:hover { background: var(--gul); }
+    .start-hake.sjekket { background: var(--kat, var(--blekk)); }
+    .start-tekst { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; color: var(--blekk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .start-merke { flex-shrink: 0; white-space: nowrap; font-size: 12px; }
+    .start-prosjekt {
+      flex-shrink: 0; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      color: var(--blekk); display: inline-flex; align-items: center; gap: 6px;
+    }
+    .start-prosjekt::before { content: ''; width: 8px; height: 8px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+
+    /* ── Kategoripiller på Milepæler og Leveranser ──────────────────────── */
+    .verktoy-rad .filter-rad { margin: 0; gap: 12px; }
+    .filter-rad .filter-pill.filter-pill {
+      border: 2px solid var(--blekk); color: var(--blekk); background: var(--papir-lys); border-radius: 2px;
+      padding: 9px 17px; font-size: 15px; letter-spacing: 0; display: inline-flex; align-items: center; gap: 9px;
+    }
+    .filter-rad .filter-pill.filter-pill::before { content: ''; width: 10px; height: 10px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .filter-rad .filter-pill.filter-pill:hover { background: var(--aksent-lys); }
+    .filter-rad .filter-pill[class*="aktiv"] { background: var(--gul); color: var(--blekk); border-color: var(--blekk); }
+    .filter-rad .filter-pill.ekskluder { opacity: .45; text-decoration: line-through; }
+
+    /* ── Leveranser ─────────────────────────────────────────────────────── */
+    .aktivitet-kort, .aktivitet-kort:last-child {
+      background: transparent; border: 0; border-bottom: 2px solid var(--blekk); border-radius: 0;
+      padding: 18px 10px; gap: 16px; align-items: center;
+    }
+    .aktivitet-kort:hover, .aktivitet-kort[class*="hover-"]:hover { background: rgba(235,226,122,.28); }
+    .aktivitet-tittel { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); }
+    .aktivitet-meta { font-family: var(--font-mono); font-size: 13px; color: var(--dempet); margin-top: 4px; }
+    .type-badge { border-radius: 2px; border-width: 2px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; padding: 3px 8px; min-width: 124px; text-align: center; }
+    .aktivitet-kort .ikon-knapp { border: 2px solid var(--blekk); border-radius: 2px; background: var(--papir-lys); color: var(--blekk) !important; height: 30px; min-width: 30px; }
+    .aktivitet-kort .ikon-knapp:hover { background: var(--gul); border-color: var(--blekk); }
   </style>
 </head>
 <body>
@@ -1838,10 +1910,10 @@
     </svg>
   </svg>
   <div style="text-align:center;">
-    <div style="font-family:var(--font-ui);font-weight:800;font-size:20px;color:var(--tekst);font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1;">Prosjekter</div>
-    <div style="font-family:var(--font-body);font-size:13px;color:var(--tekst-sek);margin-top:4px;">Logg inn for å fortsette</div>
+    <div class="login-tittel">Prosjekt&shy;planlegger</div>
+    <div class="login-under">Logg inn for å fortsette</div>
   </div>
-  <button onclick="window._fbSignIn()" style="background:var(--grønn);color:white;border:none;border-radius:10px;padding:13px 28px;font-family:var(--font-ui);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+  <button class="knapp-blokk primær login-knapp" onclick="window._fbSignIn()">
     <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
     Logg inn med Google
   </button>
@@ -1976,33 +2048,26 @@
   <!-- Leveranser / liste -->
   <div id="panel-liste" class="panel">
     <div class="side-hode" id="sideHode-liste"></div>
-    <div class="seksjon-header">
-      <div class="seksjon-tittel">Alle leveranser</div>
-      <div style="display:flex;gap:6px;align-items:stretch;">
-        <button class="legg-til-knapp" onclick="åpneAktivitetModal()">+ Aktivitet</button>
-        <button class="legg-til-knapp" onclick="åpneMilepelModal()">+ Resultat</button>
-        <button class="todo-filter-knapp" id="leveranseFilterKnapp" onclick="visProsjektFilterPopup(this,'leveranse')" title="Filter" style="position:relative;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        </button>
-      </div>
+    <div class="verktoy-rad">
+      <div class="filter-rad" id="aktivitetFilterRad"></div>
+      <button class="filtrer-knapp" id="leveranseFilterKnapp" onclick="visProsjektFilterPopup(this,'leveranse')" title="Velg prosjekter">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtrer prosjekter
+      </button>
     </div>
-    <div class="filter-rad" id="aktivitetFilterRad"></div>
     <div class="kort-container" id="aktivitetListe"></div>
   </div>
 
   <!-- Oppgaver -->
   <div id="panel-oppgaver" class="panel">
     <div class="side-hode" id="sideHode-oppgaver"></div>
-    <div class="seksjon-header">
-      <div class="seksjon-tittel">Milepæler</div>
-      <div style="display:flex;gap:6px;align-items:stretch;">
-        <button class="legg-til-knapp" onclick="åpneOppgaveModal()">+ Legg til milepæl</button>
-        <button class="todo-filter-knapp" id="oppgaveFilterKnapp" onclick="visProsjektFilterPopup(this,'oppgave')" title="Filter" style="position:relative;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        </button>
-      </div>
+    <div class="verktoy-rad">
+      <div class="filter-rad" id="filterRad"></div>
+      <button class="filtrer-knapp" id="oppgaveFilterKnapp" onclick="visProsjektFilterPopup(this,'oppgave')" title="Velg prosjekter">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtrer prosjekter
+      </button>
     </div>
-    <div class="filter-rad" id="filterRad"></div>
     <div class="kort-container" id="oppgaveListe"></div>
   </div>
 
@@ -2829,7 +2894,7 @@
       .aktivitet-kort.hover-${id}:hover { background:${lysHex}; }
       .filter-pill.farge-${id}   { border-color:${f}; color:${f}; }
       .filter-pill.aktiv-${id}   { background:${f}; color:white; border-color:${f}; }
-      .oppgave-kort.stripe-${id} { border-left-color:${f}; }
+      .oppgave-kort.stripe-${id} { border-left-color:${f}; --kat:${f}; }
       .oppgave-kort.stripe-${id}:hover { background:${lysHex}; }
       .oppgave-badge.badge-${id} { border-color:${f}; color:${f}; }
       .tilknyttet-chip.chip-${id}{ border-color:${f}; color:${f}; }
@@ -3226,7 +3291,7 @@
         <h1 class="side-tittel">${escapeHtml(def.tittel())}</h1>
         <div class="side-under">${escapeHtml(def.under)}</div>
       </div>`;
-    if (fane === 'todo') {
+    if (fane === 'todo' || fane === 'oppgaver' || fane === 'liste') {
       const h = document.createElement('div');
       h.className = 'side-handlinger';
       const knapp = (tekst, primær, fn) => {
@@ -3236,8 +3301,15 @@
         b.onclick = () => fn(b);
         h.appendChild(b);
       };
-      knapp('+ Milepæl', false, () => åpneOppgaveModal());
-      knapp('+ Ny to-do', true, () => åpneTodoModal());
+      if (fane === 'todo') {
+        knapp('+ Milepæl', false, () => åpneOppgaveModal());
+        knapp('+ Ny to-do', true, () => åpneTodoModal());
+      } else if (fane === 'oppgaver') {
+        knapp('+ Ny milepæl', true, () => åpneOppgaveModal());
+      } else {
+        knapp('+ Aktivitet', false, () => åpneAktivitetModal());
+        knapp('+ Resultat', true, () => åpneMilepelModal());
+      }
       el.appendChild(h);
     }
   }
@@ -4480,6 +4552,7 @@
       else if (state === 3) cls += 'farge-' + k.id + ' ekskluder';
       else cls += 'farge-' + k.id;
       pill.className = cls;
+      pill.style.setProperty('--kat', k.farge);
       pill.textContent = k.label;
       pill.title = state === 1 ? 'Trykk for å vise kun denne' : state === 2 ? 'Trykk for å skjule denne' : 'Trykk for å vise alle';
       pill.onclick = () => {
@@ -4842,7 +4915,7 @@
   // vist direkte på Start under søkefeltet. Huk av for å fullføre.
   function _lagDagsplan() {
     const kort = document.createElement('div');
-    kort.style.cssText = 'background:var(--hvit);border:1px solid var(--kant);border-radius:var(--r);padding:4px 14px 12px;margin-bottom:12px;';
+    kort.className = 'dagsplan-kort';
     const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
     const iDagStr = _lokalDatoStr(iDag);
     const imorgen = new Date(iDag); imorgen.setDate(iDag.getDate() + 1);
@@ -4858,13 +4931,13 @@
     oppgaver.forEach(o => sorter(o, 'oppgave'));
 
     const tittelRad = document.createElement('div');
-    tittelRad.style.cssText = "font-size:11px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.5px;color:var(--tekst-sek);margin:10px 0 2px;";
+    tittelRad.className = 'dagsplan-tittel';
     tittelRad.textContent = 'Dagsplan';
     kort.appendChild(tittelRad);
 
     if (!forfalt.length && !idag.length && !imor.length) {
       const tom = document.createElement('div');
-      tom.style.cssText = 'font-size:13px;color:var(--tekst-sek);padding:4px 0 4px;';
+      tom.className = 'dagsplan-tom';
       tom.textContent = 'Ingenting forfaller de nærmeste dagene.';
       kort.appendChild(tom);
       return kort;
@@ -4872,27 +4945,30 @@
     const lagRad = ({ item, type }) => {
       const tit = type === 'todo' ? item.tittel : item.beskrivelse;
       const rad = document.createElement('div');
-      rad.style.cssText = 'display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--kant);';
+      rad.className = 'dagsplan-rad';
       const cb = document.createElement('div');
-      cb.style.cssText = 'width:20px;height:20px;border-radius:50%;border:2px solid var(--grønn);flex-shrink:0;cursor:pointer;';
+      cb.className = 'start-hake' + (type === 'todo' ? '' : ' start-hake-mp');
+      const kat = item.kategoriId ? getKat(item.kategoriId) : null;
+      if (kat && kat.farge) cb.style.setProperty('--kat', kat.farge);
+      cb.title = 'Merk som fullført';
       cb.onclick = () => { (type === 'todo' ? toggleTodo : toggleOppgave)(item.id); renderStartside(); };
       const tekst = document.createElement('span');
-      tekst.style.cssText = 'flex:1;font-size:14px;color:var(--tekst);';
+      tekst.className = 'start-tekst';
       tekst.textContent = tit;
       rad.appendChild(cb); rad.appendChild(tekst);
       return rad;
     };
-    const seksjon = (tittel, arr, farge) => {
+    const seksjon = (tittel, arr, nivå) => {
       if (!arr.length) return;
       const h = document.createElement('div');
-      h.style.cssText = `font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.5px;color:${farge};margin:12px 0 2px;`;
-      h.textContent = `${tittel} (${arr.length})`;
+      h.className = 'dagsplan-seksjon dagsplan-' + nivå;
+      h.innerHTML = `<span>${tittel}</span><span class="gruppe-strek"></span><span>${_to(arr.length)}</span>`;
       kort.appendChild(h);
       arr.forEach(x => kort.appendChild(lagRad(x)));
     };
-    seksjon('Forfalt', forfalt, '#c0392b');
-    seksjon('I dag', idag, 'var(--grønn)');
-    seksjon('I morgen', imor, 'var(--tekst-sek)');
+    seksjon('Forfalt', forfalt, 'forfalt');
+    seksjon('I dag', idag, 'idag');
+    seksjon('I morgen', imor, 'snart');
     return kort;
   }
 
@@ -4917,8 +4993,7 @@
 
     // ── Filter-rad (same style as todo-hurtigknapper) ──
     const filterRad = document.createElement('div');
-    filterRad.className = 'todo-hurtigknapper';
-    filterRad.style.flexWrap = 'wrap';
+    filterRad.className = 'start-filterrad';
 
     // Prosjektfilter-knapp
     const aktive = prosjekter.filter(p => !p.arkivert);
@@ -4926,7 +5001,7 @@
       const pBtn = document.createElement('button');
       const alleValgt = _alleAktiv() || !_startFilter.prosjekter || _startFilter.prosjekter.length === aktive.length;
       pBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> ${alleValgt ? 'Alle prosjekter' : _startFilter.prosjekter.length + ' prosjekt'}`;
-      pBtn.style.cssText = `padding:6px 12px;border-radius:20px;border:1.5px solid ${alleValgt ? 'var(--kant)' : 'var(--grønn)'};background:${alleValgt ? 'var(--hvit)' : 'var(--grønn-lys)'};color:${alleValgt ? 'var(--tekst-sek)' : 'var(--grønn)'};font-family:var(--font-ui);font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:5px;`;
+      pBtn.className = 'start-pille' + (alleValgt ? '' : ' aktiv');
       pBtn.onclick = () => _visStartProsjektFilter(pBtn);
       filterRad.appendChild(pBtn);
     }
@@ -4943,7 +5018,7 @@
       const btn = document.createElement('button');
       btn.textContent = label;
       const aktiv = _startFilter.periode === val;
-      btn.style.cssText = `padding:6px 12px;border-radius:20px;border:1.5px solid ${aktiv ? 'var(--grønn)' : 'var(--kant)'};background:${aktiv ? 'var(--grønn-lys)' : 'var(--hvit)'};color:${aktiv ? 'var(--grønn)' : 'var(--tekst-sek)'};font-family:var(--font-ui);font-weight:700;font-size:11px;cursor:pointer;transition:all .12s;`;
+      btn.className = 'start-pille' + (aktiv ? ' aktiv' : '');
       btn.onclick = () => { _startFilter.periode = val; renderStartside(); };
       filterRad.appendChild(btn);
     });
@@ -5047,17 +5122,18 @@
     };
 
     const hake = document.createElement('div');
-    hake.style.cssText = `width:20px;height:20px;border-radius:${erTodo ? '50%' : '5px'};border:2px solid ${pFarge};flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s;`;
+    hake.className = 'start-hake' + (erTodo ? '' : ' start-hake-mp');
+    hake.style.setProperty('--kat', pFarge);
     hake.title = 'Merk som fullført';
     hake.onclick = e => {
       e.stopPropagation();
-      hake.style.background = pFarge;
+      hake.classList.add('sjekket');
       hake.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       setTimeout(() => { _toggleStartItem(erTodo, item.id, pid); }, 300);
     };
 
     const tekst = document.createElement('div');
-    tekst.style.cssText = 'flex:1;font-size:13px;color:var(--tekst);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    tekst.className = 'start-tekst';
     tekst.textContent = erTodo ? (item.tittel || '(uten tittel)') : (item.beskrivelse || '(uten navn)');
 
     row.appendChild(hake);
@@ -5069,14 +5145,14 @@
       const diff = Math.abs(arbeidsdagerMellom(fd, iDag));
       const badge = document.createElement('span');
       badge.textContent = calDiff === 1 ? 'i går' : `${diff}d siden`;
-      badge.style.cssText = 'font-size:10px;font-weight:700;color:#d94f4f;background:#fdeaea;padding:2px 7px;border-radius:8px;flex-shrink:0;white-space:nowrap;';
+      badge.className = 'frist-tekst frist-forfalt start-merke';
       row.appendChild(badge);
     } else if (item.frist) {
       const fl = fristLabel(item.frist);
       if (fl) {
         const badge = document.createElement('span');
         badge.textContent = fl.tekst;
-        badge.style.cssText = `font-size:10px;font-weight:${fl.vekt};color:${fl.farge};flex-shrink:0;white-space:nowrap;`;
+        badge.className = `frist-tekst frist-${fl.nivå || 'senere'} start-merke`;
         row.appendChild(badge);
       }
     }
@@ -5084,7 +5160,8 @@
     if (isMulti && item._prosjektNavn) {
       const chip = document.createElement('span');
       chip.textContent = item._prosjektNavn;
-      chip.style.cssText = `font-size:10px;font-weight:700;color:${pFarge};background:${pFarge}22;padding:2px 6px;border-radius:8px;flex-shrink:0;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
+      chip.className = 'start-prosjekt';
+      chip.style.setProperty('--kat', pFarge);
       row.appendChild(chip);
     }
 
@@ -6791,6 +6868,7 @@
         else if (state === 3) cls += 'farge-' + k.id + ' ekskluder';
         else cls += 'farge-' + k.id;
         pill.className = cls;
+        pill.style.setProperty('--kat', k.farge);
         pill.textContent = k.label;
         pill.title = state === 1 ? 'Trykk for å vise kun denne' : state === 2 ? 'Trykk for å skjule denne' : 'Trykk for å vise alle';
         pill.onclick = () => {
