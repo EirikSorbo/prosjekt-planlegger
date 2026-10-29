@@ -130,7 +130,6 @@
       --lys-dempet:   rgba(255,255,255,.75);
       --topp-tekst:   #e9e2d8;   /* ikoner i toppstripen */
       --topp-dempet:  #cfc7bc;   /* faner i toppstripen */
-      --topp-skille:  #8a827a;   /* skilletegnet i brødsmulen */
       --kant-sterk:   #4a453f;   /* rammen rundt de store feltene */
       --plassholder:  #8b8378;
       --fare-lys:     #f6dcd6;
@@ -161,7 +160,7 @@
       --blekk: #15202b; --papir: #f2f5f7; --papir-lys: #fbfcfd; --sand: #e2e9ee; --topp: #142231;
       --aksent: #12807e; --aksent-lys: #d5ecea; --aksent-mid: #93cbc7;
       --blå: #2f5bd3; --gul: #f3d27a; --laks: #e88f73; --fare: #c23b3b; --dempet: #5a6874; --linje: #cfd9e0;
-      --topp-tekst: #dde7ef; --topp-dempet: #b4c3cf; --topp-skille: #7a8a97; --kant-sterk: #394957;
+      --topp-tekst: #dde7ef; --topp-dempet: #b4c3cf; --kant-sterk: #394957;
       --plassholder: #8291a0; --fare-lys: #f5dcdc;
       --hover: rgba(243,210,122,.30); --hover-mork: rgba(21,32,43,.07); --overlay: rgba(21,32,43,.5);
     }
@@ -169,7 +168,7 @@
       --blekk: #1e2a20; --papir: #f3f0e6; --papir-lys: #fbf9f2; --sand: #e6e0cc; --topp: #1f3324;
       --aksent: #2f6f47; --aksent-lys: #dbeadf; --aksent-mid: #a6caaf;
       --blå: #2b5f8f; --gul: #e8c25e; --laks: #d4805a; --fare: #b2412c; --dempet: #636d5e; --linje: #d5cfbb;
-      --topp-tekst: #e3e9dc; --topp-dempet: #bfcab8; --topp-skille: #84907e; --kant-sterk: #3b4a3e;
+      --topp-tekst: #e3e9dc; --topp-dempet: #bfcab8; --kant-sterk: #3b4a3e;
       --plassholder: #878f80; --fare-lys: #f3ddd5;
       --hover: rgba(232,194,94,.30); --hover-mork: rgba(30,42,32,.07); --overlay: rgba(30,42,32,.5);
       --hjorne: 4px;
@@ -178,7 +177,7 @@
       --blekk: #18181b; --papir: #f5f5f6; --papir-lys: #ffffff; --sand: #ececef; --topp: #18181b;
       --aksent: #5b5bd6; --aksent-lys: #e8e8fb; --aksent-mid: #bdbdf0;
       --blå: #2563eb; --gul: #fde68a; --laks: #f59e7b; --fare: #dc2626; --dempet: #6b6b74; --linje: #e3e3e8;
-      --topp-tekst: #e4e4e7; --topp-dempet: #a1a1aa; --topp-skille: #71717a; --kant-sterk: #a1a1aa;
+      --topp-tekst: #e4e4e7; --topp-dempet: #a1a1aa; --kant-sterk: #a1a1aa;
       --plassholder: #a1a1aa; --fare-lys: #fde2e2;
       --hover: rgba(253,230,138,.38); --hover-mork: rgba(24,24,27,.05); --overlay: rgba(24,24,27,.4);
       --skygge: 0 1px 2px rgba(24,24,27,.06), 0 4px 14px rgba(24,24,27,.07);
@@ -193,7 +192,7 @@
       --blekk: #ebe6dd; --papir: #141518; --papir-lys: #1c1e22; --sand: #101114; --topp: #0b0c0e;
       --aksent: #ff7b5c; --aksent-lys: #3a231d; --aksent-mid: #7c4434;
       --blå: #86a2ff; --gul: #6e6224; --laks: #e88f73; --fare: #ff6a5a; --dempet: #9c968c; --linje: #2f3237;
-      --topp-tekst: #e2ddd4; --topp-dempet: #a9a399; --topp-skille: #6d6861; --kant-sterk: #8a857d;
+      --topp-tekst: #e2ddd4; --topp-dempet: #a9a399; --kant-sterk: #8a857d;
       --plassholder: #6f6a63; --fare-lys: #3d1f1b; --ok: #5cc08a; --varsel: #e3a04a; --stjerne: #e7b443;
       --hover: rgba(110,98,36,.35); --hover-mork: rgba(255,255,255,.06); --hover-lys: rgba(255,255,255,.08);
       --overlay: rgba(0,0,0,.62);
@@ -1646,8 +1645,6 @@
       font-weight: 900; font-size: 17px; text-transform: uppercase;
     }
     #prosjektTittel { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
-    .brodsmule-skille { color: var(--topp-skille); font-weight: 400; }
-    .brodsmule-app { text-transform: uppercase; font-stretch: var(--tittel-bredde, 85%); font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
     .logo > svg { color: var(--lys); opacity: .55; }
 
     body > header .faner {
@@ -1684,7 +1681,6 @@
       .oppsett > main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 44px 52px 90px; }
       #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 940px; margin: 0; }
     }
-    @media (max-width: 1180px) { .brodsmule-app, .brodsmule-skille { display: none; } }
 
     .sp-gruppe { font-family: var(--font-mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--dempet); margin: 0 0 12px 22px; }
     .sp-lenke {
@@ -1939,17 +1935,30 @@
     .tp-merknad[open] > summary::before, .tp-imorgen[open] > summary::before { content: '▾'; }
     .tp-merknad > summary:hover, .tp-imorgen > summary:hover { color: var(--blekk); }
     .tp-merknad > div { white-space: pre-line; font-size: 14px; line-height: 1.5; color: var(--blekk); padding: 0 0 8px; }
-    .plan-under {
-      display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 12px 0 8px; padding-top: 12px;
-      border-top: 2px solid var(--blekk); font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .06em; color: var(--blekk);
+    .imorgen-kort { padding-top: 4px; padding-bottom: 4px; }
+    .plan-tom-melding { margin-bottom: 30px; line-height: 1.6; }
+    .plan-tom-melding svg { vertical-align: -2px; }
+    /* Stripen på Start som fører til Dagens plan (v6.1) */
+    .plan-stripe {
+      display: flex; align-items: center; gap: 14px; width: 100%; margin: 0 0 26px; padding: 0 14px 0 0; text-align: left;
+      background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge-liten);
+      color: var(--blekk); font-family: var(--font-body); cursor: pointer; overflow: hidden;
     }
-    .plan-under span:last-child { color: var(--blå); }
-    .plan-kort > .tp-imorgen { border-top: 1px solid var(--linje); margin-top: 6px; }
-    .plan-tom > .tp-imorgen { flex-basis: 100%; }
-    .plan-tom > .tp-imorgen[open] { background: var(--papir-lys); border: var(--ramme); box-shadow: var(--skygge); padding: 0 16px 8px; }
-    .plan-tom > .tp-imorgen > summary { color: var(--dempet); padding: 2px 0; }
-    .plan-tom > .tp-imorgen[open] > summary { color: var(--blå); padding: 10px 0 6px; }
+    .plan-stripe:hover { background: var(--hover); }
+    .plan-stripe-etikett {
+      align-self: stretch; display: flex; align-items: center; gap: 8px; padding: 11px 14px; background: var(--blekk); color: var(--motfarge);
+      font: 700 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
+    }
+    .plan-stripe.naa .plan-stripe-etikett { background: var(--gul); color: var(--blekk); }
+    .plan-stripe-tekst { flex: 1; min-width: 0; padding: 11px 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .plan-stripe-merke { flex-shrink: 0; font: 700 12px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--blå); white-space: nowrap; }
+    .plan-stripe > svg { flex-shrink: 0; color: var(--dempet); }
+    @media (max-width: 600px) {
+      .plan-stripe { gap: 10px; padding-right: 10px; }
+      .plan-stripe-etikett { padding: 11px 12px; }
+      .plan-stripe-etikett span { display: none; }
+      .plan-stripe-tekst { font-size: 14px; }
+    }
     .start-hake.sjekket, .slett-sirkel, .fullfor-sirkel { color: var(--lys); }
     .start-hake {
       width: 22px; height: 22px; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
@@ -1966,6 +1975,7 @@
       color: var(--blekk); display: inline-flex; align-items: center; gap: 6px;
     }
     .start-prosjekt::before { content: ''; width: 8px; height: 8px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .aktivitet-meta .start-prosjekt { margin-right: 10px; vertical-align: 1px; }
 
     /* ── Kategoripiller på Milepæler og Leveranser ──────────────────────── */
     .verktoy-rad .filter-rad { margin: 0; gap: 12px; }
@@ -2199,12 +2209,12 @@
   <div class="logo" style="cursor:pointer;position:relative;" onclick="toggleProsjektMeny()" title="Bytt prosjekt">
     <span class="logo-rute" id="logoRute" aria-hidden="true"></span>
     <span id="prosjektTittel">Prosjekter</span>
-    <span class="brodsmule-skille">/</span><span class="brodsmule-app">Prosjektplanlegger</span>
     <svg width="10" height="10" viewBox="0 0 10 10" style="opacity:0.5;flex-shrink:0;"><path d="M2 3.5L5 6.5L8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div id="prosjektMeny" class="popup-boks meny-boks" style="display:none;"></div>
   </div>
   <nav class="faner">
     <button class="fane aktiv" data-fane="start" onclick="byttFane('start', this)">Start</button>
+    <button class="fane" data-fane="plan" onclick="byttFane('plan', this)">Plan</button>
     <button class="fane" data-fane="todo" onclick="byttFane('todo', this)">To do</button>
     <button class="fane" data-fane="oppgaver" onclick="byttFane('oppgaver', this)">Milepæler</button>
     <button class="fane" data-fane="liste" onclick="byttFane('liste', this)">Leveranser</button>
@@ -2253,6 +2263,12 @@
     </div>
     <div id="startSokResultater" style="display:none;"></div>
     <div id="startInnhold"></div>
+  </div>
+
+  <!-- Dagens plan -->
+  <div id="panel-plan" class="panel">
+    <div class="side-hode" id="sideHode-plan"></div>
+    <div id="planInnhold"></div>
   </div>
 
   <!-- To do -->
@@ -2353,7 +2369,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.0</div>
+<div class="versjon">Prosjekt-planlegger v6.1</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -3171,8 +3187,27 @@
   ];
   let kategorier = [];
 
-  function getKat(id) {
-    return kategorier.find(k => k.id === id) || null;
+  // Kategorien med id-en. Med pid fra et annet prosjekt (rader i «Alle
+  // prosjekter») slås den opp i det prosjektets kategorier. Uten treff i det
+  // aktive prosjektet letes det i de andre, så en rad aldri viser den rå id-en.
+  function getKat(id, pid) {
+    if (!id) return null;
+    const iProsjekt = p => _parseSafe(localStorage.getItem('lp_' + p + '_k'), []).find(k => k && k.id === id) || null;
+    if (pid && pid !== aktivtProsjektId) { const k = iProsjekt(pid); if (k) return k; }
+    const lokal = kategorier.find(k => k.id === id);
+    if (lokal) return lokal;
+    for (const p of prosjekter) {
+      if (p.id === aktivtProsjektId || p.id === pid) continue;
+      const k = iProsjekt(p.id);
+      if (k) return k;
+    }
+    return null;
+  }
+  const _gyldigFarge = f => /^#[0-9a-fA-F]{6}$/.test(f || '');
+  // Prosjektmerket på rader i «Alle prosjekter»: farget rute og navnet i mono, som på Start.
+  function _prosjektChipHtml(pid, navn) {
+    const f = prosjekter.find(p => p.id === pid)?.farge;
+    return `<span class="start-prosjekt" style="--kat:${_gyldigFarge(f) ? f : 'var(--blekk)'}">${escapeHtml(navn || '')}</span>`;
   }
   function katIds() { return kategorier.map(k => k.id); }
 
@@ -3541,6 +3576,7 @@
   // står fanene i toppstripen.
   const _SIDEHODER = {
     start:    { tittel: () => _hilsen(), under: 'Dette skjer i dag og de nærmeste dagene.' },
+    plan:     { tittel: () => 'Slik blir dagen.', under: 'Timeplanen og to-do-ene du har valgt for i dag.' },
     todo:     { tittel: () => 'Ting som skal skje.', under: 'Et ryddig blikk på det neste.' },
     oppgaver: { tittel: () => 'Tilstander å nå.', under: 'Milepælene, og hvor langt du er kommet mot hver av dem.' },
     liste:    { tittel: () => 'Det som skal leveres.', under: 'Aktiviteter og resultater, i rekkefølge.' },
@@ -3564,7 +3600,10 @@
     const sd = _hentStartsideData();
     const forfalt = sd.todos.filter(t => !t.fullfort && t.frist && t.frist < iDagStr && !_venter(t)).length
                   + sd.oppgaver.filter(o => !o.fullfort && o.frist && o.frist < iDagStr).length;
-    return { todo: åpneTodos.length, mp: åpneMp.length, lev: kommende.length, forfalt };
+    // Dagens plan: det som gjenstår av timeplanen og to-do-ene i planen (null uten plan).
+    const dp = _dagensPlan(sd), tp = _dagsplanFor(iDagStr), tpT = tp ? _tpTall(tp) : null;
+    const plan = (tp || dp.åpne.length || dp.gjort.length) ? (tpT ? tpT.n - tpT.g : 0) + dp.åpne.length : null;
+    return { todo: åpneTodos.length, mp: åpneMp.length, lev: kommende.length, forfalt, plan };
   }
   const _to = n => String(n).padStart(2, '0');
 
@@ -3577,6 +3616,7 @@
     const d = new Date();
     const dato = UKEDAGER[d.getDay()] + ' ' + d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
     const telling = fane === 'start' ? (tall.forfalt ? _to(tall.forfalt) + ' forfalt' : _to(tall.todo) + ' åpne')
+                  : fane === 'plan' ? (tall.plan != null ? _to(tall.plan) + ' igjen' : '')
                   : fane === 'todo' ? _to(tall.todo) + ' åpne'
                   : fane === 'oppgaver' ? _to(tall.mp) + ' åpne'
                   : fane === 'liste' ? _to(tall.lev) + ' kommende' : '';
@@ -3626,7 +3666,7 @@
     const fane = _aktivFane();
     const tall = _rammeTall();
     const pil = '<svg class="sp-pil" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>';
-    const lenker = [['start', 'Start', null], ['todo', 'To do', tall.todo], ['oppgaver', 'Milepæler', tall.mp],
+    const lenker = [['start', 'Start', null], ['plan', 'Dagens plan', tall.plan], ['todo', 'To do', tall.todo], ['oppgaver', 'Milepæler', tall.mp],
                     ['liste', 'Leveranser', tall.lev], ['kalender', 'Oversikt', null]];
     let html = '<div class="sp-gruppe">Ditt rom</div>';
     lenker.forEach(([id, navn, n]) => {
@@ -3762,6 +3802,7 @@
     renderTodos();
     const aktiv = document.querySelector('.panel.aktiv')?.id;
     if (aktiv === 'panel-oppgaver') renderOppgaver();
+    if (aktiv === 'panel-plan')     renderPlanside();
     if (aktiv === 'panel-liste')    renderListe();
     if (aktiv === 'panel-kalender' && kalVisning === 'maaned' && valgtDato) renderValgtDag(valgtDato);
     renderRamme();
@@ -4027,6 +4068,7 @@
     if (fEl) fEl.classList.add('aktiv');
     window.scrollTo(0, 0);
     if (id === 'start')    renderStartside();
+    if (id === 'plan')     renderPlanside();
     if (id === 'todo')     renderTodos();
     if (id === 'kalender') {
       if (kalVisning === 'tidslinje') renderTidslinje();
@@ -4828,8 +4870,7 @@
 
         let metaHtml = '';
         if (kd.multi && o._prosjektNavn) {
-          const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--aksent)';
-          metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
+          metaHtml += _prosjektChipHtml(o._prosjektId, o._prosjektNavn);
         }
         if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
         if (akt) {
@@ -5335,7 +5376,7 @@
     return true;
   }
   window._settDagsplaner = function(planer) {
-    if (_lagreDagsplaner(planer || {}) && typeof renderStartside === 'function') renderStartside();
+    if (_lagreDagsplaner(planer || {}) && typeof renderAlleLister === 'function') renderAlleLister();
   };
   // Et kryss hører til blokkas tekst (små bokstaver), med løpenummer når samme
   // tekst står flere ganger. Da følger krysset blokka også når løytnanten
@@ -5444,6 +5485,7 @@
       if (stolpe) stolpe.style.width = Math.round(tall.g / tall.n * 100) + '%';
     }
     _merkTimeplan(rad.closest('.tp'));
+    renderRamme();   // tallet i sidepanelet og sidehodet
     if (window._dagsplanKryss) window._dagsplanKryss(dato, nøkkel, gjort);
   }
   function _lagTpMerknad(tekst) {
@@ -5488,84 +5530,142 @@
   // Hvert halve minutt mens appen vises. Har datoen skiftet siden Start ble
   // tegnet, tegnes den på nytt, så morgendagens plan blir dagens.
   function _tpTikk() {
-    if (_tpTegnetDato && _tpTegnetDato !== _datoOm(0)) { renderStartside(); return; }
+    if (_tpTegnetDato && _tpTegnetDato !== _datoOm(0)) { renderAlleLister(); return; }
     document.querySelectorAll('.tp[data-dato]').forEach(_merkTimeplan);
+    const stripe = document.getElementById('planStripe');
+    if (stripe) { const ny = _lagPlanStripe(_dagensPlan(_hentStartsideData())); if (ny) stripe.replaceWith(ny); }
   }
   setInterval(() => { if (document.visibilityState === 'visible') _tpTikk(); }, 30000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') _tpTikk(); });
 
-  function _lagDagensPlan(plan, isMulti) {
-    _tpTegnetDato = _datoOm(0);
-    const tp = _dagsplanFor(_datoOm(0)), imorgen = _dagsplanFor(_datoOm(1));
-    const n = plan.åpne.length + plan.gjort.length;
-    if (!n && !tp) {
-      const tom = document.createElement('div');
-      tom.className = 'plan-tom';
-      tom.innerHTML = `Ingen plan for i dag. Trykk ${_IKON_PLAN} på en to-do for å legge den i planen.`;
-      if (imorgen) tom.appendChild(_lagImorgen(imorgen));
-      return tom;
+  // ── Fanen «Dagens plan» (v6.1) ──
+  // Timeplanen og to-do-ene du har lagt i planen står på egen fane. Start viser
+  // bare en stripe med hva som skjer nå, som fører hit.
+  function _lagPlanTodoRad(item, gjort, isMulti) {
+    const pid = item._prosjektId || aktivtProsjektId;
+    const rad = document.createElement('div');
+    rad.className = 'plan-rad' + (gjort ? ' gjort' : '');
+    rad.onclick = () => { if (pid !== aktivtProsjektId) byttProsjekt(pid); åpneTodoInfo(item.id); };
+    const cb = document.createElement('div');
+    cb.className = 'start-hake' + (gjort ? ' sjekket' : '');
+    cb.style.setProperty('--kat', item._katFarge || item._prosjektFarge || 'var(--blekk)');
+    cb.title = gjort ? 'Angre fullført' : 'Merk som fullført';
+    if (gjort) cb.innerHTML = _HAKE_SVG;
+    cb.onclick = e => {
+      e.stopPropagation();
+      cb.classList.toggle('sjekket');
+      setTimeout(() => _toggleStartItem(true, item.id, pid), 250);
+    };
+    const tekst = document.createElement('span');
+    tekst.className = 'start-tekst';
+    tekst.textContent = item.tittel;
+    rad.append(cb, tekst);
+    if (!gjort) {
+      // Fristen vises når den er nær; en planlagt dag som er passert, vises
+      // som merke (den har rullet over til i dag).
+      const merker = (item.frist && item.frist <= _datoOm(1) ? fristSpan(item.frist, false, true) : '')
+        + (_purres(item) ? _venterMerke(item) : (item.planlagt < _datoOm(0) ? _planlagtMerke(item, true) : ''))
+        + _sjekkMerke(item);
+      rad.insertAdjacentHTML('beforeend', merker);
     }
+    if (isMulti && item._prosjektNavn) rad.insertAdjacentHTML('beforeend', _prosjektChipHtml(pid, item._prosjektNavn));
+    if (!gjort && !_purres(item)) rad.appendChild(_planKnapp(item));
+    _bindDatoMerker(rad, { type: 'todo', id: item.id, pid });
+    return rad;
+  }
+  function _lagTimeplanKort(tp) {
     const kort = document.createElement('div');
     kort.className = 'plan-kort';
-    const pst = n ? Math.round(plan.gjort.length / n * 100) : 0;
-    const telling = `${_to(plan.gjort.length)} av ${_to(n)} gjort`;
-    // Med timeplan teller hodet blokkene i den, og to-do-tellingen står over to-do-ene.
-    const tpTall = tp ? _tpTall(tp) : null;
-    kort.innerHTML = `<div class="plan-hode"><span class="plan-tittel">Dagens plan</span>`
-      + (tp && tpTall.n ? `<span class="plan-telling" data-tp-telling>${_to(tpTall.g)} av ${_to(tpTall.n)} gjort</span></div>`
-          + `<div class="plan-stolpe" data-tp-stolpe><span style="width:${Math.round(tpTall.g / tpTall.n * 100)}%"></span></div>`
-        : `<span class="plan-telling">${tp ? escapeHtml(_tpSpenn(tp)) : telling}</span></div>`);
-    if (tp) {
-      kort.appendChild(_lagTimeplan(tp));
-      if (tp.merknad) kort.appendChild(_lagTpMerknad(tp.merknad));
-    }
-    if (n) {
-      if (tp) kort.insertAdjacentHTML('beforeend', `<div class="plan-under"><span>To-dos i planen</span><span>${telling}</span></div>`);
-      kort.insertAdjacentHTML('beforeend', `<div class="plan-stolpe"><span style="width:${pst}%"></span></div>`);
-    }
-    const lagRad = (item, gjort) => {
-      const pid = item._prosjektId || aktivtProsjektId;
-      const rad = document.createElement('div');
-      rad.className = 'plan-rad' + (gjort ? ' gjort' : '');
-      rad.onclick = () => { if (pid !== aktivtProsjektId) byttProsjekt(pid); åpneTodoInfo(item.id); };
-      const cb = document.createElement('div');
-      cb.className = 'start-hake' + (gjort ? ' sjekket' : '');
-      cb.style.setProperty('--kat', item._katFarge || item._prosjektFarge || 'var(--blekk)');
-      cb.title = gjort ? 'Angre fullført' : 'Merk som fullført';
-      if (gjort) cb.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      cb.onclick = e => {
-        e.stopPropagation();
-        cb.classList.toggle('sjekket');
-        setTimeout(() => _toggleStartItem(true, item.id, pid), 250);
-      };
-      const tekst = document.createElement('span');
-      tekst.className = 'start-tekst';
-      tekst.textContent = item.tittel;
-      rad.append(cb, tekst);
-      if (!gjort) {
-        // Fristen vises når den er nær; en planlagt dag som er passert, vises
-        // som merke (den har rullet over til i dag).
-        const merker = (item.frist && item.frist <= _datoOm(1) ? fristSpan(item.frist, false, true) : '')
-          + (_purres(item) ? _venterMerke(item) : (item.planlagt < _datoOm(0) ? _planlagtMerke(item, true) : ''))
-          + _sjekkMerke(item);
-        rad.insertAdjacentHTML('beforeend', merker);
-      }
-      if (isMulti && item._prosjektNavn) {
-        const chip = document.createElement('span');
-        chip.textContent = item._prosjektNavn;
-        chip.className = 'start-prosjekt';
-        chip.style.setProperty('--kat', item._prosjektFarge || 'var(--blekk)');
-        rad.appendChild(chip);
-      }
-      if (!gjort && !_purres(item)) rad.appendChild(_planKnapp(item));
-      _bindDatoMerker(rad, { type: 'todo', id: item.id, pid });
-      return rad;
-    };
-    plan.åpne.forEach(t => kort.appendChild(lagRad(t, false)));
-    plan.gjort.forEach(t => kort.appendChild(lagRad(t, true)));
-    if (n && !plan.åpne.length) kort.insertAdjacentHTML('beforeend', '<div class="plan-ferdig">Alt i planen er gjort.</div>');
-    if (imorgen) kort.appendChild(_lagImorgen(imorgen));
+    const t = _tpTall(tp);
+    kort.innerHTML = `<div class="plan-hode"><span class="plan-tittel">Timeplan</span>`
+      + (t.n ? `<span class="plan-telling" data-tp-telling>${_to(t.g)} av ${_to(t.n)} gjort</span></div>`
+             + `<div class="plan-stolpe" data-tp-stolpe><span style="width:${Math.round(t.g / t.n * 100)}%"></span></div>`
+             : `<span class="plan-telling">${escapeHtml(_tpSpenn(tp))}</span></div>`);
+    kort.appendChild(_lagTimeplan(tp));
+    if (tp.merknad) kort.appendChild(_lagTpMerknad(tp.merknad));
     return kort;
+  }
+  function _lagPlanTodoKort(plan, isMulti) {
+    const n = plan.åpne.length + plan.gjort.length;
+    const kort = document.createElement('div');
+    kort.className = 'plan-kort';
+    kort.innerHTML = `<div class="plan-hode"><span class="plan-tittel">To-dos i dag</span>`
+      + `<span class="plan-telling">${_to(plan.gjort.length)} av ${_to(n)} gjort</span></div>`
+      + `<div class="plan-stolpe"><span style="width:${Math.round(plan.gjort.length / n * 100)}%"></span></div>`;
+    plan.åpne.forEach(t => kort.appendChild(_lagPlanTodoRad(t, false, isMulti)));
+    plan.gjort.forEach(t => kort.appendChild(_lagPlanTodoRad(t, true, isMulti)));
+    if (!plan.åpne.length) kort.insertAdjacentHTML('beforeend', '<div class="plan-ferdig">Alt i planen er gjort.</div>');
+    return kort;
+  }
+  function renderPlanside() {
+    const cont = document.getElementById('planInnhold');
+    if (!cont) return;
+    _tpTegnetDato = _datoOm(0);
+    const plan = _dagensPlan(_hentStartsideData());
+    const isMulti = prosjekter.filter(p => !p.arkivert).length > 1;
+    const tp = _dagsplanFor(_datoOm(0)), imorgen = _dagsplanFor(_datoOm(1));
+    const n = plan.åpne.length + plan.gjort.length;
+    const hint = html => { const d = document.createElement('div'); d.className = 'plan-tom'; d.innerHTML = html; return d; };
+    cont.innerHTML = '';
+    if (!tp && !n) {
+      cont.insertAdjacentHTML('beforeend', `<div class="tom-melding plan-tom-melding">Ingen plan for i dag.<br>`
+        + `Trykk ${_IKON_PLAN} på en to-do for å legge den i planen. En timeplan med klokkeslett vises her når løytnanten har sendt en.</div>`);
+    } else {
+      if (tp) cont.appendChild(_lagTimeplanKort(tp));
+      if (n) cont.appendChild(_lagPlanTodoKort(plan, isMulti));
+      else cont.appendChild(hint(`Ingen to-dos i planen. Trykk ${_IKON_PLAN} på en to-do for å legge den til.`));
+      if (!tp) cont.appendChild(hint('Ingen timeplan med klokkeslett for i dag.'));
+    }
+    if (imorgen) {
+      const k = document.createElement('div');
+      k.className = 'plan-kort imorgen-kort';
+      k.appendChild(_lagImorgen(imorgen));
+      cont.appendChild(k);
+    }
+  }
+
+  // Hva som pågår og hva som kommer i timeplanen, regnet fra klokka.
+  function _tpNå(plan) {
+    const d = new Date(), m = d.getHours() * 60 + d.getMinutes();
+    const nøkler = _tpNøkler(plan.blokker), gjort = new Set(plan.gjort || []);
+    const bl = plan.blokker.map((b, i) => ({ ...b, gjort: gjort.has(nøkler[i]), pause: _erPause(b.hva) }));
+    const naa = bl.find(b => _tilMin(b.fra) <= m && m < _tilMin(b.til)) || null;
+    const neste = bl.find(b => _tilMin(b.fra) > m && !b.pause && !b.gjort) || null;
+    return { m, naa, neste };
+  }
+  // Stripen på Start: det som skjer nå (eller fremdriften i to-do-ene i
+  // planen). Trykk for å gå til Dagens plan. Uten plan: ingen stripe.
+  function _planStripeInnhold(plan) {
+    const tp = _dagsplanFor(_datoOm(0));
+    if (tp) {
+      const { m, naa, neste } = _tpNå(tp);
+      if (naa && naa.pause) return { naa: true, tekst: naa.hva + (neste ? ', så ' + neste.hva : ''), merke: _varighet(_tilMin(naa.til) - m) + ' igjen' };
+      if (naa && !naa.gjort) return { naa: true, tekst: 'Nå: ' + naa.hva, merke: _varighet(_tilMin(naa.til) - m) + ' igjen' };
+      if (neste) return { tekst: 'Neste: ' + neste.hva, merke: 'kl. ' + neste.fra };
+      const t = _tpTall(tp);
+      return { tekst: 'Ferdig for i dag', merke: `${t.g} av ${t.n} gjort` };
+    }
+    const n = plan.åpne.length + plan.gjort.length;
+    if (n) return { tekst: plan.åpne.length ? plan.åpne.length + (plan.åpne.length === 1 ? ' to-do' : ' to-dos') + ' igjen i planen' : 'Alt i planen er gjort',
+                    merke: `${plan.gjort.length} av ${n} gjort` };
+    const imorgen = _dagsplanFor(_datoOm(1));
+    if (imorgen) return { tekst: 'Planen for i morgen er klar', merke: _tpSpenn(imorgen) };
+    return null;
+  }
+  function _lagPlanStripe(plan) {
+    const inn = _planStripeInnhold(plan);
+    if (!inn) return null;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = 'planStripe';
+    b.className = 'plan-stripe' + (inn.naa ? ' naa' : '');
+    b.innerHTML = `<span class="plan-stripe-etikett">${_IKON_PLAN}<span>Dagens plan</span></span>`
+      + '<span class="plan-stripe-tekst"></span><span class="plan-stripe-merke"></span>'
+      + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
+    b.querySelector('.plan-stripe-tekst').textContent = inn.tekst;
+    b.querySelector('.plan-stripe-merke').textContent = inn.merke || '';
+    b.onclick = () => byttFane('plan');
+    return b;
   }
 
   // Prosjekt-id-er som Start-siden viser (respekterer prosjektfilter).
@@ -5646,7 +5746,7 @@
       cont.appendChild(dateRow);
     }
 
-    // Dagens plan under filter-raden (fylles inn når dataene er hentet)
+    // Stripen til Dagens plan under filter-raden (fylles inn når dataene er hentet)
     const planPlass = document.createElement('div');
     cont.appendChild(planPlass);
 
@@ -5663,9 +5763,9 @@
     // ── Data ──
     const fd = _hentStartsideData();
     const isMulti = (aktive.length > 1);
-    const plan = _dagensPlan(fd);
-    planPlass.replaceWith(_lagDagensPlan(plan, isMulti));
-    fd.todos = fd.todos.filter(t => !plan.ider.has(t._prosjektId + '|' + t.id));
+    _tpTegnetDato = _datoOm(0);
+    const stripe = _lagPlanStripe(_dagensPlan(fd));
+    if (stripe) planPlass.replaceWith(stripe); else planPlass.remove();
 
     // To-dos som venter på andre har egen seksjon. Planlagt dag teller som
     // frist for perioden (en planlagt dag som er passert, ruller over til i dag).
@@ -6288,8 +6388,7 @@
 
       let metaHtml = '';
       if (isMulti && t._prosjektNavn) {
-        const pFarge = prosjekter.find(p => p.id === t._prosjektId)?.farge || 'var(--aksent)';
-        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(t._prosjektNavn)}</span>`;
+        metaHtml += _prosjektChipHtml(t._prosjektId, t._prosjektNavn);
       }
       if (t.frist) metaHtml += fristSpan(t.frist, t.fullfort, true);
       metaHtml += _planlagtMerke(t, true) + _venterMerke(t) + _sjekkMerke(t);
@@ -6358,7 +6457,7 @@
       // Milepæler har rund avkrysning (to-dos firkantet), i kategorifargen.
       const cb = document.createElement('div');
       cb.className = 'todo-cb mp' + (o.fullfort ? ' sjekket' : '');
-      const katMp = getKat(oType);
+      const katMp = getKat(oType, o._prosjektId);
       if (katMp && katMp.farge) cb.style.setProperty('--kat', katMp.farge);
       cb.innerHTML = o.fullfort ? '<svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
       cb.onclick = e => {
@@ -6369,8 +6468,7 @@
 
       let metaHtml = '';
       if (isMulti && o._prosjektNavn) {
-        const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--aksent)';
-        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
+        metaHtml += _prosjektChipHtml(o._prosjektId, o._prosjektNavn);
       }
       metaHtml += fristSpan(o.frist, o.fullfort, true);
       metaHtml += _gjentaChip(o.gjenta);
@@ -6378,8 +6476,8 @@
       if (akt) {
         metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
       } else if (o.kategoriId) {
-        const katO = getKat(o.kategoriId);
-        if (katO) metaHtml += `<span class="tilknyttet-chip chip-${katO.id}">${escapeHtml(katO.label)}</span>`;
+        const katO = getKat(o.kategoriId, o._prosjektId);
+        if (katO) metaHtml += `<span class="tilknyttet-chip chip-${katO.id}" style="border-color:${katO.farge};color:${katO.farge}">${escapeHtml(katO.label)}</span>`;
       }
       metaHtml += _tagChipsHtml(o.tagger);
 
@@ -7873,14 +7971,19 @@
     };
 
     const erMilepel = erResultatType(a);
+    const katA = getKat(a.type, a._prosjektId);
     const badge = document.createElement('span');
     if (erMilepel) {
       badge.className = 'resultat-merke';
-      badge.style.setProperty('--kat', getKat(a.type)?.farge || 'var(--dempet)');
+      badge.style.setProperty('--kat', katA?.farge || 'var(--dempet)');
       badge.textContent = '\u25c6 Resultat';
     } else if (a.type) {
+      // Fargen settes her og ikke bare i den genererte CSS-en, som bare kjenner
+      // kategoriene i det aktive prosjektet.
       badge.className = `type-badge ${a.type}`;
-      badge.textContent = getKat(a.type)?.label || a.type;
+      badge.textContent = katA?.label || '';
+      if (katA && _gyldigFarge(katA.farge)) { badge.style.borderColor = katA.farge; badge.style.color = katA.farge; }
+      if (!katA) badge.style.visibility = 'hidden';
     }
 
     const d = new Date(a.dato + 'T00:00:00');
@@ -7891,7 +7994,7 @@
     }
     const tidStr = (!erMilepel && a.tid) ? ('kl.\u00a0' + a.tid + (a.tidTil ? '\u2013' + a.tidTil : '')) : '';
 
-    const prosjektChip = a._prosjektNavn ? `<span class="start-prosjekt" style="--kat:${prosjekter.find(p => p.id === a._prosjektId)?.farge || 'var(--aksent)'};margin-right:6px;">${escapeHtml(a._prosjektNavn)}</span>` : '';
+    const prosjektChip = a._prosjektNavn ? _prosjektChipHtml(a._prosjektId, a._prosjektNavn) : '';
 
     const info = document.createElement('div');
     info.className = 'aktivitet-info';
@@ -7902,12 +8005,14 @@
     kort.appendChild(badge);
     kort.appendChild(info);
 
-    const tilknyttedeOppgaver = oppgaver.filter(o => o.aktivitetId === a.id);
+    const tilknyttedeOppgaver = (a._prosjektId && a._prosjektId !== aktivtProsjektId
+      ? _hentProsjektData(a._prosjektId).oppgaver : oppgaver).filter(o => o.aktivitetId === a.id);
     if (tilknyttedeOppgaver.length > 0) {
       const antallUferdige = tilknyttedeOppgaver.filter(o => !o.fullfort).length;
       if (antallUferdige > 0) {
         const ob = document.createElement('span');
         ob.className = 'oppgave-badge badge-' + a.type;
+        if (katA && _gyldigFarge(katA.farge)) { ob.style.borderColor = katA.farge; ob.style.color = katA.farge; }
         ob.textContent = '!';
         ob.title = antallUferdige + ' milepæl(er) knyttet til denne leveransen';
         ob.onclick = e => {
@@ -7922,7 +8027,7 @@
     // Knapper: + To do og + Milepæl. Fra en flerprosjekt-liste må vi bytte til
     // leveransens prosjekt først, ellers havner det nye elementet i det aktive
     // prosjektet med en kobling til en leveranse som ikke finnes der.
-    const knappFarge = getKat(a.type)?.farge || 'var(--dempet)';
+    const knappFarge = katA?.farge || 'var(--dempet)';
 
     const leggTilTodoKnapp = document.createElement('button');
     leggTilTodoKnapp.className = 'ikon-knapp';
@@ -8086,6 +8191,8 @@
 
       const kort = document.createElement('div');
       kort.className = 'oppgave-kort ' + stripeKlasse + (o.fullfort ? ' fullfort' : '');
+      const katR = getKat(typeR, o._prosjektId);
+      if (katR && _gyldigFarge(katR.farge)) kort.style.setProperty('--kat', katR.farge);
 
       const cb = document.createElement('div');
       cb.className = 'checkbox' + (o.fullfort ? ' sjekket' : '');
@@ -8101,16 +8208,15 @@
 
       let metaHtml = '';
       if (isMulti && o._prosjektNavn) {
-        const pFarge = prosjekter.find(p => p.id === o._prosjektId)?.farge || 'var(--aksent)';
-        metaHtml += `<span class="tilknyttet-chip" style="border-color:${pFarge};color:${pFarge};font-size:10px;">${escapeHtml(o._prosjektNavn)}</span>`;
+        metaHtml += _prosjektChipHtml(o._prosjektId, o._prosjektNavn);
       }
       if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort, true);
       if (o.aktivitetId) {
         const aktM = fAktiviteter.find(a => a.id === o.aktivitetId);
         if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${aktM.type || "fri"}">${escapeHtml(aktM.tittel)}</span>`;
       } else if (o.kategoriId) {
-        const katM = getKat(o.kategoriId);
-        if (katM) metaHtml += `<span class="tilknyttet-chip chip-${katM.id}">${escapeHtml(katM.label)}</span>`;
+        const katM = getKat(o.kategoriId, o._prosjektId);
+        if (katM) metaHtml += `<span class="tilknyttet-chip chip-${katM.id}" style="border-color:${katM.farge};color:${katM.farge}">${escapeHtml(katM.label)}</span>`;
       }
       // Fremdrift: milepælen er en tilstand, to-dos er veien dit.
       const oppTodos = todos.filter(t => t.oppgaveId === o.id);
@@ -8952,7 +9058,7 @@
   window.addEventListener('online', _oppdaterOffline);
   window.addEventListener('offline', _oppdaterOffline);
 
-  // Tastatursnarveier: 1–5 bytter fane, n = nytt element i aktiv fane. Ignoreres
+  // Tastatursnarveier: 1–6 bytter fane (i samme rekkefølge som fanene), n = nytt element i aktiv fane. Ignoreres
   // i skjemafelt, når en modal er åpen, eller med modifikatortaster.
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -8961,8 +9067,8 @@
     const erFelt = el => el && ('INPUT' === el.tagName || 'TEXTAREA' === el.tagName || 'SELECT' === el.tagName || el.isContentEditable);
     if (erFelt(e.target) || erFelt(document.activeElement)) return;
     if (document.querySelector('.modal-overlay.vis')) return;
-    const faner = ['start', 'todo', 'oppgaver', 'liste', 'kalender'];
-    if (e.key >= '1' && e.key <= '5') {
+    const faner = ['start', 'plan', 'todo', 'oppgaver', 'liste', 'kalender'];
+    if (e.key >= '1' && e.key <= '6') {
       const idx = +e.key - 1;
       const el = document.querySelectorAll('.fane')[idx];
       if (el) { byttFane(faner[idx], el); e.preventDefault(); }
