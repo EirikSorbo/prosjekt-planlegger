@@ -2369,7 +2369,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.1</div>
+<div class="versjon">Prosjekt-planlegger v6.2</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -3203,18 +3203,20 @@
     }
     return null;
   }
-  const _gyldigFarge = f => /^#[0-9a-fA-F]{6}$/.test(f || '');
+  const _gyldigFarge = f => /^#[0-9a-fA-F]{3,8}$/.test(f || '');
+  // Fargen i HTML og SVG som bygges som tekst: alt annet enn #hex gir reserven.
+  const _farge = (f, reserve = 'var(--dempet)') => _gyldigFarge(f) ? f : reserve;
   // Prosjektmerket på rader i «Alle prosjekter»: farget rute og navnet i mono, som på Start.
   function _prosjektChipHtml(pid, navn) {
     const f = prosjekter.find(p => p.id === pid)?.farge;
-    return `<span class="start-prosjekt" style="--kat:${_gyldigFarge(f) ? f : 'var(--blekk)'}">${escapeHtml(navn || '')}</span>`;
+    return `<span class="start-prosjekt" style="--kat:${_farge(f, 'var(--blekk)')}">${escapeHtml(navn || '')}</span>`;
   }
   function katIds() { return kategorier.map(k => k.id); }
 
   function genererKategoriCSS() {
     let css = '';
     kategorier.forEach(k => {
-      const id = k.id;
+      const id = CSS.escape(k.id);
       // Valider fargen: kun #rrggbb slipper inn i <style> (importerte/synkede
       // data kan ellers smugle inn ekstra CSS-regler). Ugyldig → nøytral default.
       const f = /^#[0-9a-fA-F]{6}$/.test(k.farge) ? k.farge : '#9490d4';
@@ -3514,6 +3516,12 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
+  // Verdi i en JS-streng inne i onclick="f('…')". Nettleseren pakker ut attributtet
+  // før JS leser det, så escapeHtml alene stopper ikke en '.
+  function _jsStr(s) {
+    return escapeHtml(String(s == null ? '' : s).replace(/[\\'"\r\n\u2028\u2029]/g,
+      c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')));
+  }
 
   // Nøytrale linje-ikoner som arver farge via currentColor (matcher prosjektfargen).
   const _IKON_PATH = {
@@ -3684,7 +3692,7 @@
       const st = _prosjektStatus(p.id);
       const neste = st.neste ? `<span class="sp-neste" title="Neste milepæl: ${escapeHtml(st.neste.beskrivelse || '')}">${_kortDato(st.neste.frist).replace(/^\S+ /, '')} · ${escapeHtml(st.neste.beskrivelse || '')}</span>` : '';
       html += `<button class="sp-lenke sp-prosjekt${valgt ? ' aktiv' : ''}" data-prosjekt="${escapeHtml(p.id)}">`
-            + `<span class="sp-prikk" style="background:${/^#[0-9a-fA-F]{3,8}$/.test(p.farge || '') ? p.farge : 'var(--blekk)'}"></span>`
+            + `<span class="sp-prikk" style="background:${_farge(p.farge, 'var(--blekk)')}"></span>`
             + `<span class="sp-prosjekt-tekst"><span class="sp-prosjekt-navn">${escapeHtml(p.navn)}</span>${neste}</span>`
             + (st.forfalt ? `<span class="sp-forfalt" title="${st.forfalt} forfalt">${st.forfalt}</span>` : '')
             + '</button>';
@@ -3989,18 +3997,21 @@
   }
 
   // Rask-fangst: hvis appen åpnes med ?fangst=/?text=/?title= (f.eks. via
-  // del-til-mål, bokmerke eller snarvei), opprett en to do i aktivt prosjekt
-  // og rens URL-en. Angre-toast lar deg trekke det tilbake.
+  // del-til-mål, bokmerke eller snarvei), spør og opprett en to do i aktivt
+  // prosjekt. URL-en renses uansett svar. Lenken kan komme fra hvem som helst,
+  // så den får ikke legge inn noe uten et ja. Angre-toast lar deg trekke det tilbake.
   function _rasktFangst() {
     try {
       const p = new URLSearchParams(location.search);
       const tekst = (p.get('fangst') || p.get('text') || p.get('title') || '').trim();
       if (!tekst) return;
       const url = (p.get('url') || '').trim();
+      history.replaceState(null, '', location.pathname);
+      const navn = prosjekter.find(x => x.id === aktivtProsjektId)?.navn || '';
+      if (!confirm(`Legge til som to-do i «${navn}»?\n\n${tekst.slice(0, 200)}${url ? '\n\n' + url.slice(0, 200) : ''}`)) return;
       const id = uid();
       todos.push({ id, tittel: tekst.slice(0, 200), beskrivelse: url, frist: null, aktivitetId: null, oppgaveId: null, kategoriId: null, gjenta: null, tagger: [], opprettet: _lokalDatoStr(), fullfort: false });
       lagre();
-      history.replaceState(null, '', location.pathname);
       oppdaterAktivPanel();
       visAngreToast('Fanget som to do', () => { todos = todos.filter(t => t.id !== id); lagre(); oppdaterAktivPanel(); });
     } catch (e) { /* fangst er best-effort */ }
@@ -4044,8 +4055,8 @@
   }
   function _snoozeKnapperHtml(id) {
     return _infoBlokk('Utsett påminnelsen', `<div class="info-knapper">
-        <button class="mini-knapp" onclick="_snoozVarsel('${id}', 3600000)">${_svgIkon('klokke', 12)} 1 time</button>
-        <button class="mini-knapp" onclick="_snoozVarsel('${id}', 86400000)">${_svgIkon('klokke', 12)} Til i morgen</button>
+        <button class="mini-knapp" onclick="_snoozVarsel('${_jsStr(id)}', 3600000)">${_svgIkon('klokke', 12)} 1 time</button>
+        <button class="mini-knapp" onclick="_snoozVarsel('${_jsStr(id)}', 86400000)">${_svgIkon('klokke', 12)} Til i morgen</button>
       </div>`);
   }
 
@@ -4874,10 +4885,10 @@
         }
         if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort);
         if (akt) {
-          metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
+          metaHtml += `<span class="tilknyttet-chip chip-${escapeHtml(akt.type || "fri")}">${escapeHtml(akt.tittel)}</span>`;
         } else if (o.kategoriId) {
           const katV = _kalKat(kd, o.kategoriId, o._prosjektId);
-          if (katV) metaHtml += `<span class="tilknyttet-chip chip-${katV.id}">${escapeHtml(katV.label)}</span>`;
+          if (katV) metaHtml += `<span class="tilknyttet-chip chip-${escapeHtml(katV.id)}">${escapeHtml(katV.label)}</span>`;
         }
 
         info.innerHTML = `<div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
@@ -5069,8 +5080,8 @@
         const aktEl = document.createElement('div');
         aktEl.className = 'kat-oversikt-akt';
         aktEl.onclick = () => { lukkModal('katOversiktModal'); åpneAktivitetInfo(a.id); };
-        aktEl.innerHTML = `<div class="kat-oversikt-akt-tittel">${erMilepel ? '◆ ' : ''}${a.tittel}</div>
-          <div class="kat-oversikt-akt-dato">${datoStr}${tidStr}</div>`;
+        aktEl.innerHTML = `<div class="kat-oversikt-akt-tittel">${erMilepel ? '◆ ' : ''}${escapeHtml(a.tittel)}</div>
+          <div class="kat-oversikt-akt-dato">${datoStr}${escapeHtml(tidStr)}</div>`;
         seksjon.appendChild(aktEl);
 
         const aktOpp = oppgaver.filter(o => o.aktivitetId === a.id && !o.fullfort);
@@ -5080,7 +5091,7 @@
           oppEl.onclick = () => { lukkModal('katOversiktModal'); åpneOppgaveInfo(o.id); };
           const fristStr = o.frist ? fristLabel(o.frist, false).tekst : '';
           oppEl.innerHTML = `<span style="color:var(--dempet);">↳</span>
-            <span style="flex:1;">${o.beskrivelse}</span>
+            <span style="flex:1;">${escapeHtml(o.beskrivelse)}</span>
             ${fristStr ? `<span style="font-size:11px;color:var(--dempet);">${fristStr}</span>` : ''}`;
           const oppTodos = todos.filter(t => t.oppgaveId === o.id);
           if (oppTodos.length > 0) {
@@ -5099,7 +5110,7 @@
             todoEl.style.paddingLeft = '44px';
             todoEl.style.fontSize = '11px';
             todoEl.onclick = () => { lukkModal('katOversiktModal'); åpneTodoInfo(t.id); };
-            todoEl.innerHTML = `<span style="color:var(--aksent-mid);">◻</span> ${t.tittel}`;
+            todoEl.innerHTML = `<span style="color:var(--aksent-mid);">◻</span> ${escapeHtml(t.tittel)}`;
             seksjon.appendChild(todoEl);
           });
         });
@@ -5132,7 +5143,7 @@
         oppEl.style.paddingLeft = '12px';
         oppEl.onclick = () => { lukkModal('katOversiktModal'); åpneOppgaveInfo(o.id); };
         const fristStr = o.frist ? fristLabel(o.frist, false).tekst : '';
-        oppEl.innerHTML = `<span style="flex:1;">${o.beskrivelse}</span>
+        oppEl.innerHTML = `<span style="flex:1;">${escapeHtml(o.beskrivelse)}</span>
           ${fristStr ? `<span style="font-size:11px;color:var(--dempet);">${fristStr}</span>` : ''}`;
         seksjon.appendChild(oppEl);
       });
@@ -5244,7 +5255,7 @@
       const rad = document.createElement('div');
       rad.className = 'sok-treff';
       rad.innerHTML = `<div class="sok-treff-tittel${item.fullfort ? ' fullfort' : ''}">${escapeHtml(tittel || '(uten tittel)')}</div>
-        <div class="sok-treff-meta"><span class="sok-chip" style="border-color:${p.farge};color:${p.farge};">${escapeHtml(p.navn)}</span><span>${typeLabel}${item.frist ? ' · ' + item.frist : ''}</span></div>`;
+        <div class="sok-treff-meta"><span class="sok-chip" style="border-color:${_farge(p.farge)};color:${_farge(p.farge)};">${escapeHtml(p.navn)}</span><span>${typeLabel}${item.frist ? ' · ' + escapeHtml(item.frist) : ''}</span></div>`;
       rad.onclick = () => {
         if (p.id !== aktivtProsjektId) byttProsjekt(p.id);
         if (type === 'todo') åpneTodoInfo(item.id);
@@ -6474,10 +6485,10 @@
       metaHtml += _gjentaChip(o.gjenta);
       metaHtml += _tidChipHtml(o);
       if (akt) {
-        metaHtml += `<span class="tilknyttet-chip chip-${akt.type || "fri"}">${escapeHtml(akt.tittel)}</span>`;
+        metaHtml += `<span class="tilknyttet-chip chip-${escapeHtml(akt.type || "fri")}">${escapeHtml(akt.tittel)}</span>`;
       } else if (o.kategoriId) {
         const katO = getKat(o.kategoriId, o._prosjektId);
-        if (katO) metaHtml += `<span class="tilknyttet-chip chip-${katO.id}" style="border-color:${katO.farge};color:${katO.farge}">${escapeHtml(katO.label)}</span>`;
+        if (katO) metaHtml += `<span class="tilknyttet-chip chip-${escapeHtml(katO.id)}" style="border-color:${_farge(katO.farge)};color:${_farge(katO.farge)}">${escapeHtml(katO.label)}</span>`;
       }
       metaHtml += _tagChipsHtml(o.tagger);
 
@@ -7194,15 +7205,15 @@
     }
     html += _sjekklisteHtml(t);
     if (t.beskrivelse) {
-      html += _infoBlokk('Beskrivelse', `<div class="info-tekst">${t.beskrivelse}</div>`);
+      html += _infoBlokk('Beskrivelse', `<div class="info-tekst">${escapeHtml(t.beskrivelse)}</div>`);
     }
     if (t.oppgaveId) {
       const opp = oppgaver.find(o => o.id === t.oppgaveId);
-      if (opp) html += _infoBlokk('Milepæl', `<div class="info-lenke" onclick="lukkModal('todoInfoModal');åpneOppgaveInfo('${opp.id}')">${escapeHtml(opp.beskrivelse)}</div>`);
+      if (opp) html += _infoBlokk('Milepæl', `<div class="info-lenke" onclick="lukkModal('todoInfoModal');åpneOppgaveInfo('${_jsStr(opp.id)}')">${escapeHtml(opp.beskrivelse)}</div>`);
     }
     if (t.kategoriId) {
       const katTI = getKat(t.kategoriId);
-      if (katTI) html += _infoBlokk('Kategori', `<span class="type-badge ${katTI.id}">${escapeHtml(katTI.label)}</span>`);
+      if (katTI) html += _infoBlokk('Kategori', `<span class="type-badge ${escapeHtml(katTI.id)}">${escapeHtml(katTI.label)}</span>`);
     }
     if (t.tagger && t.tagger.length) {
       html += _infoBlokk('Tagger', `<div class="info-knapper">${t.tagger.map(x => `<span class="tilknyttet-chip">#${escapeHtml(x)}</span>`).join('')}</div>`);
@@ -7606,7 +7617,7 @@
 
   // Infovinduet: venter-blokk og sjekkliste (elementet er i aktivt prosjekt).
   function _venterBlokkHtml(t) {
-    const id = t.id;
+    const id = _jsStr(t.id);
     if (!t.venter) {
       return _infoBlokk('Venter på svar', `<div class="info-knapper"><button class="mini-knapp" onclick="settVenter('${id}')">Venter på noen …</button></div>`);
     }
@@ -7654,12 +7665,12 @@
     const l = t.sjekkliste || [];
     const f = l.filter(x => x.ferdig).length;
     const rader = l.map(x => `<div class="sjekk-rad${x.ferdig ? ' ferdig' : ''}">
-        <button class="sjekk-boks" onclick="sjekkVeksle('${t.id}','${x.id}')" title="${x.ferdig ? 'Angre' : 'Kryss av'}">${x.ferdig ? '✓' : ''}</button>
+        <button class="sjekk-boks" onclick="sjekkVeksle('${_jsStr(t.id)}','${_jsStr(x.id)}')" title="${x.ferdig ? 'Angre' : 'Kryss av'}">${x.ferdig ? '✓' : ''}</button>
         <span class="sjekk-tekst">${escapeHtml(x.tekst)}</span>
-        <button class="sjekk-slett" onclick="sjekkSlett('${t.id}','${x.id}')" title="Fjern punktet">×</button>
+        <button class="sjekk-slett" onclick="sjekkSlett('${_jsStr(t.id)}','${_jsStr(x.id)}')" title="Fjern punktet">×</button>
       </div>`).join('');
     return _infoBlokk('Sjekkliste' + (l.length ? ` · ${f} av ${l.length}` : ''),
-      rader + `<input class="sjekk-ny" id="sjekkNy" maxlength="200" placeholder="Nytt punkt, Enter for å legge til" onkeydown="if(event.key==='Enter'){sjekkLeggTil('${t.id}',this)}">`);
+      rader + `<input class="sjekk-ny" id="sjekkNy" maxlength="200" placeholder="Nytt punkt, Enter for å legge til" onkeydown="if(event.key==='Enter'){sjekkLeggTil('${_jsStr(t.id)}',this)}">`);
   }
   function _sjekkEndre(todoId, fn, fokus) {
     const t = todos.find(x => x.id === todoId);
@@ -7692,6 +7703,7 @@
     if (type === 'todo') åpneTodoInfo(id); else åpneOppgaveInfo(id);
   }
   function _datoKnapperHtml(type, id, felt) {
+    id = _jsStr(id);
     const kall = ds => `_settDato([{type:'${type}',id:'${id}'}],'${felt}',${ds ? `'${ds}'` : 'null'},()=>_oppfriskInfo('${type}','${id}'))`;
     return '<div class="info-knapper">'
       + _datoValg().map(([lbl, ds]) => `<button class="mini-knapp" onclick="${kall(ds)}">${lbl}</button>`).join('')
@@ -7862,7 +7874,7 @@
       rad.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--linje);';
       rad.innerHTML = `<div style="flex:1;min-width:0;">
           <div style="font-size:13px;color:var(--blekk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(tittel)}</div>
-          <div style="font-size:11px;color:var(--dempet);">${_papirkurvNavn[e.type] || e.type} · slettet ${escapeHtml(e.slettet || '')}</div>
+          <div style="font-size:11px;color:var(--dempet);">${escapeHtml(_papirkurvNavn[e.type] || e.type)} · slettet ${escapeHtml(e.slettet || '')}</div>
         </div>`;
       const btn = document.createElement('button');
       btn.className = 'knapp-sek';
@@ -7999,8 +8011,8 @@
     const info = document.createElement('div');
     info.className = 'aktivitet-info';
     info.innerHTML = `
-      <div class="aktivitet-tittel">${a.tittel}</div>
-      <div class="aktivitet-meta">${prosjektChip}${datoStr}${tidStr ? '&nbsp;' + tidStr : ''}</div>`;
+      <div class="aktivitet-tittel">${escapeHtml(a.tittel)}</div>
+      <div class="aktivitet-meta">${prosjektChip}${datoStr}${tidStr ? '&nbsp;' + escapeHtml(tidStr) : ''}</div>`;
 
     kort.appendChild(badge);
     kort.appendChild(info);
@@ -8213,10 +8225,10 @@
       if (o.frist) metaHtml += fristSpan(o.frist, o.fullfort, true);
       if (o.aktivitetId) {
         const aktM = fAktiviteter.find(a => a.id === o.aktivitetId);
-        if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${aktM.type || "fri"}">${escapeHtml(aktM.tittel)}</span>`;
+        if (aktM) metaHtml += `<span class="tilknyttet-chip chip-${escapeHtml(aktM.type || "fri")}">${escapeHtml(aktM.tittel)}</span>`;
       } else if (o.kategoriId) {
         const katM = getKat(o.kategoriId, o._prosjektId);
-        if (katM) metaHtml += `<span class="tilknyttet-chip chip-${katM.id}" style="border-color:${katM.farge};color:${katM.farge}">${escapeHtml(katM.label)}</span>`;
+        if (katM) metaHtml += `<span class="tilknyttet-chip chip-${escapeHtml(katM.id)}" style="border-color:${_farge(katM.farge)};color:${_farge(katM.farge)}">${escapeHtml(katM.label)}</span>`;
       }
       // Fremdrift: milepælen er en tilstand, to-dos er veien dit.
       const oppTodos = todos.filter(t => t.oppgaveId === o.id);
@@ -8294,17 +8306,17 @@
 
     // Tilknyttet leveranse, ellers kategori
     if (akt) {
-      html += _infoBlokk('Leveranse', `<div class="info-lenke info-lenke-rad" onclick="lukkModal('oppgaveInfoModal');åpneAktivitetInfo('${akt.id}')">
-          <span class="type-badge ${akt.type || ''}">${escapeHtml(getKat(akt.type)?.label || '')}</span>
+      html += _infoBlokk('Leveranse', `<div class="info-lenke info-lenke-rad" onclick="lukkModal('oppgaveInfoModal');åpneAktivitetInfo('${_jsStr(akt.id)}')">
+          <span class="type-badge ${escapeHtml(akt.type || '')}">${escapeHtml(getKat(akt.type)?.label || '')}</span>
           <span class="info-lenke-tittel">${escapeHtml(akt.tittel)}</span>
           <span class="info-dato">${_kortDato(akt.dato)}</span>
         </div>`);
     } else if (o.kategoriId) {
       const katI = getKat(o.kategoriId);
-      if (katI) html += _infoBlokk('Kategori', `<span class="type-badge ${katI.id}">${escapeHtml(katI.label)}</span>`);
+      if (katI) html += _infoBlokk('Kategori', `<span class="type-badge ${escapeHtml(katI.id)}">${escapeHtml(katI.label)}</span>`);
     }
 
-    if (o.notat) html += _infoBlokk('Notater', `<div class="info-tekst">${o.notat}</div>`);
+    if (o.notat) html += _infoBlokk('Notater', `<div class="info-tekst">${escapeHtml(o.notat)}</div>`);
 
     if (o.tagger && o.tagger.length) {
       html += _infoBlokk('Tagger', `<div class="info-knapper">${o.tagger.map(x => `<span class="tilknyttet-chip">#${escapeHtml(x)}</span>`).join('')}</div>`);
@@ -8326,7 +8338,7 @@
     if (tilknyttedeTodos.length > 0) {
       const antallFullfort = tilknyttedeTodos.filter(t => t.fullfort).length;
       const prosent = Math.round(antallFullfort / tilknyttedeTodos.length * 100);
-      const rader = tilknyttedeTodos.map(t => `<div class="sjekk-rad klikkbar${t.fullfort ? ' ferdig' : ''}" onclick="lukkModal('oppgaveInfoModal');åpneTodoInfo('${t.id}')">
+      const rader = tilknyttedeTodos.map(t => `<div class="sjekk-rad klikkbar${t.fullfort ? ' ferdig' : ''}" onclick="lukkModal('oppgaveInfoModal');åpneTodoInfo('${_jsStr(t.id)}')">
           <span class="sjekk-boks">${t.fullfort ? '✓' : ''}</span>
           <span class="sjekk-tekst">${escapeHtml(t.tittel)}</span>
           ${t.frist && !t.fullfort ? fristSpan(t.frist) : ''}
@@ -8394,15 +8406,15 @@
     const body = document.getElementById('infoModalBody');
 
     const typeBadgeHtml = erMilepel
-      ? `<span class="resultat-merke" style="--kat:${getKat(a.type)?.farge || 'var(--dempet)'}">◆ Resultat</span>`
+      ? `<span class="resultat-merke" style="--kat:${_farge(getKat(a.type)?.farge)}">◆ Resultat</span>`
       : '';
-    const katBadgeHtml = a.type ? `<span class="type-badge ${a.type}">${getKat(a.type)?.label || a.type}</span>` : '';
+    const katBadgeHtml = a.type ? `<span class="type-badge ${escapeHtml(a.type)}">${escapeHtml(getKat(a.type)?.label || a.type)}</span>` : '';
 
     let html = `<div class="info-knapper info-blokk">${typeBadgeHtml}${katBadgeHtml}</div>`
-      + _infoBlokk(erMilepel ? 'Dato' : 'Når', `<div class="info-linje"><span class="info-dato">${datoStr}${tidStr ? ' · ' + tidStr : ''}</span></div>`);
+      + _infoBlokk(erMilepel ? 'Dato' : 'Når', `<div class="info-linje"><span class="info-dato">${datoStr}${tidStr ? ' · ' + escapeHtml(tidStr) : ''}</span></div>`);
 
     if (a.beskrivelse) {
-      html += _infoBlokk('Beskrivelse', `<div class="info-tekst">${a.beskrivelse}</div>`);
+      html += _infoBlokk('Beskrivelse', `<div class="info-tekst">${escapeHtml(a.beskrivelse)}</div>`);
     }
 
     body.innerHTML = html;
@@ -8472,7 +8484,7 @@
         const info = document.createElement('div');
         info.className = 'oppgave-info';
         const metaHtml = o.frist ? fristSpan(o.frist, o.fullfort) : '';
-        info.innerHTML = `<div class="oppgave-besk">${o.beskrivelse}</div>
+        info.innerHTML = `<div class="oppgave-besk">${escapeHtml(o.beskrivelse)}</div>
           ${metaHtml ? '<div class="oppgave-meta">' + metaHtml + '</div>' : ''}`;
 
         kort.appendChild(cb);
@@ -8677,8 +8689,8 @@
 
       const tekst = document.createElement('div');
       tekst.style.cssText = 'flex:1;min-width:0;';
-      tekst.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--blekk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.tittel}</div>
-        <div style="font-size:11px;color:var(--dempet);">${datoStr}${ekstraInfo ? ' · ' + ekstraInfo : ''}</div>`;
+      tekst.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--blekk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.tittel)}</div>
+        <div style="font-size:11px;color:var(--dempet);">${datoStr}${ekstraInfo ? ' · ' + escapeHtml(ekstraInfo) : ''}</div>`;
       el.appendChild(tekst);
 
       if (knappTekst) {
@@ -9342,7 +9354,7 @@
     }
     if (_rapportKontekst.undertittel) {
       const el = document.querySelector('.rapport-tittel-stor');
-      if (el) el.innerHTML = _rapportKontekst.undertittel;
+      if (el) el.textContent = _rapportKontekst.undertittel;
     }
     // Swap tilbake
     aktiviteter = bak.aktiviteter;
@@ -9524,8 +9536,9 @@
 
     const fmtPer = (a, b) => `${fmtDato(a)} – ${fmtDato(b)}`;
     const tittel = data.kat
-      ? `Statusrapport — <span style="color:${data.kat.farge}">${data.kat.label}</span>`
+      ? `Statusrapport — <span style="color:${_farge(data.kat.farge)}">${escapeHtml(data.kat.label)}</span>`
       : 'Statusrapport';
+    const katPill = kat => `<span class="rapport-pill" style="border-color:${_farge(kat.farge)};color:${_farge(kat.farge)};">${escapeHtml(kat.label)}</span>`;
 
     document.querySelector('#rapportModal .modal-tittel').textContent =
       data.kat ? `Rapport: ${data.kat.label}` : 'Rapport';
@@ -9545,9 +9558,9 @@
         const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
         const diff = Math.round((data.iDag - new Date(o.frist + 'T00:00:00')) / 86400000);
         html += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          ${kat ? katPill(kat) : ''}
           <div style="flex:1;">
-            <div class="rapport-item-tittel">${o.beskrivelse}</div>
+            <div class="rapport-item-tittel">${escapeHtml(o.beskrivelse)}</div>
             <div class="rapport-item-meta" style="color:var(--fare);font-weight:600;">${diff} dag${diff===1?'':'er'} over fristen (${fmtDatoFra(o.frist)})</div>
           </div>
         </div>`;
@@ -9566,17 +9579,17 @@
         const kat = getKat(a.type);
         const erMp = erResultatType(a);
         h += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          ${kat ? katPill(kat) : ''}
           <div style="flex:1;">
-            <div class="rapport-item-tittel">${erMp ? '◆ ' : ''}${a.tittel}</div>
-            <div class="rapport-item-meta">${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' · kl. ' + a.tid : ''}</div>
+            <div class="rapport-item-tittel">${erMp ? '◆ ' : ''}${escapeHtml(a.tittel)}</div>
+            <div class="rapport-item-meta">${fmtDatoFra(a.dato)}${a.datoTil && a.datoTil !== a.dato ? ' – ' + fmtDatoFra(a.datoTil) : ''}${a.tid ? ' · kl. ' + escapeHtml(a.tid) : ''}</div>
           </div>
         </div>`;
         oppListe.filter(o => o.aktivitetId === a.id).forEach(o => {
           bruktOpp.add(o.id);
           h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
             <div style="flex:1;">
-              <div class="rapport-item-tittel" style="font-size:13px;">↳ ${o.beskrivelse}</div>
+              <div class="rapport-item-tittel" style="font-size:13px;">↳ ${escapeHtml(o.beskrivelse)}</div>
               <div class="rapport-item-meta">Milepæl · Frist ${fmtDatoFra(o.frist)}</div>
             </div>
           </div>`;
@@ -9584,7 +9597,7 @@
             bruktTodo.add(t.id);
             h += `<div class="rapport-item" style="margin-left:28px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
               <div style="flex:1;">
-                <div class="rapport-item-tittel" style="font-size:12px;">◻ ${t.tittel}</div>
+                <div class="rapport-item-tittel" style="font-size:12px;">◻ ${escapeHtml(t.tittel)}</div>
                 <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
               </div>
             </div>`;
@@ -9595,7 +9608,7 @@
           bruktTodo.add(t.id);
           h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
             <div style="flex:1;">
-              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${t.tittel}</div>
+              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${escapeHtml(t.tittel)}</div>
               <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
             </div>
           </div>`;
@@ -9605,9 +9618,9 @@
       oppListe.filter(o => !bruktOpp.has(o.id)).forEach(o => {
         const kat = getKat(o.kategoriId) || getKat(aktiviteter.find(a => a.id === o.aktivitetId)?.type);
         h += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : ''}
+          ${kat ? katPill(kat) : ''}
           <div style="flex:1;">
-            <div class="rapport-item-tittel">${o.beskrivelse}</div>
+            <div class="rapport-item-tittel">${escapeHtml(o.beskrivelse)}</div>
             <div class="rapport-item-meta">Milepæl · Frist ${fmtDatoFra(o.frist)}</div>
           </div>
         </div>`;
@@ -9615,7 +9628,7 @@
           bruktTodo.add(t.id);
           h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
             <div style="flex:1;">
-              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${t.tittel}</div>
+              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${escapeHtml(t.tittel)}</div>
               <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
             </div>
           </div>`;
@@ -9625,9 +9638,9 @@
       todoListe.filter(t => !bruktTodo.has(t.id)).forEach(t => {
         const kat = getKat(t.kategoriId) || (t.oppgaveId ? getKat(oppgaver.find(o => o.id === t.oppgaveId)?.kategoriId) : null);
         h += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : '<span class="rapport-pill" style="border-color:var(--linje);color:var(--dempet);">To do</span>'}
+          ${kat ? katPill(kat) : '<span class="rapport-pill" style="border-color:var(--linje);color:var(--dempet);">To do</span>'}
           <div style="flex:1;">
-            <div class="rapport-item-tittel">◻ ${t.tittel}</div>
+            <div class="rapport-item-tittel">◻ ${escapeHtml(t.tittel)}</div>
             <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
           </div>
         </div>`;
@@ -9653,9 +9666,9 @@
                     (item.obj.aktivitetId ? getKat(aktiviteter.find(a => a.id === item.obj.aktivitetId)?.type) :
                     (item.obj.oppgaveId ? getKat(oppgaver.find(o => o.id === item.obj.oppgaveId)?.kategoriId) : null));
         html += `<div class="rapport-item">
-          ${kat ? `<span class="rapport-pill" style="border-color:${kat.farge};color:${kat.farge};">${kat.label}</span>` : `<span class="rapport-pill" style="border-color:var(--linje);color:var(--dempet);">${item.type}</span>`}
+          ${kat ? katPill(kat) : `<span class="rapport-pill" style="border-color:var(--linje);color:var(--dempet);">${item.type}</span>`}
           <div style="flex:1;">
-            <div class="rapport-item-tittel">${item.tittel}</div>
+            <div class="rapport-item-tittel">${escapeHtml(item.tittel)}</div>
             <div class="rapport-item-meta">Fullført ${fmtDatoFra(item.dato)}</div>
           </div>
         </div>`;
@@ -9760,7 +9773,7 @@
     prosjekter.filter(p => !p.arkivert).forEach(p => {
       const lbl = document.createElement('label');
       lbl.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;color:var(--blekk);cursor:pointer;';
-      lbl.innerHTML = `<input type="checkbox" class="printProsjektCb" value="${p.id}" ${p.id === aktivtProsjektId ? 'checked' : ''} style="width:15px;height:15px;accent-color:var(--aksent);"><span style="width:10px;height:10px;border-radius:2px;background:${p.farge};display:inline-block;flex-shrink:0;"></span> ${escapeHtml(p.navn)}`;
+      lbl.innerHTML = `<input type="checkbox" class="printProsjektCb" value="${escapeHtml(p.id)}" ${p.id === aktivtProsjektId ? 'checked' : ''} style="width:15px;height:15px;accent-color:var(--aksent);"><span style="width:10px;height:10px;border-radius:2px;background:${_farge(p.farge)};display:inline-block;flex-shrink:0;"></span> ${escapeHtml(p.navn)}`;
       pl.appendChild(lbl);
     });
     const dims = [
@@ -9852,17 +9865,17 @@
       const projRows = [];
       const mp = akt.filter(a => erResultatType(a) && a.dato && a.dato >= minD && a.dato <= maxD);
       const ak = akt.filter(a => !erResultatType(a) && a.dato && iRange(a.dato, a.datoTil || a.dato));
-      if (dims.milepal && mp.length) projRows.push({ kind: 'milestone', items: mp, farge: p.farge });
+      if (dims.milepal && mp.length) projRows.push({ kind: 'milestone', items: mp, farge: _farge(p.farge, '#9490d4') });
       if (dims.aktivitet && ak.length) {
         const byKat = {};
         ak.forEach(a => { const k = a.type || '_'; (byKat[k] = byKat[k] || []).push(a); });
         Object.keys(byKat).forEach(katId => {
           const k = kat.find(x => x.id === katId);
-          projRows.push({ kind: 'catlane', label: k ? k.label : 'Uten kategori', farge: k ? k.farge : '#9490d4', items: byKat[katId], opp });
+          projRows.push({ kind: 'catlane', label: k ? k.label : 'Uten kategori', farge: _farge(k && k.farge, '#9490d4'), items: byKat[katId], opp });
         });
       }
       if (!projRows.length) return;               // hopp over prosjekt uten innhold
-      if (data.length > 1) rows.push({ kind: 'projhdr', navn: p.navn, farge: p.farge });
+      if (data.length > 1) rows.push({ kind: 'projhdr', navn: p.navn, farge: _farge(p.farge, '#9490d4') });
       projRows.forEach(r => rows.push(r));
     });
     if (!rows.some(r => r.kind !== 'projhdr')) return null;
@@ -10012,7 +10025,7 @@
 
       const txt = document.createElement('div');
       txt.style.flex = '1';
-      txt.innerHTML = `<div class="valg-tittel">${label}</div>${sub ? `<div class="valg-under">${sub}</div>` : ''}`;
+      txt.innerHTML = `<div class="valg-tittel">${escapeHtml(label)}</div>${sub ? `<div class="valg-under">${escapeHtml(sub)}</div>` : ''}`;
       btn.appendChild(txt);
 
       const pil = document.createElement('div');
@@ -10141,9 +10154,7 @@
     const p = prosjekter.find(p => p.id === prosjektId);
     const katNavn = katFilter ? (pData.kategorier.find(k => k.id === katFilter)?.label || '') : '';
     const tittel = katNavn ? `${p.navn}: ${katNavn}` : `Rapport: ${p.navn}`;
-    const undertittel = katNavn
-      ? `Statusrapport — <span style="color:${pData.kategorier.find(k=>k.id===katFilter)?.farge||''}">${katNavn}</span>`
-      : 'Statusrapport — ' + (p?.navn || '');
+    const undertittel = 'Statusrapport — ' + (katNavn || p?.navn || '');
 
     // Lagre kontekst for periodebytte
     _rapportKontekst = {
