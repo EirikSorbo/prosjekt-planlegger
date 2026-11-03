@@ -119,6 +119,7 @@
       --skygge-liten:2px 2px 0 var(--blekk);
       --ramme:       2px solid var(--blekk);   /* kort, knapper og felt */
       --hjorne:      2px;
+      --app-bredde:  1320px;       /* sidepanel + innhold, midtstilt på store skjermer */
       --motfarge:    var(--lys);   /* tekst på flater i blekkfarge */
       --motfarge-dempet: var(--lys-dempet);
       /* Overskriftene kan i tillegg styres med --tittel-bredde (font-stretch)
@@ -1680,6 +1681,10 @@
       }
       .oppsett > main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 44px 52px 90px; }
       #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 940px; margin: 0; }
+      /* Store skjermer: sidepanel og innhold står samlet midt på, og
+         innholdet i toppstripen følger samme bredde. */
+      .oppsett { max-width: var(--app-bredde); margin: 0 auto; }
+      body > header { padding-inline: max(22px, calc((100% - var(--app-bredde)) / 2 + 22px)); }
     }
 
     .sp-gruppe { font-family: var(--font-mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--dempet); margin: 0 0 12px 22px; }
@@ -2369,7 +2374,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.2</div>
+<div class="versjon">Prosjekt-planlegger v6.3</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -7062,9 +7067,11 @@
     if (en === 'imorgen') return { dato: _datoOm(1), antall: 1 };
     if (en === 'overmorgen') return { dato: _datoOm(2), antall: 1 };
     if (erDag(en)) return { dato: _nesteUkedag(_HURTIG_DAGER[en]), antall: 1 };
-    // 31.10, 31/10, 31.10.26, 31.10.2026
+    // 31.10, 31/10, 31.10.26, 31.10.2026. Uten år må «innen», «til», «frist»
+    // eller «før» stå foran, så «Se kapittel 3.2» og «Versjon 1.5» ikke får frist.
     const m = en.match(/^(\d{1,2})[./](\d{1,2})(?:[./](\d{2}|\d{4}))?\.?$/);
     if (m) {
+      if (!m[3] && !/^(innen|til|frist|før)$/.test(s(2))) return null;
       const dag = +m[1], mnd = +m[2];
       if (dag < 1 || dag > 31 || mnd < 1 || mnd > 12) return null;
       let år = m[3] ? +m[3] : new Date().getFullYear();
