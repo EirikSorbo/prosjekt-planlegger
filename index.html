@@ -119,7 +119,7 @@
       --skygge-liten:2px 2px 0 var(--blekk);
       --ramme:       2px solid var(--blekk);   /* kort, knapper og felt */
       --hjorne:      2px;
-      --app-bredde:  1320px;       /* sidepanel + innhold, midtstilt på store skjermer */
+      --app-bredde:  82.5rem;       /* sidepanel + innhold, midtstilt på store skjermer */
       --motfarge:    var(--lys);   /* tekst på flater i blekkfarge */
       --motfarge-dempet: var(--lys-dempet);
       /* Overskriftene kan i tillegg styres med --tittel-bredde (font-stretch)
@@ -201,12 +201,20 @@
       --ramme: 2px solid #5a5650; --motfarge: #141518; --motfarge-dempet: rgba(20,21,24,.68);
     }
 
+    /* ── Størrelse (v6.4) ───────────────────────────────────────────────────
+       Skrift, luft og knapper er satt i rem (px / 16), så alt skaleres fra
+       skriftstørrelsen her. 100 % gir 16 px og akkurat de gamle målene (mobil).
+       Store skjermer: litt mindre, så appen blir nettere. Skriv nye mål i rem;
+       kanter, skygger og hårstreker kan stå i px. */
+    html { font-size: 100%; }
+    @media screen and (min-width: 900px) { html { font-size: 92%; } }
+
     body {
       font-family: var(--font-body);
       background: var(--papir);
       color: var(--blekk);
       min-height: 100vh;
-      font-size: 15px;
+      font-size: 0.9375rem;
       line-height: 1.5;
     }
 
@@ -214,31 +222,31 @@
     header {
       background: var(--papir-lys);
       border-bottom: 1px solid var(--linje);
-      padding: 0 12px;
+      padding: 0 0.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 58px;
+      height: 3.625rem;
       position: sticky;
       top: 0;
       z-index: 100;
     }
     @media (min-width: 700px) {
-      header, .faner { max-width: 1100px; margin-left: auto; margin-right: auto; }
+      header, .faner { max-width: 68.75rem; margin-left: auto; margin-right: auto; }
     }
     @media (min-width: 1280px) {
-      header, .faner { max-width: 1280px; }
+      header, .faner { max-width: 80rem; }
     }
 
     .header-handlinger {
       display: flex;
-      gap: 6px;
+      gap: 0.375rem;
       align-items: center;
     }
 
     .header-knapp {
-      width: 36px;
-      height: 36px;
+      width: 2.25rem;
+      height: 2.25rem;
       border-radius: 50%;
       border: 1px solid var(--linje);
       background: var(--papir-lys);
@@ -247,7 +255,7 @@
       align-items: center;
       justify-content: center;
       color: var(--dempet);
-      font-size: 18px;
+      font-size: 1.125rem;
       line-height: 1;
       transition: all .15s;
     }
@@ -258,13 +266,13 @@
     .logo {
       font-family: var(--font-ui);
       font-weight: 800;
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--aksent);
       letter-spacing: -0.3px;
       white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 0.4375rem;
       font-variant-numeric: lining-nums;
       font-feature-settings: "lnum" 1;
     }
@@ -277,16 +285,16 @@
       border-bottom: 1px solid var(--linje);
       padding: 0;
       position: sticky;
-      top: 58px;
+      top: 3.625rem;
       z-index: 99;
     }
 
     .fane {
       flex: 1;
-      padding: 13px 4px;
+      padding: 0.8125rem 0.25rem;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 11px;
+      font-size: 0.6875rem;
       letter-spacing: 0.3px;
       color: var(--dempet);
       cursor: pointer;
@@ -305,18 +313,18 @@
 
     /* ── Main ── */
     main {
-      max-width: 480px;
+      max-width: 30rem;
       margin: 0 auto;
-      padding: 20px 12px 64px;
+      padding: 1.25rem 0.75rem 4rem;
     }
 
     /* Bredere layout på tablet/desktop */
     @media (min-width: 700px) {
-      main { max-width: 1100px; padding: 24px 24px 80px; }
-      #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 720px; margin: 0 auto; }
+      main { max-width: 68.75rem; padding: 1.5rem 1.5rem 5rem; }
+      #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 45rem; margin: 0 auto; }
     }
     @media (min-width: 1280px) {
-      main { max-width: 1280px; }
+      main { max-width: 80rem; }
     }
 
     .panel { display: none; }
@@ -327,13 +335,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
+      margin-bottom: 1.125rem;
     }
 
     .seksjon-tittel {
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 16px;
+      font-size: 1rem;
       color: var(--blekk);
     }
 
@@ -342,17 +350,17 @@
       color: var(--lys);
       border: none;
       border-radius: var(--rs);
-      padding: 9px 16px;
+      padding: 0.5625rem 1rem;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 12px;
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.4px;
       cursor: pointer;
       transition: background .15s;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 0.375rem;
     }
     .legg-til-knapp:hover { background: var(--blekk); color: var(--motfarge); }
 
@@ -364,17 +372,17 @@
     }
 
     .tom-melding {
-      padding: 48px 24px;
+      padding: 3rem 1.5rem;
       text-align: center;
       color: var(--dempet);
-      font-size: 14px;
+      font-size: 0.875rem;
       line-height: 1.7;
     }
 
     .maaned-label {
-      padding: 12px 20px 8px;
+      padding: 0.75rem 1.25rem 0.5rem;
       font-family: var(--font-ui);
-      font-size: 10px;
+      font-size: 0.625rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -385,10 +393,10 @@
 
     /* ── Activity card ── */
     .aktivitet-kort {
-      padding: 13px 20px;
+      padding: 0.8125rem 1.25rem;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 0.875rem;
       border-bottom: 1px solid var(--linje);
       cursor: pointer;
       transition: background .1s;
@@ -396,9 +404,9 @@
     .aktivitet-kort:last-child { border-bottom: none; }
 
     .type-badge {
-      padding: 3px 10px;
+      padding: 0.1875rem 0.625rem;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       font-family: var(--font-ui);
       text-transform: uppercase;
@@ -412,17 +420,17 @@
     .aktivitet-info { flex: 1; min-width: 0; }
     .aktivitet-tittel {
       font-weight: 700;
-      font-size: 14px;
+      font-size: 0.875rem;
       color: var(--blekk);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .aktivitet-meta { font-size: 12px; color: var(--dempet); margin-top: 2px; }
+    .aktivitet-meta { font-size: 0.75rem; color: var(--dempet); margin-top: 2px; }
 
     .ikon-knapp {
-      width: 30px;
-      height: 30px;
+      width: 1.875rem;
+      height: 1.875rem;
       border-radius: var(--rs);
       border: 1px solid var(--linje);
       background: var(--papir-lys);
@@ -431,7 +439,7 @@
       align-items: center;
       justify-content: center;
       color: var(--dempet);
-      font-size: 13px;
+      font-size: 0.8125rem;
       transition: all .15s;
       flex-shrink: 0;
     }
@@ -442,13 +450,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
+      margin-bottom: 1.125rem;
     }
 
     .maaned-tittel {
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 17px;
+      font-size: 1.0625rem;
       color: var(--blekk);
       text-transform: capitalize;
     }
@@ -457,14 +465,14 @@
       background: var(--papir-lys);
       border: 1px solid var(--linje);
       border-radius: var(--rs);
-      width: 36px;
-      height: 36px;
+      width: 2.25rem;
+      height: 2.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       color: var(--dempet);
-      font-size: 18px;
+      font-size: 1.125rem;
       transition: all .15s;
       line-height: 1;
     }
@@ -485,10 +493,10 @@
     }
 
     .dag-navn {
-      padding: 9px 4px;
+      padding: 0.5625rem 0.25rem;
       text-align: center;
       font-family: var(--font-ui);
-      font-size: 10px;
+      font-size: 0.625rem;
       font-weight: 700;
       color: var(--aksent);
       text-transform: uppercase;
@@ -501,8 +509,8 @@
     }
 
     .dag-celle {
-      min-height: 76px;
-      padding: 7px 6px 6px;
+      min-height: 4.75rem;
+      padding: 0.4375rem 0.375rem 0.375rem;
       border-right: 1px solid var(--linje);
       border-bottom: 1px solid var(--linje);
       cursor: pointer;
@@ -515,15 +523,15 @@
 
     .dag-nr {
       font-weight: 700;
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--blekk);
-      width: 24px;
-      height: 24px;
+      width: 1.5rem;
+      height: 1.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      margin-bottom: 4px;
+      margin-bottom: 0.25rem;
     }
 
     .dag-celle.i-dag .dag-nr {
@@ -537,20 +545,20 @@
     .prikke-rad {
       display: flex;
       flex-wrap: wrap;
-      gap: 3px;
+      gap: 0.1875rem;
       justify-content: center;
     }
 
     .prikk {
-      width: 9px;
-      height: 9px;
+      width: 0.5625rem;
+      height: 0.5625rem;
       border-radius: 50%;
       flex-shrink: 0;
     }
 
     /* Selected day panel */
     .valgt-dag-panel {
-      margin-top: 14px;
+      margin-top: 0.875rem;
       background: var(--papir-lys);
       border-radius: var(--r);
       border: 1px solid var(--linje);
@@ -560,7 +568,7 @@
     .valgt-dag-panel.vis { display: block; }
 
     .valgt-dag-header {
-      padding: 12px 20px;
+      padding: 0.75rem 1.25rem;
       border-bottom: 1px solid var(--linje);
       background: var(--aksent-lys);
       display: flex;
@@ -571,12 +579,12 @@
     .valgt-dag-tittel {
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--blekk);
     }
 
     .dag-seksjon-header {
-      padding: 10px 20px 8px;
+      padding: 0.625rem 1.25rem 0.5rem;
       background: var(--aksent-lys);
       border-bottom: 1px solid var(--linje);
       border-top: 1px solid var(--linje);
@@ -587,7 +595,7 @@
     .dag-seksjon-header:first-child { border-top: none; }
     .dag-seksjon-label {
       font-family: var(--font-ui);
-      font-size: 10px;
+      font-size: 0.625rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -597,10 +605,10 @@
       background: none;
       border: 1px solid var(--aksent-mid);
       border-radius: var(--rs);
-      padding: 3px 10px;
+      padding: 0.1875rem 0.625rem;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 11px;
+      font-size: 0.6875rem;
       color: var(--aksent);
       cursor: pointer;
       transition: all .15s;
@@ -610,15 +618,15 @@
     /* ── Tasks ── */
     .filter-rad {
       display: flex;
-      gap: 6px;
+      gap: 0.375rem;
       flex-wrap: wrap;
-      margin-bottom: 16px;
+      margin-bottom: 1rem;
     }
 
     .filter-pill {
-      padding: 6px 13px;
+      padding: 0.375rem 0.8125rem;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 0.75rem;
       font-weight: 700;
       border: 1px solid var(--linje);
       background: var(--papir-lys);
@@ -645,13 +653,13 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      padding-right: 16px;
+      padding-right: 1rem;
       pointer-events: none;
       border-radius: var(--r);
     }
     .sveip-bakgrunn .slett-sirkel {
-      width: 40px;
-      height: 40px;
+      width: 2.5rem;
+      height: 2.5rem;
       border-radius: 50%;
       background: var(--fare);
       display: flex;
@@ -683,13 +691,13 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding-left: 16px;
+      padding-left: 1rem;
       pointer-events: none;
       border-radius: var(--r);
     }
     .sveip-fullfor .fullfor-sirkel {
-      width: 40px;
-      height: 40px;
+      width: 2.5rem;
+      height: 2.5rem;
       border-radius: 50%;
       background: var(--ok);
       display: flex;
@@ -705,17 +713,17 @@
     /* ── Angre-toast (klikkbar, i motsetning til synk-status) ── */
     .angre-toast {
       position: fixed;
-      bottom: 16px;
+      bottom: 1rem;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       background: var(--blekk);
       color: var(--motfarge);
       border-radius: 12px;
-      padding: 10px 12px 10px 16px;
+      padding: 0.625rem 0.75rem 0.625rem 1rem;
       display: flex;
       align-items: center;
-      gap: 14px;
-      font-size: 13px;
+      gap: 0.875rem;
+      font-size: 0.8125rem;
       font-weight: 600;
       font-family: var(--font-body);
       z-index: 10000;
@@ -731,47 +739,47 @@
       border: none;
       color: var(--gul);
       font-weight: 800;
-      font-size: 12px;
+      font-size: 0.75rem;
       font-family: var(--font-ui);
       cursor: pointer;
-      padding: 4px 6px;
+      padding: 0.25rem 0.375rem;
       text-transform: uppercase;
       letter-spacing: .5px;
     }
 
     /* ── Hurtig-tillegg av to do (inline input) ── */
-    .hurtig-todo-rad { margin-bottom: 8px; }
+    .hurtig-todo-rad { margin-bottom: 0.5rem; }
     .hurtig-todo-rad input {
       width: 100%;
       box-sizing: border-box;
-      padding: 11px 14px;
+      padding: 0.6875rem 0.875rem;
       border: 1px dashed var(--linje);
       border-radius: var(--r);
       background: var(--papir-lys);
       font-family: var(--font-body);
-      font-size: 14px;
+      font-size: 0.875rem;
       color: var(--blekk);
     }
     .hurtig-todo-rad input:focus { outline: none; border-style: solid; border-color: var(--aksent); }
     .hurtig-todo-rad input::placeholder { color: var(--dempet); }
 
     /* ── Fritekst-søk på startsiden ── */
-    .start-sok-rad { margin-bottom: 10px; }
+    .start-sok-rad { margin-bottom: 0.625rem; }
     .start-sok-rad input {
       width: 100%;
       box-sizing: border-box;
-      padding: 10px 14px;
+      padding: 0.625rem 0.875rem;
       border: 1px solid var(--linje);
       border-radius: var(--r);
       background: var(--papir-lys);
       font-family: var(--font-body);
-      font-size: 14px;
+      font-size: 0.875rem;
       color: var(--blekk);
     }
     .start-sok-rad input:focus { outline: none; border-color: var(--aksent); }
     .sok-treff {
-      padding: 11px 14px;
-      margin-bottom: 6px;
+      padding: 0.6875rem 0.875rem;
+      margin-bottom: 0.375rem;
       background: var(--papir-lys);
       border: 1px solid var(--linje);
       border-radius: var(--r);
@@ -779,17 +787,17 @@
       transition: background .1s;
     }
     .sok-treff:hover { background: var(--aksent-lys); }
-    .sok-treff-tittel { font-size: 14px; font-weight: 600; color: var(--blekk); }
+    .sok-treff-tittel { font-size: 0.875rem; font-weight: 600; color: var(--blekk); }
     .sok-treff-tittel.fullfort { text-decoration: line-through; color: var(--dempet); }
-    .sok-treff-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--dempet); }
-    .sok-chip { border: 1px solid; border-radius: 8px; padding: 1px 6px; font-size: 10px; font-weight: 700; }
+    .sok-treff-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; font-size: 0.6875rem; color: var(--dempet); }
+    .sok-chip { border: 1px solid; border-radius: 8px; padding: 1px 0.375rem; font-size: 0.625rem; font-weight: 700; }
 
     /* ── Oppgave type-stripe ── */
     .oppgave-kort {
-      padding: 13px 20px 13px 16px;
+      padding: 0.8125rem 1.25rem 0.8125rem 1rem;
       display: flex;
       align-items: flex-start;
-      gap: 13px;
+      gap: 0.8125rem;
       border-bottom: 1px solid var(--linje);
       transition: background .1s;
       border-left: 4px solid transparent;
@@ -799,8 +807,8 @@
 
     .checkbox { display: none; }
     .checkbox.sjekket {
-      width: 20px;
-      height: 20px;
+      width: 1.25rem;
+      height: 1.25rem;
       border-radius: 6px;
       cursor: pointer;
       display: flex;
@@ -808,7 +816,7 @@
       justify-content: center;
       flex-shrink: 0;
       margin-top: 1px;
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       color: var(--lys);
       background: var(--aksent);
@@ -819,7 +827,7 @@
 
     .oppgave-besk {
       font-weight: 700;
-      font-size: 14px;
+      font-size: 0.875rem;
       color: var(--blekk);
     }
     .oppgave-kort.fullfort .oppgave-besk {
@@ -828,14 +836,14 @@
 
     .oppgave-meta {
       display: flex;
-      gap: 10px;
+      gap: 0.625rem;
       flex-wrap: wrap;
-      margin-top: 5px;
+      margin-top: 0.3125rem;
       align-items: center;
     }
 
     .frist-tekst {
-      font-size: 12px;
+      font-size: 0.75rem;
       color: var(--dempet);
     }
     .frist-tekst.forfalt { color: var(--kamp); font-weight: 600; }
@@ -849,7 +857,7 @@
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding: 16px;
+      padding: 1rem;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       opacity: 0;
@@ -862,7 +870,7 @@
       background: var(--papir-lys);
       border-radius: 16px;
       width: 100%;
-      max-width: 440px;
+      max-width: 27.5rem;
       overflow: visible;
       transform: translateY(12px) scale(0.99);
       transition: transform .2s;
@@ -873,7 +881,7 @@
     .modal-overlay.vis .modal { transform: translateY(0) scale(1); }
 
     .modal-header {
-      padding: 18px 22px 14px;
+      padding: 1.125rem 1.375rem 0.875rem;
       border-bottom: 1px solid var(--linje);
       display: flex;
       align-items: center;
@@ -883,7 +891,7 @@
     .modal-tittel {
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 15px;
+      font-size: 0.9375rem;
       color: var(--blekk);
     }
 
@@ -892,9 +900,9 @@
       border: none;
       cursor: pointer;
       color: var(--dempet);
-      font-size: 22px;
-      width: 32px;
-      height: 32px;
+      font-size: 1.375rem;
+      width: 2rem;
+      height: 2rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -905,16 +913,16 @@
     .lukk-knapp:hover { background: var(--aksent-lys); color: var(--aksent); }
 
     .modal-body {
-      padding: 18px 22px;
+      padding: 1.125rem 1.375rem;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 0.875rem;
     }
 
-    .felt { display: flex; flex-direction: column; gap: 5px; }
+    .felt { display: flex; flex-direction: column; gap: 0.3125rem; }
 
     .felt label {
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       font-family: var(--font-ui);
       text-transform: uppercase;
@@ -927,9 +935,9 @@
     .felt textarea {
       border: 1px solid var(--linje);
       border-radius: var(--rs);
-      padding: 9px 11px;
+      padding: 0.5625rem 0.6875rem;
       font-family: var(--font-body);
-      font-size: 16px;
+      font-size: 1rem;
       font-weight: 500;
       color: var(--blekk);
       background: var(--papir);
@@ -943,17 +951,17 @@
       border-color: var(--aksent);
       background: var(--papir-lys);
     }
-    .felt textarea { resize: vertical; min-height: 72px; }
+    .felt textarea { resize: vertical; min-height: 4.5rem; }
 
-    .felt-rad { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .felt-rad { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
     .modal-footer {
-      padding: 14px 22px 18px;
+      padding: 0.875rem 1.375rem 1.125rem;
       border-top: 1px solid var(--linje);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 0.625rem;
     }
 
     .knapp-primær {
@@ -961,10 +969,10 @@
       color: var(--lys);
       border: none;
       border-radius: var(--rs);
-      padding: 9px 20px;
+      padding: 0.5625rem 1.25rem;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 12px;
+      font-size: 0.75rem;
       letter-spacing: 0.3px;
       cursor: pointer;
       transition: background .15s;
@@ -976,10 +984,10 @@
       color: var(--dempet);
       border: 1px solid var(--linje);
       border-radius: var(--rs);
-      padding: 9px 16px;
+      padding: 0.5625rem 1rem;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 12px;
+      font-size: 0.75rem;
       cursor: pointer;
       transition: all .15s;
     }
@@ -990,26 +998,26 @@
       color: var(--kamp);
       border: 1px solid var(--fare-lys);
       border-radius: var(--rs);
-      padding: 9px 14px;
+      padding: 0.5625rem 0.875rem;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 12px;
+      font-size: 0.75rem;
       cursor: pointer;
       transition: all .15s;
     }
     .knapp-slett:hover { background: var(--fare-lys); }
 
-    .knapp-gruppe { display: flex; gap: 8px; }
+    .knapp-gruppe { display: flex; gap: 0.5rem; }
 
     /* Mobil-tilpasning for info-modal footer */
     @media (max-width: 480px) {
       .modal-footer .knapp-sek {
-        padding: 8px 10px;
-        font-size: 11px;
+        padding: 0.5rem 0.625rem;
+        font-size: 0.6875rem;
         white-space: nowrap;
       }
       .modal-footer .knapp-gruppe {
-        gap: 5px;
+        gap: 0.3125rem;
       }
       .modal-footer .info-lukk-mobil {
         display: none !important;
@@ -1018,15 +1026,15 @@
 
     /* ── Oppgave-indikator på aktivitetskort ── */
     .oppgave-badge {
-      width: 28px;
-      height: 28px;
+      width: 1.75rem;
+      height: 1.75rem;
       border-radius: 50%;
       border: 1px solid;
       background: var(--papir-lys);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 700;
       font-family: Georgia, serif;
       cursor: pointer;
@@ -1038,10 +1046,10 @@
     .tilknyttet-chip {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
+      gap: 0.25rem;
+      padding: 2px 0.5rem;
       border-radius: 12px;
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       border: 1.5px solid;
       background: transparent;
@@ -1050,7 +1058,7 @@
     /* ── To do ── */
     .todo-filter-knapp {
       display:flex;align-items:center;justify-content:center;
-      padding:0 10px;border-radius:var(--rs);
+      padding:0 0.625rem;border-radius:var(--rs);
       border:1.5px solid var(--linje);background:var(--papir-lys);
       color:var(--dempet);cursor:pointer;transition:all .15s;
       flex-shrink:0;box-sizing:border-box;
@@ -1066,46 +1074,46 @@
     .dags-popup {
       position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
       z-index:1101;background:var(--papir-lys);border:1.5px solid var(--linje);
-      border-radius:var(--r);width:480px;max-width:92vw;
+      border-radius:var(--r);width:30rem;max-width:92vw;
       box-shadow:var(--skygge-stor);overflow:hidden;
       animation:slideUp .18s ease;
     }
     @keyframes slideUp { from{opacity:0;transform:translate(-50%,-46%)} to{opacity:1;transform:translate(-50%,-50%)} }
     .dags-popup-header {
-      padding:18px 20px 14px;border-bottom:1px solid var(--linje);
+      padding:1.125rem 1.25rem 0.875rem;border-bottom:1px solid var(--linje);
       display:flex;align-items:center;justify-content:space-between;
     }
     .dags-innhold {
-      padding:16px 20px;max-height:60vh;overflow-y:auto;
+      padding:1rem 1.25rem;max-height:60vh;overflow-y:auto;
     }
     .dags-seksjon-tittel {
-      font-size:10px;font-weight:700;font-family:var(--font-ui);
-      text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;
+      font-size:0.625rem;font-weight:700;font-family:var(--font-ui);
+      text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.5rem;
     }
     .dags-rad {
-      display:flex;align-items:center;gap:10px;
-      padding:8px 10px;border-radius:var(--rs);
-      cursor:pointer;margin-bottom:3px;transition:background .12s;
+      display:flex;align-items:center;gap:0.625rem;
+      padding:0.5rem 0.625rem;border-radius:var(--rs);
+      cursor:pointer;margin-bottom:0.1875rem;transition:background .12s;
     }
     .dags-rad:hover { background:var(--aksent-lys); }
 
     .todo-hurtigknapper {
       display: flex;
       align-items: stretch;
-      gap: 8px;
-      padding: 14px 0 10px;
+      gap: 0.5rem;
+      padding: 0.875rem 0 0.625rem;
       flex-wrap: wrap;
     }
     .todo-hurtig-knapp {
       flex: 1;
-      min-width: 90px;
+      min-width: 5.625rem;
       background: var(--papir-lys);
       border: 1.5px solid var(--linje);
       border-radius: var(--rs);
-      padding: 9px 10px;
+      padding: 0.5625rem 0.625rem;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 12px;
+      font-size: 0.75rem;
       color: var(--aksent);
       cursor: pointer;
       text-align: center;
@@ -1116,8 +1124,8 @@
     .todo-kort {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 14px;
+      gap: 0.625rem;
+      padding: 0.5rem 0.875rem;
       background: var(--papir-lys);
       border-bottom: 1px solid var(--linje);
       cursor: pointer;
@@ -1129,8 +1137,8 @@
     .todo-kort.fullfort .todo-tittel { text-decoration: line-through; opacity: 0.4; }
 
     .todo-cb {
-      width: 18px;
-      height: 18px;
+      width: 1.125rem;
+      height: 1.125rem;
       border-radius: 50%;
       border: 2px solid var(--aksent-mid);
       flex-shrink: 0;
@@ -1145,11 +1153,11 @@
     .todo-cb:hover:not(.sjekket) { border-color: var(--aksent); }
 
     .todo-info { flex: 1; min-width: 0; }
-    .todo-tittel { font-size: 13px; font-weight: 600; color: var(--blekk); }
-    .todo-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; align-items: center; }
+    .todo-tittel { font-size: 0.8125rem; font-weight: 600; color: var(--blekk); }
+    .todo-meta { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-top: 2px; align-items: center; }
 
     /* Prioritet/viktig-stjerne på todo-/oppgave-kort */
-    .viktig-stjerne { background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; display: flex; align-items: center; }
+    .viktig-stjerne { background: none; border: none; cursor: pointer; padding: 0.25rem; flex-shrink: 0; display: flex; align-items: center; }
     .viktig-stjerne svg { fill: none; stroke: var(--linje); stroke-width: 1.6px; transition: .12s; }
     .viktig-stjerne:hover svg { stroke: var(--stjerne); }
     .viktig-stjerne.aktiv svg { fill: var(--stjerne-fyll); stroke: var(--stjerne); }
@@ -1157,18 +1165,18 @@
     /* ── Kategorioversikt-knapper ── */
     .kat-oversikt-rad {
       display: flex;
-      gap: 6px;
+      gap: 0.375rem;
       flex-wrap: wrap;
-      padding: 0 0 12px;
+      padding: 0 0 0.75rem;
     }
     .kat-oversikt-knapp {
-      padding: 5px 12px;
+      padding: 0.3125rem 0.75rem;
       border-radius: 20px;
       border: 1.5px solid;
       background: transparent;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 11px;
+      font-size: 0.6875rem;
       cursor: pointer;
       transition: background .15s, color .15s;
     }
@@ -1176,43 +1184,43 @@
 
     /* ── Kategorioversikt-modal ── */
     .kat-oversikt-seksjon {
-      margin-bottom: 18px;
+      margin-bottom: 1.125rem;
     }
     .kat-oversikt-seksjon-tittel {
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       font-family: var(--font-ui);
       color: var(--dempet);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      margin-bottom: 0.375rem;
     }
     .kat-oversikt-akt {
-      padding: 10px 12px;
+      padding: 0.625rem 0.75rem;
       background: var(--papir-lys);
       border-radius: var(--rs);
       border: 1px solid var(--linje);
-      margin-bottom: 6px;
+      margin-bottom: 0.375rem;
       cursor: pointer;
       transition: background .12s;
     }
     .kat-oversikt-akt:hover { background: var(--aksent-lys); }
     .kat-oversikt-akt-tittel {
-      font-size: 13px;
+      font-size: 0.8125rem;
       font-weight: 700;
       color: var(--blekk);
     }
     .kat-oversikt-akt-dato {
-      font-size: 11px;
+      font-size: 0.6875rem;
       color: var(--dempet);
       margin-top: 2px;
     }
     .kat-oversikt-oppgave {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 12px 6px 24px;
-      font-size: 12px;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem 0.375rem 1.5rem;
+      font-size: 0.75rem;
       color: var(--blekk);
       cursor: pointer;
       transition: background .1s;
@@ -1221,8 +1229,8 @@
     .kat-oversikt-oppgave:hover { background: var(--aksent-lys); }
 
     .info-ikon-knapp {
-      width: 34px;
-      height: 34px;
+      width: 2.125rem;
+      height: 2.125rem;
       border-radius: 50%;
       border: 1.5px solid var(--linje);
       background: var(--papir-lys);
@@ -1240,21 +1248,21 @@
     /* ── Kalender visningsvalg ── */
     .kal-visning-toggle {
       display: flex;
-      gap: 4px;
-      margin-bottom: 12px;
+      gap: 0.25rem;
+      margin-bottom: 0.75rem;
       background: var(--aksent-lys);
       border-radius: var(--rs);
-      padding: 3px;
+      padding: 0.1875rem;
     }
     .kal-toggle-knapp {
       flex: 1;
-      padding: 6px;
+      padding: 0.375rem;
       border: none;
       border-radius: 6px;
       background: transparent;
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 12px;
+      font-size: 0.75rem;
       color: var(--dempet);
       cursor: pointer;
       transition: background .15s, color .15s;
@@ -1274,23 +1282,23 @@
     .uke-dag-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
+      gap: 0.625rem;
+      padding: 0.5rem 0.75rem;
       cursor: pointer;
       transition: background .12s;
     }
     .uke-dag-header:hover { background: var(--aksent-lys); }
     .uke-dag-header.i-dag { background: var(--aksent-lys); }
     .uke-dag-nr {
-      width: 30px;
-      height: 30px;
+      width: 1.875rem;
+      height: 1.875rem;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: var(--font-ui);
       font-weight: 800;
-      font-size: 14px;
+      font-size: 0.875rem;
       color: var(--blekk);
       flex-shrink: 0;
     }
@@ -1299,30 +1307,30 @@
       color: var(--lys);
     }
     .uke-dag-navn {
-      font-size: 12px;
+      font-size: 0.75rem;
       font-weight: 700;
       font-family: var(--font-ui);
       color: var(--dempet);
       text-transform: uppercase;
-      width: 28px;
+      width: 1.75rem;
       flex-shrink: 0;
     }
     .uke-prikker {
       display: flex;
-      gap: 4px;
+      gap: 0.25rem;
       flex-wrap: wrap;
       flex: 1;
     }
     .uke-prikk {
-      width: 8px;
-      height: 8px;
+      width: 0.5rem;
+      height: 0.5rem;
       border-radius: 50%;
       flex-shrink: 0;
     }
     .uke-dag.valgt .uke-dag-header { background: var(--aksent-lys); }
     .uke-hendelse {
-      padding: 5px 12px 5px 52px;
-      font-size: 12px;
+      padding: 0.3125rem 0.75rem 0.3125rem 3.25rem;
+      font-size: 0.75rem;
       color: var(--blekk);
       border-left: 3px solid transparent;
       margin: 2px 0;
@@ -1343,13 +1351,13 @@
       justify-content: flex-end;
     }
     .tidslinje-skala-knapp {
-      padding: 5px 10px;
+      padding: 0.3125rem 0.625rem;
       border: 1px solid var(--linje);
       border-radius: var(--rs);
       background: var(--papir-lys);
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 11px;
+      font-size: 0.6875rem;
       color: var(--dempet);
       cursor: pointer;
       transition: all .15s;
@@ -1366,7 +1374,7 @@
       -webkit-overflow-scrolling: touch;
       /* Luft under innholdet så den horisontale scrollbaren (overlay på macOS)
          flyter over tom plass, ikke over nederste informasjonsrad. */
-      padding-bottom: 16px;
+      padding-bottom: 1rem;
     }
     .tidslinje-grid {
       position: relative;
@@ -1380,12 +1388,12 @@
     }
     .tidslinje-mnd-celle {
       font-family: var(--font-ui);
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       color: var(--aksent);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 8px 4px;
+      padding: 0.5rem 0.25rem;
       text-align: center;
       border-right: 1px solid var(--linje);
       box-sizing: border-box;
@@ -1401,8 +1409,8 @@
       position: sticky;
       left: 0;
       background: var(--papir-lys);
-      padding: 0 8px;
-      font-size: 11px;
+      padding: 0 0.5rem;
+      font-size: 0.6875rem;
       font-weight: 700;
       font-family: var(--font-ui);
       color: var(--blekk);
@@ -1435,8 +1443,8 @@
       height: 18px;
       top: 5px;
       border-radius: 4px;
-      padding: 0 6px;
-      font-size: 10px;
+      padding: 0 0.375rem;
+      font-size: 0.625rem;
       font-weight: 700;
       color: transparent;
       display: flex;
@@ -1486,17 +1494,17 @@
       background: var(--fare);
       color: var(--lys);
       font-family: var(--font-ui);
-      font-size: 9px;
+      font-size: 0.5625rem;
       font-weight: 700;
-      padding: 1px 4px;
+      padding: 1px 0.25rem;
       border-radius: 3px;
       z-index: 3;
     }
 
     /* ── Rapport ── */
-    .rapport-modal { max-width: 720px !important; }
+    .rapport-modal { max-width: 45rem !important; }
     .rapport-body {
-      padding: 24px 28px;
+      padding: 1.5rem 1.75rem;
       max-height: 70vh;
       overflow-y: auto;
       font-family: var(--font-body);
@@ -1504,44 +1512,44 @@
     .rapport-tittel-stor {
       font-family: var(--font-ui);
       font-weight: 800;
-      font-size: 22px;
+      font-size: 1.375rem;
       color: var(--blekk);
-      margin-bottom: 4px;
+      margin-bottom: 0.25rem;
       letter-spacing: -0.3px;
     }
     .rapport-undertittel {
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--dempet);
-      margin-bottom: 28px;
+      margin-bottom: 1.75rem;
       font-weight: 500;
     }
-    .rapport-seksjon { margin-bottom: 26px; }
+    .rapport-seksjon { margin-bottom: 1.625rem; }
     .rapport-seksjon-tittel {
       font-family: var(--font-ui);
       font-weight: 700;
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--aksent);
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      padding-bottom: 6px;
+      padding-bottom: 0.375rem;
       border-bottom: 2px solid var(--aksent);
-      margin-bottom: 12px;
+      margin-bottom: 0.75rem;
     }
     .rapport-item {
-      padding: 10px 0;
+      padding: 0.625rem 0;
       border-bottom: 1px solid var(--linje);
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 0.75rem;
     }
     .rapport-item:last-child { border-bottom: none; }
-    .rapport-item-tittel { font-weight: 700; font-size: 14px; color: var(--blekk); }
-    .rapport-item-meta { font-size: 12px; color: var(--dempet); margin-top: 2px; }
+    .rapport-item-tittel { font-weight: 700; font-size: 0.875rem; color: var(--blekk); }
+    .rapport-item-meta { font-size: 0.75rem; color: var(--dempet); margin-top: 2px; }
     .rapport-pill {
       display: inline-block;
-      padding: 2px 8px;
+      padding: 2px 0.5rem;
       border-radius: 10px;
-      font-size: 10px;
+      font-size: 0.625rem;
       font-weight: 700;
       font-family: var(--font-ui);
       text-transform: uppercase;
@@ -1551,28 +1559,28 @@
       flex-shrink: 0;
       margin-top: 1px;
     }
-    .rapport-tom { font-size: 13px; color: var(--dempet); font-style: italic; padding: 4px 0; }
+    .rapport-tom { font-size: 0.8125rem; color: var(--dempet); font-style: italic; padding: 0.25rem 0; }
     .rapport-stat-rad {
       display: flex;
-      gap: 14px;
-      margin-bottom: 24px;
+      gap: 0.875rem;
+      margin-bottom: 1.5rem;
     }
     .rapport-stat {
       flex: 1;
       background: var(--aksent-lys);
       border-radius: var(--rs);
-      padding: 14px;
+      padding: 0.875rem;
       text-align: center;
     }
     .rapport-stat-tall {
       font-family: var(--font-ui);
       font-weight: 800;
-      font-size: 26px;
+      font-size: 1.625rem;
       color: var(--aksent);
       letter-spacing: -0.5px;
     }
     .rapport-stat-label {
-      font-size: 10px;
+      font-size: 0.625rem;
       color: var(--dempet);
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -1585,20 +1593,20 @@
     .kat-rad {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 0;
+      gap: 0.625rem;
+      padding: 0.5rem 0;
       border-bottom: 1px solid var(--linje);
     }
     .kat-rad:last-child { border-bottom: none; }
     .kat-farge-velger {
       display: flex;
-      gap: 6px;
+      gap: 0.375rem;
       flex-wrap: wrap;
-      margin-top: 8px;
+      margin-top: 0.5rem;
     }
     .kat-farge-dot {
-      width: 22px;
-      height: 22px;
+      width: 1.375rem;
+      height: 1.375rem;
       border-radius: 50%;
       cursor: pointer;
       border: 2px solid transparent;
@@ -1609,9 +1617,9 @@
       flex: 1;
       border: 1px solid var(--linje);
       border-radius: var(--rs);
-      padding: 6px 10px;
+      padding: 0.375rem 0.625rem;
       font-family: var(--font-body);
-      font-size: 14px;
+      font-size: 0.875rem;
       color: var(--blekk);
       background: var(--papir);
     }
@@ -1619,8 +1627,8 @@
     /* ── Versjon ── */
     .versjon {
       text-align: center;
-      padding: 32px 0 16px;
-      font-size: 11px;
+      padding: 2rem 0 1rem;
+      font-size: 0.6875rem;
       color: var(--linje);
       font-family: var(--font-ui);
       letter-spacing: 0.5px;
@@ -1636,90 +1644,90 @@
 
     /* ── Toppstripe ─────────────────────────────────────────────────────── */
     body > header {
-      background: var(--topp); border-bottom: 0; height: 64px; padding: 0 22px; gap: 18px;
+      background: var(--topp); border-bottom: 0; height: 4rem; padding: 0 1.375rem; gap: 1.125rem;
       max-width: none; margin: 0; position: sticky; top: 0; z-index: 100;
     }
-    .logo { color: var(--lys); font-family: var(--font-ui); font-weight: 800; font-size: 15px; letter-spacing: .02em; gap: 12px; min-width: 0; }
+    .logo { color: var(--lys); font-family: var(--font-ui); font-weight: 800; font-size: 0.9375rem; letter-spacing: .02em; gap: 0.75rem; min-width: 0; }
     .logo-rute {
-      width: 34px; height: 34px; border-radius: var(--hjorne); flex-shrink: 0;
+      width: 2.125rem; height: 2.125rem; border-radius: var(--hjorne); flex-shrink: 0;
       background: var(--prosjekt); color: var(--lys); display: flex; align-items: center; justify-content: center;
-      font-weight: 900; font-size: 17px; text-transform: uppercase;
+      font-weight: 900; font-size: 1.0625rem; text-transform: uppercase;
     }
-    #prosjektTittel { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+    #prosjektTittel { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 15rem; }
     .logo > svg { color: var(--lys); opacity: .55; }
 
     body > header .faner {
-      position: static; background: transparent; border: 0; margin: 0 auto 0 14px; padding: 0;
+      position: static; background: transparent; border: 0; margin: 0 auto 0 0.875rem; padding: 0;
       gap: 2px; justify-content: flex-start; max-width: none;
     }
     body > header .fane {
-      flex: 0 0 auto; color: var(--topp-dempet); font-family: var(--font-ui); font-weight: 800; font-size: 13px;
-      font-stretch: var(--tittel-bredde, 90%); letter-spacing: .09em; padding: 8px 11px; border-bottom: 0; margin: 0;
+      flex: 0 0 auto; color: var(--topp-dempet); font-family: var(--font-ui); font-weight: 800; font-size: 0.8125rem;
+      font-stretch: var(--tittel-bredde, 90%); letter-spacing: .09em; padding: 0.5rem 0.6875rem; border-bottom: 0; margin: 0;
     }
     body > header .fane:hover { color: var(--lys); }
     body > header .fane.aktiv { color: var(--aksent); }
 
-    .header-handlinger { gap: 6px; }
-    body > header .header-knapp { background: transparent; border: 0; color: var(--topp-tekst); width: 38px; height: 38px; }
+    .header-handlinger { gap: 0.375rem; }
+    body > header .header-knapp { background: transparent; border: 0; color: var(--topp-tekst); width: 2.375rem; height: 2.375rem; }
     body > header .header-knapp:hover { background: var(--hover-lys); color: var(--lys); }
     .avatar-knapp {
-      width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer; margin-left: 6px;
-      background: var(--blå); color: var(--lys); font-family: var(--font-ui); font-weight: 800; font-size: 14px;
+      width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 0; cursor: pointer; margin-left: 0.375rem;
+      background: var(--blå); color: var(--lys); font-family: var(--font-ui); font-weight: 800; font-size: 0.875rem;
       display: flex; align-items: center; justify-content: center; letter-spacing: .02em;
     }
 
     /* ── Oppsett: sidepanel + innhold ───────────────────────────────────── */
-    .oppsett { display: flex; align-items: stretch; min-height: calc(100vh - 64px); }
+    .oppsett { display: flex; align-items: stretch; min-height: calc(100vh - 4rem); }
     .oppsett > main { flex: 1; min-width: 0; }
     #sidepanel { display: none; }
     main { max-width: none; }
     @media (min-width: 900px) {
       #sidepanel {
-        display: block; width: 264px; flex-shrink: 0; background: var(--sand);
-        border-right: 3px solid var(--blekk); padding: 36px 18px 40px;
-        position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto;
+        display: block; width: 16.5rem; flex-shrink: 0; background: var(--sand);
+        border-right: 3px solid var(--blekk); padding: 2.25rem 1.125rem 2.5rem;
+        position: sticky; top: 4rem; height: calc(100vh - 4rem); overflow-y: auto;
       }
-      .oppsett > main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 44px 52px 90px; }
-      #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 940px; margin: 0; }
+      .oppsett > main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 2.75rem 3.25rem 5.625rem; }
+      #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 58.75rem; margin: 0; }
       /* Store skjermer: sidepanel og innhold står samlet midt på, og
          innholdet i toppstripen følger samme bredde. */
       .oppsett { max-width: var(--app-bredde); margin: 0 auto; }
-      body > header { padding-inline: max(22px, calc((100% - var(--app-bredde)) / 2 + 22px)); }
+      body > header { padding-inline: max(1.375rem, calc((100% - var(--app-bredde)) / 2 + 1.375rem)); }
     }
 
-    .sp-gruppe { font-family: var(--font-mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--dempet); margin: 0 0 12px 22px; }
+    .sp-gruppe { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dempet); margin: 0 0 0.75rem 1.375rem; }
     .sp-lenke {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
-      padding: 14px 22px; margin-bottom: 4px; border: 0; border-radius: var(--hjorne); background: none; cursor: pointer;
-      font-family: var(--font-ui); font-size: 17px; font-weight: 500; color: var(--blekk); text-align: left;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.625rem; width: 100%;
+      padding: 0.875rem 1.375rem; margin-bottom: 0.25rem; border: 0; border-radius: var(--hjorne); background: none; cursor: pointer;
+      font-family: var(--font-ui); font-size: 1.0625rem; font-weight: 500; color: var(--blekk); text-align: left;
     }
     .sp-lenke:hover { background: var(--hover-mork); }
     .sp-lenke.aktiv { background: var(--aksent); color: var(--lys); font-weight: 800; }
-    .sp-tall { font-family: var(--font-mono); font-size: 14px; color: var(--dempet); }
+    .sp-tall { font-family: var(--font-mono); font-size: 0.875rem; color: var(--dempet); }
     .sp-lenke.aktiv .sp-tall { color: var(--lys-dempet); }
     .sp-pil { opacity: .7; }
-    .sp-skille { height: 46px; }
-    .sp-prosjekt { justify-content: flex-start; gap: 16px; padding: 12px 22px; }
+    .sp-skille { height: 2.875rem; }
+    .sp-prosjekt { justify-content: flex-start; gap: 1rem; padding: 0.75rem 1.375rem; }
     .sp-prosjekt.aktiv { background: var(--blekk); color: var(--motfarge); }
-    .sp-prikk { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; background: var(--blekk); }
+    .sp-prikk { width: 0.6875rem; height: 0.6875rem; border-radius: 50%; flex-shrink: 0; background: var(--blekk); }
     .sp-prosjekt-navn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sp-prosjekt-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; }
+    .sp-prosjekt-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1875rem; text-align: left; }
     .sp-prosjekt-tekst .sp-prosjekt-navn { flex: none; }
-    .sp-neste { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--dempet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sp-neste { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; color: var(--dempet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sp-prosjekt.aktiv .sp-neste { color: var(--motfarge-dempet); }
-    .sp-forfalt { flex-shrink: 0; min-width: 22px; padding: 2px 6px; background: var(--fare); color: var(--lys); font: 700 12px var(--font-mono); text-align: center; }
-    .sp-ny { color: var(--dempet); font-size: 15px; }
+    .sp-forfalt { flex-shrink: 0; min-width: 1.375rem; padding: 2px 0.375rem; background: var(--fare); color: var(--lys); font: 700 0.75rem var(--font-mono); text-align: center; }
+    .sp-ny { color: var(--dempet); font-size: 0.9375rem; }
 
     /* ── Sidehode: dato, stor tittel, undertittel, handlinger ───────────── */
-    .side-hode { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin: 0 0 28px; flex-wrap: wrap; }
+    .side-hode { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.375rem; margin: 0 0 1.75rem; flex-wrap: wrap; }
     .side-hode:empty { display: none; }
-    .side-dato { font-family: var(--font-mono); color: var(--blå); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }
+    .side-dato { font-family: var(--font-mono); color: var(--blå); font-size: 0.8125rem; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 0.75rem; font-weight: 500; }
     .side-tittel {
       font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 72%); text-transform: var(--tittel-store, uppercase);
-      font-size: clamp(36px, 6vw, 62px); line-height: .92; letter-spacing: -0.035em; color: var(--blekk);
+      font-size: clamp(2.25rem, 6vw, 3.875rem); line-height: .92; letter-spacing: -0.035em; color: var(--blekk);
     }
-    .side-under { color: var(--dempet); font-size: 17px; margin-top: 12px; }
-    .side-handlinger { display: flex; gap: 14px; flex-wrap: wrap; }
+    .side-under { color: var(--dempet); font-size: 1.0625rem; margin-top: 0.75rem; }
+    .side-handlinger { display: flex; gap: 0.875rem; flex-wrap: wrap; }
 
     /* ── Knapper: svart kant og hard skygge ─────────────────────────────── */
     .knapp-blokk, .knapp-primær, .knapp-sek, .legg-til-knapp, .todo-hurtig-knapp, .knapp-fare, .knapp-slett {
@@ -1727,7 +1735,7 @@
       font-family: var(--font-ui); font-weight: 700; cursor: pointer;
       transition: transform .08s, box-shadow .08s, background .12s;
     }
-    .knapp-blokk { font-size: 15px; font-weight: 800; padding: 14px 22px; background: var(--papir-lys); color: var(--blekk); box-shadow: var(--skygge); line-height: 1.2; }
+    .knapp-blokk { font-size: 0.9375rem; font-weight: 800; padding: 0.875rem 1.375rem; background: var(--papir-lys); color: var(--blekk); box-shadow: var(--skygge); line-height: 1.2; }
     .knapp-blokk.primær, .knapp-primær { background: var(--aksent); color: var(--lys); }
     .knapp-sek, .legg-til-knapp, .todo-hurtig-knapp { background: var(--papir-lys); color: var(--blekk); }
     .knapp-fare, .knapp-slett { background: var(--papir-lys); color: var(--fare); border-color: var(--fare); box-shadow: 2px 2px 0 var(--fare); }
@@ -1742,69 +1750,69 @@
     .info-ikon-knapp:hover { background: var(--gul); }
 
     /* ── Verktøyrad: kategorier + filter ────────────────────────────────── */
-    .verktoy-rad { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 22px; flex-wrap: wrap; }
+    .verktoy-rad { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1.375rem; flex-wrap: wrap; }
     .verktoy-rad .kat-oversikt-rad { margin: 0; }
-    .kat-oversikt-rad { display: flex; gap: 12px; flex-wrap: wrap; }
+    .kat-oversikt-rad { display: flex; gap: 0.75rem; flex-wrap: wrap; }
     .kat-oversikt-knapp {
       border: var(--ramme); color: var(--blekk); background: var(--papir-lys); border-radius: var(--hjorne);
-      padding: 9px 17px; font-family: var(--font-ui); font-weight: 700; font-size: 15px;
-      display: inline-flex; align-items: center; gap: 9px; opacity: 1; cursor: pointer;
+      padding: 0.5625rem 1.0625rem; font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem;
+      display: inline-flex; align-items: center; gap: 0.5625rem; opacity: 1; cursor: pointer;
     }
-    .kat-oversikt-knapp::before { content: ''; width: 10px; height: 10px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .kat-oversikt-knapp::before { content: ''; width: 0.625rem; height: 0.625rem; background: var(--kat, var(--blekk)); flex-shrink: 0; }
     .kat-oversikt-knapp:hover { background: var(--gul); opacity: 1; }
     .filtrer-knapp {
-      background: none; border: 0; cursor: pointer; position: relative; padding: 8px 4px;
-      font-family: var(--font-ui); font-size: 16px; color: var(--dempet); display: inline-flex; gap: 8px; align-items: center;
+      background: none; border: 0; cursor: pointer; position: relative; padding: 0.5rem 0.25rem;
+      font-family: var(--font-ui); font-size: 1rem; color: var(--dempet); display: inline-flex; gap: 0.5rem; align-items: center;
     }
     .filtrer-knapp:hover { color: var(--blekk); }
     .filtrer-knapp.aktiv { color: var(--aksent); font-weight: 700; }
 
     /* ── Hurtiginntasting ───────────────────────────────────────────────── */
-    .hurtig-todo-rad { position: relative; margin: 0 0 30px; }
+    .hurtig-todo-rad { position: relative; margin: 0 0 1.875rem; }
     .hurtig-todo-rad input {
       width: 100%; border: 2.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
-      padding: 21px 130px 21px 26px; font-family: var(--font-body); font-size: 18px; color: var(--blekk);
+      padding: 1.3125rem 8.125rem 1.3125rem 1.625rem; font-family: var(--font-body); font-size: 1.125rem; color: var(--blekk);
     }
     .hurtig-todo-rad input:focus { outline: none; border: 2.5px solid var(--blekk); box-shadow: var(--skygge); }
     .hurtig-todo-rad input::placeholder { color: var(--plassholder); }
     .hurtig-todo-rad::after {
-      content: 'ENTER \21B5'; position: absolute; right: 26px; top: 50%; transform: translateY(-50%);
-      font-family: var(--font-mono); color: var(--blå); font-size: 16px; letter-spacing: .04em; pointer-events: none;
+      content: 'ENTER \21B5'; position: absolute; right: 1.625rem; top: 50%; transform: translateY(-50%);
+      font-family: var(--font-mono); color: var(--blå); font-size: 1rem; letter-spacing: .04em; pointer-events: none;
     }
     .start-sok-rad input {
       border: 2.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
-      font-family: var(--font-body); font-size: 16px; padding: 15px 20px;
+      font-family: var(--font-body); font-size: 1rem; padding: 0.9375rem 1.25rem;
     }
     .start-sok-rad input:focus { outline: none; border-color: var(--blekk); box-shadow: var(--skygge); }
 
     /* ── Lister: gruppeoverskrift + rader ───────────────────────────────── */
     .kort-container { background: transparent; border: 0; box-shadow: none; border-radius: 0; overflow: visible; }
     .maaned-label.gruppe-etikett {
-      display: flex; align-items: center; gap: 22px; margin: 30px 0 4px; padding: 0;
+      display: flex; align-items: center; gap: 1.375rem; margin: 1.875rem 0 0.25rem; padding: 0;
       background: none; border: 0; color: var(--blekk);
     }
-    .kort-container > .gruppe-etikett:first-child { margin-top: 4px; }
+    .kort-container > .gruppe-etikett:first-child { margin-top: 0.25rem; }
     .gruppe-navn {
-      background: var(--blekk); color: var(--motfarge); font-family: var(--font-mono); font-size: 14px; font-weight: 700;
-      letter-spacing: .2em; text-transform: uppercase; padding: 10px 18px; white-space: nowrap;
+      background: var(--blekk); color: var(--motfarge); font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase; padding: 0.625rem 1.125rem; white-space: nowrap;
     }
-    .gruppe-strek { flex: 1; height: 2px; background: var(--blekk); min-width: 20px; }
-    .gruppe-antall { font-family: var(--font-mono); font-size: 14px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+    .gruppe-strek { flex: 1; height: 2px; background: var(--blekk); min-width: 1.25rem; }
+    .gruppe-antall { font-family: var(--font-mono); font-size: 0.875rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
 
     .todo-kort, .oppgave-kort {
       background: transparent; border: 0; border-bottom: 2px solid var(--blekk); border-radius: 0;
-      padding: 20px 10px; gap: 18px; align-items: center;
+      padding: 1.25rem 0.625rem; gap: 1.125rem; align-items: center;
     }
-    .oppgave-kort { border-left: 0; padding-left: 14px; }
+    .oppgave-kort { border-left: 0; padding-left: 0.875rem; }
     /* Hvert kort ligger alene i sin sveip-beholder, så en eldre :last-child-regel
        fjernet streken på alle. */
     .todo-kort:last-child, .oppgave-kort:last-child { border-bottom: 2px solid var(--blekk); }
     .todo-kort:hover, .oppgave-kort:hover, .oppgave-kort[class*="stripe-"]:hover { background: var(--hover); }
     .sveip-innhold { background: var(--papir); }
-    .todo-tittel, .oppgave-besk { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); line-height: 1.3; }
-    .todo-meta, .oppgave-meta { margin-top: 6px; gap: 8px; }
+    .todo-tittel, .oppgave-besk { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); line-height: 1.3; }
+    .todo-meta, .oppgave-meta { margin-top: 0.375rem; gap: 0.5rem; }
     .todo-cb, .oppgave-kort .checkbox {
-      width: 26px; height: 26px; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk));
+      width: 1.625rem; height: 1.625rem; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk));
       background: transparent; flex-shrink: 0;
     }
     .todo-cb.sjekket, .oppgave-kort .checkbox.sjekket { background: var(--kat, var(--blekk)); border-color: var(--kat, var(--blekk)); color: var(--lys); }
@@ -1812,119 +1820,119 @@
     .viktig-stjerne svg { stroke-width: 1.6; }
 
     /* ── Frister som merker ─────────────────────────────────────────────── */
-    .frist-tekst { display: inline-block; font-family: var(--font-ui); font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 3px 9px; line-height: 1.35; }
+    .frist-tekst { display: inline-block; font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 0.1875rem 0.5625rem; line-height: 1.35; }
     .frist-forfalt { background: var(--fare); color: var(--lys); }
     .frist-idag    { background: var(--aksent); color: var(--lys); }
     .frist-snart   { background: var(--laks); color: var(--lys); }
-    .frist-senere  { padding: 3px 0; font-family: var(--font-mono); font-weight: 500; text-transform: none; color: var(--dempet); letter-spacing: 0; }
-    .tilknyttet-chip { border-radius: var(--hjorne); border-width: 1.5px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .02em; padding: 2px 7px; }
+    .frist-senere  { padding: 0.1875rem 0; font-family: var(--font-mono); font-weight: 500; text-transform: none; color: var(--dempet); letter-spacing: 0; }
+    .tilknyttet-chip { border-radius: var(--hjorne); border-width: 1.5px; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: .02em; padding: 2px 0.4375rem; }
     /* ── Tom liste ── */
     /* ── Seksjonsoverskrifter i Milepæler/Leveranser (tittelen står i sidehodet) */
-    .tom-melding { font-size: 16px; color: var(--dempet); border: 2px dashed var(--linje); background: transparent; padding: 34px 20px; }
+    .tom-melding { font-size: 1rem; color: var(--dempet); border: 2px dashed var(--linje); background: transparent; padding: 2.125rem 1.25rem; }
 
     /* ── Vinduer ────────────────────────────────────────────────────────── */
     .modal-overlay { background: var(--overlay); }
-    .modal { border: 2.5px solid var(--blekk); border-radius: 3px; box-shadow: var(--skygge-stor); background: var(--papir); max-width: 520px; }
+    .modal { border: 2.5px solid var(--blekk); border-radius: 3px; box-shadow: var(--skygge-stor); background: var(--papir); max-width: 32.5rem; }
     .modal-header { border-bottom: 2px solid var(--blekk); }
-    .modal-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 80%); font-size: 22px; letter-spacing: -0.02em; }
+    .modal-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 80%); font-size: 1.375rem; letter-spacing: -0.02em; }
     .modal-footer { border-top: 2px solid var(--blekk); }
-    .felt label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dempet); }
+    .felt label { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: .14em; text-transform: uppercase; color: var(--dempet); }
     .felt input, .felt select, .felt textarea { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); font-family: var(--font-body); }
     .felt input:focus, .felt select:focus, .felt textarea:focus { outline: none; box-shadow: var(--skygge); }
     .angre-toast { background: var(--blekk); border-radius: var(--hjorne); box-shadow: 4px 4px 0 var(--aksent); font-family: var(--font-ui); }
 
     /* ── Kalender ───────────────────────────────────────────────────────── */
     .kal-visning-toggle { border: var(--ramme); border-radius: var(--hjorne); overflow: hidden; background: var(--papir-lys); }
-    .kal-visning-toggle button { border-radius: 0; font-family: var(--font-ui); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; }
+    .kal-visning-toggle button { border-radius: 0; font-family: var(--font-ui); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: 0.75rem; }
     .kal-visning-toggle button.aktiv { background: var(--blekk); color: var(--motfarge); }
-    .maaned-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 80%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; font-size: 22px; }
+    .maaned-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 80%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; font-size: 1.375rem; }
     .nav-knapp { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); box-shadow: var(--skygge-liten); }
 
     /* ── Mobil ──────────────────────────────────────────────────────────── */
     @media (max-width: 899px) {
-      body > header { flex-wrap: wrap; height: auto; padding: 10px 14px 0; gap: 8px; }
+      body > header { flex-wrap: wrap; height: auto; padding: 0.625rem 0.875rem 0; gap: 0.5rem; }
       .logo { flex: 1; }
-      .logo-rute { width: 30px; height: 30px; font-size: 15px; }
+      .logo-rute { width: 1.875rem; height: 1.875rem; font-size: 0.9375rem; }
       body > header .faner {
-        order: 3; width: calc(100% + 28px); margin: 2px -14px 0; padding: 0 6px;
+        order: 3; width: calc(100% + 1.75rem); margin: 2px -0.875rem 0; padding: 0 0.375rem;
         overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; justify-content: space-between;
       }
       body > header .faner::-webkit-scrollbar { display: none; }
-      body > header .fane { padding: 11px 6px 13px; font-size: 11.5px; letter-spacing: .04em; }
-      .verktoy-rad { gap: 10px; margin-bottom: 16px; }
-      .kat-oversikt-rad, .verktoy-rad .filter-rad, .start-filterrad { gap: 8px; }
-      .kat-oversikt-knapp, .filter-pill.filter-pill { padding: 7px 12px; font-size: 14px; gap: 7px; }
-      .start-pille { padding: 7px 11px; font-size: 13px; }
-      .filtrer-knapp { font-size: 14px; padding: 4px 2px; }
-      .plan-kort { padding: 4px 14px 10px; }
-      .plan-tittel { font-size: 22px; }
-      .aktivitet-kort, .aktivitet-kort:last-child { padding: 14px 4px; gap: 10px; flex-wrap: wrap; }
+      body > header .fane { padding: 0.6875rem 0.375rem 0.8125rem; font-size: 0.71875rem; letter-spacing: .04em; }
+      .verktoy-rad { gap: 0.625rem; margin-bottom: 1rem; }
+      .kat-oversikt-rad, .verktoy-rad .filter-rad, .start-filterrad { gap: 0.5rem; }
+      .kat-oversikt-knapp, .filter-pill.filter-pill { padding: 0.4375rem 0.75rem; font-size: 0.875rem; gap: 0.4375rem; }
+      .start-pille { padding: 0.4375rem 0.6875rem; font-size: 0.8125rem; }
+      .filtrer-knapp { font-size: 0.875rem; padding: 0.25rem 2px; }
+      .plan-kort { padding: 0.25rem 0.875rem 0.625rem; }
+      .plan-tittel { font-size: 1.375rem; }
+      .aktivitet-kort, .aktivitet-kort:last-child { padding: 0.875rem 0.25rem; gap: 0.625rem; flex-wrap: wrap; }
       .type-badge { min-width: 0; }
-      .aktivitet-tittel { font-size: 16px; }
+      .aktivitet-tittel { font-size: 1rem; }
       body > header .fane.aktiv { box-shadow: inset 0 -3px 0 var(--aksent); }
       .avatar-knapp, #sokKnapp { display: none; }
-      .oppsett > main, main { padding: 20px 14px 72px; max-width: 640px; margin: 0 auto; }
-      .side-hode { margin-bottom: 20px; gap: 14px; }
-      .side-dato { font-size: 11px; letter-spacing: .14em; margin-bottom: 8px; }
-      .side-under { font-size: 15px; margin-top: 8px; }
+      .oppsett > main, main { padding: 1.25rem 0.875rem 4.5rem; max-width: 40rem; margin: 0 auto; }
+      .side-hode { margin-bottom: 1.25rem; gap: 0.875rem; }
+      .side-dato { font-size: 0.6875rem; letter-spacing: .14em; margin-bottom: 0.5rem; }
+      .side-under { font-size: 0.9375rem; margin-top: 0.5rem; }
       .side-handlinger { width: 100%; }
-      .side-handlinger .knapp-blokk { flex: 1; padding: 12px 10px; font-size: 14px; }
-      .hurtig-todo-rad input { font-size: 16px; padding: 17px 110px 17px 18px; }
-      .hurtig-todo-rad::after { right: 18px; font-size: 14px; }
-      .todo-tittel, .oppgave-besk { font-size: 16px; }
-      .todo-kort, .oppgave-kort { padding: 16px 6px; gap: 14px; }
-      .gruppe-navn { font-size: 12px; padding: 8px 12px; letter-spacing: .16em; }
-      .gruppe-antall { font-size: 12px; }
-      .maaned-label.gruppe-etikett { gap: 12px; margin-top: 24px; }
+      .side-handlinger .knapp-blokk { flex: 1; padding: 0.75rem 0.625rem; font-size: 0.875rem; }
+      .hurtig-todo-rad input { font-size: 1rem; padding: 1.0625rem 6.875rem 1.0625rem 1.125rem; }
+      .hurtig-todo-rad::after { right: 1.125rem; font-size: 0.875rem; }
+      .todo-tittel, .oppgave-besk { font-size: 1rem; }
+      .todo-kort, .oppgave-kort { padding: 1rem 0.375rem; gap: 0.875rem; }
+      .gruppe-navn { font-size: 0.75rem; padding: 0.5rem 0.75rem; letter-spacing: .16em; }
+      .gruppe-antall { font-size: 0.75rem; }
+      .maaned-label.gruppe-etikett { gap: 0.75rem; margin-top: 1.5rem; }
     }
 
     /* ── Start: filterpiller, dagens plan og rader ──────────────────────── */
-    .start-filterrad { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px; }
+    .start-filterrad { display: flex; flex-wrap: wrap; gap: 0.625rem; margin: 0 0 1.375rem; }
     .start-pille {
       border: var(--ramme); background: var(--papir-lys); color: var(--blekk); border-radius: var(--hjorne);
-      padding: 8px 15px; font-family: var(--font-ui); font-weight: 700; font-size: 14px; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.5rem 0.9375rem; font-family: var(--font-ui); font-weight: 700; font-size: 0.875rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.375rem;
     }
     .start-pille:hover { background: var(--aksent-lys); }
     .start-pille.aktiv { background: var(--gul); }
-    .plan-kort { background: var(--papir-lys); border: var(--ramme); box-shadow: var(--skygge); padding: 6px 18px 12px; margin: 0 0 30px; }
-    .plan-hode { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 10px 0 8px; }
-    .plan-tittel { font-family: var(--font-ui); font-size: 26px; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
-    .plan-telling { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blå); white-space: nowrap; }
-    .plan-stolpe { height: 6px; background: var(--linje); margin: 0 0 4px; }
+    .plan-kort { background: var(--papir-lys); border: var(--ramme); box-shadow: var(--skygge); padding: 0.375rem 1.125rem 0.75rem; margin: 0 0 1.875rem; }
+    .plan-hode { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; margin: 0.625rem 0 0.5rem; }
+    .plan-tittel { font-family: var(--font-ui); font-size: 1.625rem; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
+    .plan-telling { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blå); white-space: nowrap; }
+    .plan-stolpe { height: 0.375rem; background: var(--linje); margin: 0 0 0.25rem; }
     .plan-stolpe > span { display: block; height: 100%; background: var(--blå); transition: width .3s; }
     .plan-rad .start-tekst { white-space: normal; }
     .plan-rad.gjort .start-tekst { text-decoration: line-through; color: var(--dempet); font-weight: 500; }
-    .plan-ferdig { font-family: var(--font-mono); font-size: 12px; color: var(--blå); padding: 10px 0 2px; }
-    .plan-tom { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0 0 26px; font-family: var(--font-mono); font-size: 12px; color: var(--dempet); }
-    .plan-tom svg { width: 14px; height: 14px; }
+    .plan-ferdig { font-family: var(--font-mono); font-size: 0.75rem; color: var(--blå); padding: 0.625rem 0 2px; }
+    .plan-tom { display: flex; align-items: center; flex-wrap: wrap; gap: 0.375rem; margin: 0 0 1.625rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); }
+    .plan-tom svg { width: 0.875rem; height: 0.875rem; }
     .plan-knapp {
-      flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; width: 2rem; height: 2rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;
       background: none; border: 2px solid transparent; border-radius: var(--hjorne); color: var(--dempet); cursor: pointer;
     }
     .plan-knapp:hover { border-color: var(--blekk); color: var(--blekk); background: var(--gul); }
     .plan-knapp.aktiv { color: var(--blå); }
-    .login-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 72%); text-transform: var(--tittel-store, uppercase); font-size: 40px; letter-spacing: -0.02em; line-height: .95; color: var(--blekk); }
-    .login-under { font-size: 15px; color: var(--dempet); margin-top: 8px; }
-    .login-knapp { display: inline-flex; align-items: center; gap: 10px; }
-    .plan-rad { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--linje); cursor: pointer; }
+    .login-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 72%); text-transform: var(--tittel-store, uppercase); font-size: 2.5rem; letter-spacing: -0.02em; line-height: .95; color: var(--blekk); }
+    .login-under { font-size: 0.9375rem; color: var(--dempet); margin-top: 0.5rem; }
+    .login-knapp { display: inline-flex; align-items: center; gap: 0.625rem; }
+    .plan-rad { display: flex; align-items: center; gap: 0.875rem; padding: 0.625rem 0; border-bottom: 1px solid var(--linje); cursor: pointer; }
     .plan-rad:last-child { border-bottom: none; }
     /* Timeplan fra løytnanten (v5.8): tid | hva | prosjekt, pågående blokk i gult */
-    .tp { margin: 0 0 4px; font-family: var(--font-body); }
-    .tp-rad { display: grid; grid-template-columns: 22px 104px minmax(0, 1fr) auto; align-items: center; column-gap: 14px; padding: 10px 8px; margin: 0 -8px; border-bottom: 1px solid var(--linje); }
+    .tp { margin: 0 0 0.25rem; font-family: var(--font-body); }
+    .tp-rad { display: grid; grid-template-columns: 1.375rem 6.5rem minmax(0, 1fr) auto; align-items: center; column-gap: 0.875rem; padding: 0.625rem 0.5rem; margin: 0 -0.5rem; border-bottom: 1px solid var(--linje); }
     .tp-rad:not(.pause) { cursor: pointer; }
     .tp-rad:last-child { border-bottom: none; }
     .tp-hake, .tp-hake-tom { grid-column: 1; align-self: center; }
-    .tp-hake-tom { width: 22px; }
-    .tp-tid { grid-column: 2; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--blå); white-space: nowrap; }
-    .tp-hva { grid-column: 3; font-size: 16px; font-weight: 600; color: var(--blekk); }
-    .tp-prosjekter { grid-column: 4; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 12px; }
+    .tp-hake-tom { width: 1.375rem; }
+    .tp-tid { grid-column: 2; font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; color: var(--blå); white-space: nowrap; }
+    .tp-hva { grid-column: 3; font-size: 1rem; font-weight: 600; color: var(--blekk); }
+    .tp-prosjekter { grid-column: 4; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 0.75rem; }
     .tp-rad.gjort .tp-hva { text-decoration: line-through; color: var(--dempet); font-weight: 500; }
     .tp-rad.gjort .start-prosjekt { opacity: .45; }
-    .tp-igjen { grid-column: 3 / -1; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blekk); padding-top: 4px; }
+    .tp-igjen { grid-column: 3 / -1; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blekk); padding-top: 0.25rem; }
     .tp-igjen:empty { display: none; }
-    .tp-rad.pause { padding-top: 6px; padding-bottom: 6px; }
-    .tp-rad.pause .tp-tid, .tp-rad.pause .tp-hva { font-size: 12px; font-weight: 500; color: var(--dempet); }
+    .tp-rad.pause { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    .tp-rad.pause .tp-tid, .tp-rad.pause .tp-hva { font-size: 0.75rem; font-weight: 500; color: var(--dempet); }
     .tp-rad.forbi .tp-tid, .tp-rad.forbi .tp-hva { color: var(--dempet); }
     .tp-rad.forbi .tp-hva { font-weight: 500; }
     .tp-rad.forbi .start-prosjekt { opacity: .45; }
@@ -1932,63 +1940,63 @@
     .tp-rad.naa .tp-tid, .tp-rad.naa .tp-hva { color: var(--blekk); }
     .tp-rad.neste .tp-igjen { color: var(--blå); }
     .tp-merknad > summary, .tp-imorgen > summary {
-      cursor: pointer; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .06em; color: var(--blå); padding: 8px 0; list-style: none;
+      cursor: pointer; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--blå); padding: 0.5rem 0; list-style: none;
     }
     .tp-merknad > summary::-webkit-details-marker, .tp-imorgen > summary::-webkit-details-marker { display: none; }
     .tp-merknad > summary::before, .tp-imorgen > summary::before { content: '▸'; display: inline-block; width: 1.4em; }
     .tp-merknad[open] > summary::before, .tp-imorgen[open] > summary::before { content: '▾'; }
     .tp-merknad > summary:hover, .tp-imorgen > summary:hover { color: var(--blekk); }
-    .tp-merknad > div { white-space: pre-line; font-size: 14px; line-height: 1.5; color: var(--blekk); padding: 0 0 8px; }
-    .imorgen-kort { padding-top: 4px; padding-bottom: 4px; }
-    .plan-tom-melding { margin-bottom: 30px; line-height: 1.6; }
+    .tp-merknad > div { white-space: pre-line; font-size: 0.875rem; line-height: 1.5; color: var(--blekk); padding: 0 0 0.5rem; }
+    .imorgen-kort { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .plan-tom-melding { margin-bottom: 1.875rem; line-height: 1.6; }
     .plan-tom-melding svg { vertical-align: -2px; }
     /* Stripen på Start som fører til Dagens plan (v6.1) */
     .plan-stripe {
-      display: flex; align-items: center; gap: 14px; width: 100%; margin: 0 0 26px; padding: 0 14px 0 0; text-align: left;
+      display: flex; align-items: center; gap: 0.875rem; width: 100%; margin: 0 0 1.625rem; padding: 0 0.875rem 0 0; text-align: left;
       background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge-liten);
       color: var(--blekk); font-family: var(--font-body); cursor: pointer; overflow: hidden;
     }
     .plan-stripe:hover { background: var(--hover); }
     .plan-stripe-etikett {
-      align-self: stretch; display: flex; align-items: center; gap: 8px; padding: 11px 14px; background: var(--blekk); color: var(--motfarge);
-      font: 700 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
+      align-self: stretch; display: flex; align-items: center; gap: 0.5rem; padding: 0.6875rem 0.875rem; background: var(--blekk); color: var(--motfarge);
+      font: 700 0.6875rem var(--font-mono); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
     }
     .plan-stripe.naa .plan-stripe-etikett { background: var(--gul); color: var(--blekk); }
-    .plan-stripe-tekst { flex: 1; min-width: 0; padding: 11px 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .plan-stripe-merke { flex-shrink: 0; font: 700 12px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--blå); white-space: nowrap; }
+    .plan-stripe-tekst { flex: 1; min-width: 0; padding: 0.6875rem 0; font-size: 0.9375rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .plan-stripe-merke { flex-shrink: 0; font: 700 0.75rem var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--blå); white-space: nowrap; }
     .plan-stripe > svg { flex-shrink: 0; color: var(--dempet); }
     @media (max-width: 600px) {
-      .plan-stripe { gap: 10px; padding-right: 10px; }
-      .plan-stripe-etikett { padding: 11px 12px; }
+      .plan-stripe { gap: 0.625rem; padding-right: 0.625rem; }
+      .plan-stripe-etikett { padding: 0.6875rem 0.75rem; }
       .plan-stripe-etikett span { display: none; }
-      .plan-stripe-tekst { font-size: 14px; }
+      .plan-stripe-tekst { font-size: 0.875rem; }
     }
     .start-hake.sjekket, .slett-sirkel, .fullfor-sirkel { color: var(--lys); }
     .start-hake {
-      width: 22px; height: 22px; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
+      width: 1.375rem; height: 1.375rem; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
       display: flex; align-items: center; justify-content: center; transition: background .12s;
     }
     .start-hake-mp { border-radius: 50%; }
     .start-hake:hover { background: var(--gul); }
     .start-hake.sjekket { background: var(--kat, var(--blekk)); }
-    .start-tekst { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; color: var(--blekk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .start-merke { flex-shrink: 0; white-space: nowrap; font-size: 12px; }
+    .start-tekst { flex: 1; min-width: 0; font-size: 1rem; font-weight: 600; color: var(--blekk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .start-merke { flex-shrink: 0; white-space: nowrap; font-size: 0.75rem; }
     .start-prosjekt {
-      flex-shrink: 0; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-      color: var(--blekk); display: inline-flex; align-items: center; gap: 6px;
+      flex-shrink: 0; max-width: 6.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      color: var(--blekk); display: inline-flex; align-items: center; gap: 0.375rem;
     }
-    .start-prosjekt::before { content: ''; width: 8px; height: 8px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
-    .aktivitet-meta .start-prosjekt { margin-right: 10px; vertical-align: 1px; }
+    .start-prosjekt::before { content: ''; width: 0.5rem; height: 0.5rem; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .aktivitet-meta .start-prosjekt { margin-right: 0.625rem; vertical-align: 1px; }
 
     /* ── Kategoripiller på Milepæler og Leveranser ──────────────────────── */
-    .verktoy-rad .filter-rad { margin: 0; gap: 12px; }
+    .verktoy-rad .filter-rad { margin: 0; gap: 0.75rem; }
     .filter-pill.filter-pill {
       border: var(--ramme); color: var(--blekk); background: var(--papir-lys); border-radius: var(--hjorne);
-      padding: 9px 17px; font-size: 15px; letter-spacing: 0; display: inline-flex; align-items: center; gap: 9px;
+      padding: 0.5625rem 1.0625rem; font-size: 0.9375rem; letter-spacing: 0; display: inline-flex; align-items: center; gap: 0.5625rem;
     }
-    .filter-pill.filter-pill::before { content: ''; width: 10px; height: 10px; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .filter-pill.filter-pill::before { content: ''; width: 0.625rem; height: 0.625rem; background: var(--kat, var(--blekk)); flex-shrink: 0; }
     .filter-pill.filter-pill:hover { background: var(--aksent-lys); }
     .filter-pill.filter-pill[class*="aktiv"] { background: var(--gul); color: var(--blekk); border-color: var(--blekk); }
     .filter-pill.filter-pill.ekskluder { opacity: .45; text-decoration: line-through; }
@@ -1996,72 +2004,72 @@
     /* ── Leveranser ─────────────────────────────────────────────────────── */
     .aktivitet-kort, .aktivitet-kort:last-child {
       background: transparent; border: 0; border-bottom: 2px solid var(--blekk); border-radius: 0;
-      padding: 18px 10px; gap: 16px; align-items: center;
+      padding: 1.125rem 0.625rem; gap: 1rem; align-items: center;
     }
     .aktivitet-kort:hover, .aktivitet-kort[class*="hover-"]:hover { background: var(--hover); }
-    .aktivitet-tittel { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); }
-    .aktivitet-meta { font-family: var(--font-mono); font-size: 13px; color: var(--dempet); margin-top: 4px; }
-    .type-badge { border-radius: var(--hjorne); border-width: 2px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; padding: 3px 8px; min-width: 124px; text-align: center; }
-    .aktivitet-kort .ikon-knapp { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk) !important; height: 30px; min-width: 30px; }
+    .aktivitet-tittel { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); }
+    .aktivitet-meta { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--dempet); margin-top: 0.25rem; }
+    .type-badge { border-radius: var(--hjorne); border-width: 2px; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: .04em; padding: 0.1875rem 0.5rem; min-width: 7.75rem; text-align: center; }
+    .aktivitet-kort .ikon-knapp { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk) !important; height: 1.875rem; min-width: 1.875rem; }
     .aktivitet-kort .ikon-knapp:hover { background: var(--gul); border-color: var(--blekk); }
 
     /* ── Datomeny, infoblokker, gruppehandling (v5.1) ───────────────────── */
     /* Milepælene kan fullføres rett fra lista (avkrysningen var skjult). Rund, så den skilles fra to-do. */
-    .oppgave-kort .checkbox { display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; font-size: 14px; font-weight: 800; }
+    .oppgave-kort .checkbox { display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; font-size: 0.875rem; font-weight: 800; }
     .oppgave-kort .checkbox:hover:not(.sjekket) { background: var(--gul); }
     .frist-tekst.klikkbar, .planlagt-merke.klikkbar { cursor: pointer; }
     .frist-tekst.klikkbar:hover, .planlagt-merke.klikkbar:hover { outline: 2px solid var(--blekk); outline-offset: 1px; }
     .dato-meny {
-      position: fixed; z-index: 10001; min-width: 230px; background: var(--papir-lys);
-      border: var(--ramme); box-shadow: var(--skygge); padding: 6px; font-family: var(--font-ui);
+      position: fixed; z-index: 10001; min-width: 14.375rem; background: var(--papir-lys);
+      border: var(--ramme); box-shadow: var(--skygge); padding: 0.375rem; font-family: var(--font-ui);
     }
-    .dato-meny-tittel { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); padding: 6px 8px 8px; }
+    .dato-meny-tittel { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); padding: 0.375rem 0.5rem 0.5rem; }
     .dato-meny button, .dato-meny-velg {
-      display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 14px;
-      background: none; border: 0; padding: 9px 8px; font: 600 15px var(--font-ui); color: var(--blekk); cursor: pointer; text-align: left;
+      display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 0.875rem;
+      background: none; border: 0; padding: 0.5625rem 0.5rem; font: 600 0.9375rem var(--font-ui); color: var(--blekk); cursor: pointer; text-align: left;
     }
     .dato-meny button:hover, .dato-meny-velg:hover { background: var(--gul); }
-    .dato-meny-dato { font-family: var(--font-mono); font-size: 12px; color: var(--dempet); font-weight: 500; }
-    .dato-meny-velg input { font: 500 13px var(--font-mono); border: 1.5px solid var(--blekk); background: var(--papir-lys); padding: 3px 4px; max-width: 140px; }
-    .dato-meny .dato-meny-fjern { border-top: 1px solid var(--linje); margin-top: 4px; color: var(--fare); }
-    .info-blokk { margin: 0 0 18px; }
-    .info-etikett { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin-bottom: 8px; }
-    .info-linje { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; font-size: 15px; }
-    .info-dato { font-family: var(--font-mono); font-size: 13px; color: var(--blekk); }
-    .info-knapper { display: flex; flex-wrap: wrap; gap: 8px; }
+    .dato-meny-dato { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); font-weight: 500; }
+    .dato-meny-velg input { font: 500 0.8125rem var(--font-mono); border: 1.5px solid var(--blekk); background: var(--papir-lys); padding: 0.1875rem 0.25rem; max-width: 8.75rem; }
+    .dato-meny .dato-meny-fjern { border-top: 1px solid var(--linje); margin-top: 0.25rem; color: var(--fare); }
+    .info-blokk { margin: 0 0 1.125rem; }
+    .info-etikett { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin-bottom: 0.5rem; }
+    .info-linje { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; margin-bottom: 0.625rem; font-size: 0.9375rem; }
+    .info-dato { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--blekk); }
+    .info-knapper { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .mini-knapp {
       border: var(--ramme); background: var(--papir-lys); color: var(--blekk); border-radius: var(--hjorne);
-      padding: 6px 11px; font: 700 13px var(--font-ui); cursor: pointer;
+      padding: 0.375rem 0.6875rem; font: 700 0.8125rem var(--font-ui); cursor: pointer;
     }
     .mini-knapp:hover { background: var(--gul); }
     .mini-knapp.primær { background: var(--aksent); color: var(--lys); }
     .gruppe-handling {
       flex-shrink: 0; border: 2px solid var(--fare); background: var(--papir-lys); color: var(--fare); border-radius: var(--hjorne);
-      padding: 4px 9px; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; cursor: pointer;
+      padding: 0.25rem 0.5625rem; font: 700 0.6875rem var(--font-mono); text-transform: uppercase; letter-spacing: .05em; cursor: pointer;
     }
     .gruppe-handling:hover { background: var(--fare); color: var(--lys); }
     @media (max-width: 899px) {
-      .gruppe-etikett { flex-wrap: wrap; row-gap: 8px; }
+      .gruppe-etikett { flex-wrap: wrap; row-gap: 0.5rem; }
       .gruppe-handling { order: 5; }
     }
 
     /* ── Hurtigfeltets tolkning og gjentakelse (v5.2) ───────────────────── */
-    .hurtig-tolkning { display: none; flex-wrap: wrap; gap: 8px; margin: -20px 0 26px; }
+    .hurtig-tolkning { display: none; flex-wrap: wrap; gap: 0.5rem; margin: -1.25rem 0 1.625rem; }
     .hurtig-tolkning.vis { display: flex; }
-    .tolk-chip { font-family: var(--font-mono); font-size: 12px; color: var(--blå); border: 1.5px solid var(--blå); padding: 3px 8px; background: var(--papir-lys); }
-    .tolk-chip b { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-right: 4px; }
+    .tolk-chip { font-family: var(--font-mono); font-size: 0.75rem; color: var(--blå); border: 1.5px solid var(--blå); padding: 0.1875rem 0.5rem; background: var(--papir-lys); }
+    .tolk-chip b { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-right: 0.25rem; }
     .gjenta-chip { border-color: var(--linje); color: var(--dempet); }
-    .gjenta-dager { display: none; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .gjenta-dager { display: none; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
     .gjenta-dager button {
       border: var(--ramme); background: var(--papir-lys); color: var(--blekk); border-radius: var(--hjorne);
-      padding: 5px 9px; font: 700 12px var(--font-mono); text-transform: uppercase; cursor: pointer;
+      padding: 0.3125rem 0.5625rem; font: 700 0.75rem var(--font-mono); text-transform: uppercase; cursor: pointer;
     }
     .gjenta-dager button.valgt { background: var(--blekk); color: var(--motfarge); }
 
     /* ── Venter, planlagt dag, sjekkliste (v5.3) ───────────────────────── */
     .planlagt-merke, .venter-merke, .sjekk-merke {
-      display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; line-height: 1.35; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 0.3125rem; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .04em; padding: 2px 0.4375rem; line-height: 1.35; white-space: nowrap;
     }
     .planlagt-merke { color: var(--blå); border: 1.5px solid var(--blå); }
     .planlagt-merke.sen { color: var(--dempet); border-color: var(--linje); }
@@ -2070,128 +2078,128 @@
     .sjekk-merke { color: var(--dempet); padding-left: 0; padding-right: 0; }
     .sjekk-merke.ferdig { color: var(--blå); }
     .plan-rad .frist-tekst, .plan-rad .planlagt-merke, .plan-rad .venter-merke, .plan-rad .sjekk-merke,
-    .start-merke, .todo-kort > .planlagt-merke, .todo-kort > .venter-merke, .todo-kort > .sjekk-merke { font-size: 11px; flex-shrink: 0; }
-    .info-tekst { font-size: 15px; line-height: 1.55; }
-    .info-lenke { border: var(--ramme); background: var(--papir-lys); padding: 9px 12px; font-weight: 600; cursor: pointer; }
+    .start-merke, .todo-kort > .planlagt-merke, .todo-kort > .venter-merke, .todo-kort > .sjekk-merke { font-size: 0.6875rem; flex-shrink: 0; }
+    .info-tekst { font-size: 0.9375rem; line-height: 1.55; }
+    .info-lenke { border: var(--ramme); background: var(--papir-lys); padding: 0.5625rem 0.75rem; font-weight: 600; cursor: pointer; }
     .info-lenke:hover { background: var(--gul); }
-    .sjekk-rad { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--linje); }
+    .sjekk-rad { display: flex; align-items: center; gap: 0.625rem; padding: 0.4375rem 0; border-bottom: 1px solid var(--linje); }
     .sjekk-boks {
-      width: 22px; height: 22px; padding: 0; flex-shrink: 0; border: var(--ramme); border-radius: var(--hjorne);
+      width: 1.375rem; height: 1.375rem; padding: 0; flex-shrink: 0; border: var(--ramme); border-radius: var(--hjorne);
       background: var(--papir-lys); color: var(--lys); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .sjekk-boks:hover { background: var(--gul); }
     .sjekk-rad.ferdig .sjekk-boks { background: var(--blekk); color: var(--motfarge); }
-    .sjekk-tekst { flex: 1; min-width: 0; font-size: 15px; overflow-wrap: anywhere; }
+    .sjekk-tekst { flex: 1; min-width: 0; font-size: 0.9375rem; overflow-wrap: anywhere; }
     .sjekk-rad.ferdig .sjekk-tekst { text-decoration: line-through; color: var(--dempet); }
-    .sjekk-slett { background: none; border: 0; font-size: 20px; line-height: 1; color: var(--dempet); cursor: pointer; padding: 0 4px; }
+    .sjekk-slett { background: none; border: 0; font-size: 1.25rem; line-height: 1; color: var(--dempet); cursor: pointer; padding: 0 0.25rem; }
     .sjekk-slett:hover { color: var(--fare); }
-    .sjekk-ny { width: 100%; margin-top: 8px; border: 2px dashed var(--linje); background: transparent; padding: 9px 10px; font: 15px var(--font-body); color: var(--blekk); }
+    .sjekk-ny { width: 100%; margin-top: 0.5rem; border: 2px dashed var(--linje); background: transparent; padding: 0.5625rem 0.625rem; font: 0.9375rem var(--font-body); color: var(--blekk); }
     .sjekk-ny:focus { outline: none; border-style: solid; border-color: var(--blekk); }
-    .felt-rad { display: flex; gap: 8px; }
+    .felt-rad { display: flex; gap: 0.5rem; }
     .felt-rad input[type="text"] { flex: 1; min-width: 0; }
-    .felt-rad input[type="date"] { flex: 0 0 150px; }
+    .felt-rad input[type="date"] { flex: 0 0 9.375rem; }
     /* Smal skjerm: tittelen får hele linja, merkene legger seg under den. */
     @media (max-width: 899px) {
-      .plan-rad, #startInnhold .todo-kort { flex-wrap: wrap; row-gap: 6px; }
-      .plan-rad .start-tekst, #startInnhold .todo-kort .start-tekst { flex: 1 1 calc(100% - 40px); white-space: normal; }
-      .plan-rad .start-tekst + *, #startInnhold .todo-kort .start-tekst + * { margin-left: 36px; }
+      .plan-rad, #startInnhold .todo-kort { flex-wrap: wrap; row-gap: 0.375rem; }
+      .plan-rad .start-tekst, #startInnhold .todo-kort .start-tekst { flex: 1 1 calc(100% - 2.5rem); white-space: normal; }
+      .plan-rad .start-tekst + *, #startInnhold .todo-kort .start-tekst + * { margin-left: 2.25rem; }
       /* Smal skjerm: boksen til venstre, tid, tekst og prosjekt stablet ved siden av. */
-      .tp-rad { grid-template-columns: 22px minmax(0, 1fr); row-gap: 3px; column-gap: 12px; }
+      .tp-rad { grid-template-columns: 1.375rem minmax(0, 1fr); row-gap: 0.1875rem; column-gap: 0.75rem; }
       .tp-hake { grid-row: 1; align-self: start; margin-top: 1px; }
       .tp-tid, .tp-hva, .tp-prosjekter, .tp-igjen { grid-column: 2; }
       .tp-prosjekter { justify-content: flex-start; }
-      .tp-tid { font-size: 12px; }
-      .tp-hva { font-size: 15px; }
-      .tp-rad.pause { grid-template-columns: 22px auto minmax(0, 1fr); }
+      .tp-tid { font-size: 0.75rem; }
+      .tp-hva { font-size: 0.9375rem; }
+      .tp-rad.pause { grid-template-columns: 1.375rem auto minmax(0, 1fr); }
       .tp-rad.pause .tp-hva { grid-column: 3; }
     }
 
     /* ── Felles: sprettvinduer, menyer, valglister, meldinger (v5.7) ──────── */
-    .popup-boks { background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge); padding: 14px 16px; font-family: var(--font-ui); }
-    .popup-boks.popup-rad { display: flex; gap: 6px; padding: 8px; white-space: nowrap; }
-    .popup-tittel { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin-bottom: 8px; }
-    .popup-merknad { font-size: 13px; color: var(--dempet); line-height: 1.5; max-width: 240px; }
-    .popup-valg { display: flex; align-items: center; gap: 9px; padding: 6px 0; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--blekk); }
-    .popup-skille { margin-top: 12px; border-top: 1px solid var(--linje); padding-top: 12px; }
-    .popup-dato { flex: 1; min-width: 0; font: 13px var(--font-mono); padding: 6px 8px; border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk); }
-    .popup-boks .knapp-full { margin-top: 12px; }
+    .popup-boks { background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge); padding: 0.875rem 1rem; font-family: var(--font-ui); }
+    .popup-boks.popup-rad { display: flex; gap: 0.375rem; padding: 0.5rem; white-space: nowrap; }
+    .popup-tittel { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dempet); margin-bottom: 0.5rem; }
+    .popup-merknad { font-size: 0.8125rem; color: var(--dempet); line-height: 1.5; max-width: 15rem; }
+    .popup-valg { display: flex; align-items: center; gap: 0.5625rem; padding: 0.375rem 0; cursor: pointer; font-size: 0.9375rem; font-weight: 600; color: var(--blekk); }
+    .popup-skille { margin-top: 0.75rem; border-top: 1px solid var(--linje); padding-top: 0.75rem; }
+    .popup-dato { flex: 1; min-width: 0; font: 0.8125rem var(--font-mono); padding: 0.375rem 0.5rem; border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk); }
+    .popup-boks .knapp-full { margin-top: 0.75rem; }
     .knapp-full { width: 100%; justify-content: center; }
-    .mini-knapp { display: inline-flex; align-items: center; gap: 6px; }
+    .mini-knapp { display: inline-flex; align-items: center; gap: 0.375rem; }
     .mini-knapp.aktiv { background: var(--gul); }
     .mini-knapp.fare { border-color: var(--fare); color: var(--fare); }
     .mini-knapp.fare:hover { background: var(--fare); color: var(--lys); }
-    .knapp-blokk.fare { background: var(--fare); color: var(--lys); display: inline-flex; align-items: center; gap: 8px; }
-    .prikk { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; background: var(--kat, var(--blekk)); }
-    .meny-boks { position: absolute; top: 100%; left: 0; margin-top: 8px; min-width: 240px; z-index: 200; overflow: hidden; padding: 4px 0; box-shadow: var(--skygge-stor); }
-    .meny-valg { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 15px; font-weight: 500; color: var(--blekk); cursor: pointer; }
+    .knapp-blokk.fare { background: var(--fare); color: var(--lys); display: inline-flex; align-items: center; gap: 0.5rem; }
+    .prikk { width: 0.6875rem; height: 0.6875rem; border-radius: 50%; flex-shrink: 0; background: var(--kat, var(--blekk)); }
+    .meny-boks { position: absolute; top: 100%; left: 0; margin-top: 0.5rem; min-width: 15rem; z-index: 200; overflow: hidden; padding: 0.25rem 0; box-shadow: var(--skygge-stor); }
+    .meny-valg { display: flex; align-items: center; gap: 0.625rem; padding: 0.6875rem 1rem; font-size: 0.9375rem; font-weight: 500; color: var(--blekk); cursor: pointer; }
     .meny-valg:hover { background: var(--gul); }
     .meny-valg.valgt { font-weight: 800; }
     .meny-valg + .meny-valg { border-top: 1px solid var(--linje); }
     .meny-hake { margin-left: auto; color: var(--aksent); font-weight: 800; }
-    .filter-merke { font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--lys); background: var(--kat, var(--dempet)); padding: 3px 8px; cursor: pointer; }
+    .filter-merke { font: 700 0.6875rem var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--lys); background: var(--kat, var(--dempet)); padding: 0.1875rem 0.5rem; cursor: pointer; }
     .offline-pille {
-      position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 500; align-items: center; gap: 8px;
-      background: var(--blekk); color: var(--motfarge); font: 500 13px var(--font-mono); padding: 8px 14px; box-shadow: 3px 3px 0 var(--varsel);
+      position: fixed; left: 50%; transform: translateX(-50%); bottom: 1rem; z-index: 500; align-items: center; gap: 0.5rem;
+      background: var(--blekk); color: var(--motfarge); font: 500 0.8125rem var(--font-mono); padding: 0.5rem 0.875rem; box-shadow: 3px 3px 0 var(--varsel);
     }
-    .offline-prikk { width: 9px; height: 9px; background: var(--varsel); flex-shrink: 0; }
-    .varsel-banner { align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 16px; background: var(--gul); border-bottom: 2px solid var(--blekk); }
-    .varsel-tekst { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--blekk); }
+    .offline-prikk { width: 0.5625rem; height: 0.5625rem; background: var(--varsel); flex-shrink: 0; }
+    .varsel-banner { align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; padding: 0.625rem 1rem; background: var(--gul); border-bottom: 2px solid var(--blekk); }
+    .varsel-tekst { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--blekk); }
     .synk-pille {
-      position: fixed; bottom: 10px; right: 10px; z-index: 9999; pointer-events: none; transition: opacity .5s; max-width: 80vw; word-break: break-word;
-      padding: 6px 11px; font: 700 12px var(--font-mono); letter-spacing: .02em; border: var(--ramme);
+      position: fixed; bottom: 0.625rem; right: 0.625rem; z-index: 9999; pointer-events: none; transition: opacity .5s; max-width: 80vw; word-break: break-word;
+      padding: 0.375rem 0.6875rem; font: 700 0.75rem var(--font-mono); letter-spacing: .02em; border: var(--ramme);
     }
-    .tag-banner { display: flex; align-items: center; gap: 10px; padding: 0 0 16px; font: 12px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--dempet); }
+    .tag-banner { display: flex; align-items: center; gap: 0.625rem; padding: 0 0 1rem; font: 0.75rem var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--dempet); }
     .resultat-merke {
-      display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; white-space: nowrap; padding: 3px 9px;
-      font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; background: var(--kat, var(--dempet)); color: var(--lys);
+      display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; white-space: nowrap; padding: 0.1875rem 0.5625rem;
+      font: 700 0.6875rem var(--font-mono); text-transform: uppercase; letter-spacing: .04em; background: var(--kat, var(--dempet)); color: var(--lys);
     }
     .arkiv-rad:hover { background: var(--hover); }
-    .info-fullfort { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ok); }
-    .info-lenke-rad { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .info-fullfort { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ok); }
+    .info-lenke-rad { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.375rem; }
     .info-lenke-tittel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .info-lenke.konflikt { border-color: var(--fare); background: var(--fare-lys); }
-    .konflikt-tekst { flex-shrink: 0; white-space: nowrap; font: 700 11px var(--font-mono); text-transform: uppercase; color: var(--fare); }
+    .konflikt-tekst { flex-shrink: 0; white-space: nowrap; font: 700 0.6875rem var(--font-mono); text-transform: uppercase; color: var(--fare); }
     .sjekk-rad.klikkbar { cursor: pointer; }
     .sjekk-rad.klikkbar:hover { background: var(--hover); }
-    .sjekk-rad .frist-tekst { font-size: 11px; flex-shrink: 0; }
+    .sjekk-rad .frist-tekst { font-size: 0.6875rem; flex-shrink: 0; }
     .valg-rad {
-      display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; text-align: left; cursor: pointer;
+      display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.8125rem 1rem; text-align: left; cursor: pointer;
       border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); font-family: var(--font-ui); color: var(--blekk);
     }
     .valg-rad:hover { background: var(--gul); }
     .valg-rad.valgt { background: var(--aksent-lys); box-shadow: var(--skygge); }
-    .valg-tittel { flex: 1; font-weight: 700; font-size: 15px; color: var(--blekk); }
-    .valg-under { font-size: 13px; color: var(--dempet); margin-top: 2px; font-weight: 400; }
-    .valg-pil { color: var(--dempet); font-size: 18px; }
+    .valg-tittel { flex: 1; font-weight: 700; font-size: 0.9375rem; color: var(--blekk); }
+    .valg-under { font-size: 0.8125rem; color: var(--dempet); margin-top: 2px; font-weight: 400; }
+    .valg-pil { color: var(--dempet); font-size: 1.125rem; }
     /* Vinduenes knapperad tåler mange knapper */
-    .modal-footer { flex-wrap: wrap; gap: 8px; }
+    .modal-footer { flex-wrap: wrap; gap: 0.5rem; }
     .modal-footer button { white-space: nowrap; }
     .todo-cb.mp { border-radius: 50%; }
-    .fremdrift { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font: 500 12px var(--font-mono); color: var(--dempet); }
-    .fremdrift .plan-stolpe { width: 52px; height: 6px; margin: 0; }
+    .fremdrift { display: inline-flex; align-items: center; gap: 0.4375rem; white-space: nowrap; font: 500 0.75rem var(--font-mono); color: var(--dempet); }
+    .fremdrift .plan-stolpe { width: 3.25rem; height: 0.375rem; margin: 0; }
 
     /* ── Utseende i Innstillinger (v6.0) ─────────────────────────────────── */
-    .tema-seksjon { padding: 14px 22px; border-bottom: 1px solid var(--linje); }
-    .tema-etikett { font: 700 10px var(--font-ui); text-transform: uppercase; letter-spacing: .8px; color: var(--dempet); margin-bottom: 10px; }
-    .tema-etikett span { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 6px; }
-    .tema-valg { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .tema-seksjon { padding: 0.875rem 1.375rem; border-bottom: 1px solid var(--linje); }
+    .tema-etikett { font: 700 0.625rem var(--font-ui); text-transform: uppercase; letter-spacing: .8px; color: var(--dempet); margin-bottom: 0.625rem; }
+    .tema-etikett span { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 0.375rem; }
+    .tema-valg { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.375rem, 1fr)); gap: 0.5rem; }
     .tema-knapp {
-      display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; align-items: center; text-align: left;
-      padding: 8px; background: var(--papir-lys); border: 1px solid var(--linje); border-radius: var(--hjorne);
+      display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); column-gap: 0.625rem; align-items: center; text-align: left;
+      padding: 0.5rem; background: var(--papir-lys); border: 1px solid var(--linje); border-radius: var(--hjorne);
       cursor: pointer; color: var(--blekk); font-family: var(--font-ui);
     }
     .tema-knapp:hover { border-color: var(--blekk); }
     .tema-knapp.valgt { border: var(--ramme); box-shadow: var(--skygge-liten); }
-    .tema-prøve { grid-row: 1 / 3; width: 44px; height: 32px; display: flex; gap: 3px; padding: 5px; border: 1px solid rgba(0,0,0,.18); box-sizing: border-box; }
+    .tema-prøve { grid-row: 1 / 3; width: 2.75rem; height: 2rem; display: flex; gap: 0.1875rem; padding: 0.3125rem; border: 1px solid rgba(0,0,0,.18); box-sizing: border-box; }
     .tema-prøve i { flex: 1; }
-    .tema-navn { font-size: 13px; font-weight: 800; }
-    .tema-om { font-size: 11px; color: var(--dempet); line-height: 1.3; }
+    .tema-navn { font-size: 0.8125rem; font-weight: 800; }
+    .tema-om { font-size: 0.6875rem; color: var(--dempet); line-height: 1.3; }
   </style>
 </head>
 <body>
 
 <!-- Login overlay -->
-<div id="loginOverlay" style="display:flex;position:fixed;inset:0;background:var(--papir);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
+<div id="loginOverlay" style="display:flex;position:fixed;inset:0;background:var(--papir);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;">
   <svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
     <rect width="72" height="72" rx="18" style="fill:var(--papir-lys);stroke:var(--linje)" stroke-width="1"/>
     <svg x="7" y="4" width="58" height="64" viewBox="84 81 813 939">
@@ -2226,7 +2234,7 @@
     <button class="fane" data-fane="kalender" onclick="byttFane('kalender', this)">Oversikt</button>
   </nav>
   <div class="header-handlinger">
-    <span id="dagerIgjenBadge" style="display:none;font-family:var(--font-ui);font-weight:600;font-size:11px;color:var(--dempet);letter-spacing:0.3px;white-space:nowrap;opacity:0.7;"></span>
+    <span id="dagerIgjenBadge" style="display:none;font-family:var(--font-ui);font-weight:600;font-size:0.6875rem;color:var(--dempet);letter-spacing:0.3px;white-space:nowrap;opacity:0.7;"></span>
     <span id="filterBadge" class="filter-merke" style="display:none;" onclick="åpneKategoriModal()"></span>
     <button class="header-knapp" id="sokKnapp" onclick="gåTilSøk()" title="Søk i alt">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -2284,7 +2292,7 @@
       <button class="filtrer-knapp" id="todoFilterKnapp" onclick="visTodoFilterPopup(this)" title="Filtrer og sorter">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="4" x2="12" y2="20"/><polyline points="6 14 12 20 18 14"/></svg>
         Filtrer og sorter
-        <span id="dagsoversiktFilterDot" style="display:none;position:absolute;top:4px;right:-6px;width:7px;height:7px;border-radius:50%;background:var(--aksent);"></span>
+        <span id="dagsoversiktFilterDot" style="display:none;position:absolute;top:0.25rem;right:-0.375rem;width:0.4375rem;height:0.4375rem;border-radius:50%;background:var(--aksent);"></span>
       </button>
     </div>
     <div class="hurtig-todo-rad">
@@ -2374,7 +2382,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.3</div>
+<div class="versjon">Prosjekt-planlegger v6.4</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2397,98 +2405,98 @@
       <div class="modal-tittel">Innstillinger</div>
       <button class="lukk-knapp" onclick="lukkModal('kategoriModal')">×</button>
     </div>
-    <div style="padding:14px 22px 12px;border-bottom:1px solid var(--linje);">
-      <button onclick="lukkModal('kategoriModal');åpneKategoriRediger()" style="width:100%;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 14px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Kategorier</button>
+    <div style="padding:0.875rem 1.375rem 0.75rem;border-bottom:1px solid var(--linje);">
+      <button onclick="lukkModal('kategoriModal');åpneKategoriRediger()" style="width:100%;font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.6875rem 0.875rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Kategorier</button>
     </div>
     <div class="tema-seksjon">
       <div class="tema-etikett">Utseende <span>utkast, gjelder bare denne enheten</span></div>
       <div id="temaValg" class="tema-valg"></div>
     </div>
-    <div style="padding:14px 22px 14px;border-bottom:1px solid var(--linje);">
-      <div style="font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:10px;">Tidslinje</div>
-      <div style="display:flex;gap:8px;">
+    <div style="padding:0.875rem 1.375rem 0.875rem;border-bottom:1px solid var(--linje);">
+      <div style="font-size:0.625rem;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:0.625rem;">Tidslinje</div>
+      <div style="display:flex;gap:0.5rem;">
         <div style="flex:1;">
-          <label style="display:block;font-size:11px;color:var(--dempet);margin-bottom:4px;font-weight:600;">Startdato</label>
-          <input type="date" id="tidslinjeStartInput" oninput="oppdaterTidslinjeGrensedatoer()" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);box-sizing:border-box;" />
+          <label style="display:block;font-size:0.6875rem;color:var(--dempet);margin-bottom:0.25rem;font-weight:600;">Startdato</label>
+          <input type="date" id="tidslinjeStartInput" oninput="oppdaterTidslinjeGrensedatoer()" style="width:100%;font-size:0.75rem;padding:0.4375rem 0.625rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);box-sizing:border-box;" />
         </div>
         <div style="flex:1;">
-          <label style="display:block;font-size:11px;color:var(--dempet);margin-bottom:4px;font-weight:600;">Sluttdato</label>
-          <input type="date" id="tidslinjeSluttInput" oninput="oppdaterTidslinjeGrensedatoer()" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);box-sizing:border-box;" />
+          <label style="display:block;font-size:0.6875rem;color:var(--dempet);margin-bottom:0.25rem;font-weight:600;">Sluttdato</label>
+          <input type="date" id="tidslinjeSluttInput" oninput="oppdaterTidslinjeGrensedatoer()" style="width:100%;font-size:0.75rem;padding:0.4375rem 0.625rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);box-sizing:border-box;" />
         </div>
       </div>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;">
-        <input type="checkbox" id="visDagerIgjenToggle" onchange="toggleVisDagerIgjen(this.checked)" style="width:16px;height:16px;accent-color:var(--aksent);cursor:pointer;" />
-        <span style="font-size:12px;color:var(--blekk);font-weight:600;">Vis «dager igjen» i header</span>
+      <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.625rem;cursor:pointer;">
+        <input type="checkbox" id="visDagerIgjenToggle" onchange="toggleVisDagerIgjen(this.checked)" style="width:1rem;height:1rem;accent-color:var(--aksent);cursor:pointer;" />
+        <span style="font-size:0.75rem;color:var(--blekk);font-weight:600;">Vis «dager igjen» i header</span>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-        <span style="font-size:12px;color:var(--blekk);font-weight:600;flex:1;">Behold fullførte i listen</span>
-        <select id="ryddDagerSelect" onchange="settRyddDager(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);cursor:pointer;">
+      <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;">
+        <span style="font-size:0.75rem;color:var(--blekk);font-weight:600;flex:1;">Behold fullførte i listen</span>
+        <select id="ryddDagerSelect" onchange="settRyddDager(this.value)" style="font-size:0.75rem;padding:0.375rem 0.5rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);cursor:pointer;">
           <option value="3">3 dager</option>
           <option value="7">1 uke</option>
           <option value="30">30 dager</option>
           <option value="aldri">Alltid</option>
         </select>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-        <span style="font-size:12px;color:var(--blekk);font-weight:600;flex:1;">Påminnelse-tid (frister)</span>
-        <input type="time" id="varselTidInput" onchange="settVarselTid(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);cursor:pointer;" />
+      <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;">
+        <span style="font-size:0.75rem;color:var(--blekk);font-weight:600;flex:1;">Påminnelse-tid (frister)</span>
+        <input type="time" id="varselTidInput" onchange="settVarselTid(this.value)" style="font-size:0.75rem;padding:0.375rem 0.5rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);cursor:pointer;" />
       </label>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;">
-        <input type="checkbox" id="oppsummeringToggle" onchange="settOppsummering(this.checked)" style="width:16px;height:16px;accent-color:var(--aksent);cursor:pointer;" />
-        <span style="font-size:12px;color:var(--blekk);font-weight:600;">Daglig oppsummering</span>
+      <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;cursor:pointer;">
+        <input type="checkbox" id="oppsummeringToggle" onchange="settOppsummering(this.checked)" style="width:1rem;height:1rem;accent-color:var(--aksent);cursor:pointer;" />
+        <span style="font-size:0.75rem;color:var(--blekk);font-weight:600;">Daglig oppsummering</span>
       </label>
     </div>
-    <div style="padding:16px 22px 8px;">
-      <div style="font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:10px;">Data</div>
-      <div style="display:flex;gap:8px;">
-        <button class="knapp-sek" onclick="eksporterData()" style="flex:1;font-size:12px;">↓ Eksporter</button>
-        <button class="knapp-sek" onclick="document.getElementById('importInput').click()" style="flex:1;font-size:12px;">↑ Importer</button>
-        <button class="knapp-sek" onclick="document.getElementById('mergeInput').click()" style="flex:1;font-size:12px;">⇅ Slå sammen</button>
+    <div style="padding:1rem 1.375rem 0.5rem;">
+      <div style="font-size:0.625rem;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:0.625rem;">Data</div>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="knapp-sek" onclick="eksporterData()" style="flex:1;font-size:0.75rem;">↓ Eksporter</button>
+        <button class="knapp-sek" onclick="document.getElementById('importInput').click()" style="flex:1;font-size:0.75rem;">↑ Importer</button>
+        <button class="knapp-sek" onclick="document.getElementById('mergeInput').click()" style="flex:1;font-size:0.75rem;">⇅ Slå sammen</button>
       </div>
-      <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:8px;font-size:12px;" class="knapp-sek">↩ Angre siste import</button>
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="flex:1;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Arkiv</button>
-        <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="flex:1;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Papirkurv</button>
+      <button id="angreImportKnapp" onclick="angreImport()" style="display:none;width:100%;margin-top:0.5rem;font-size:0.75rem;" class="knapp-sek">↩ Angre siste import</button>
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+        <button onclick="lukkModal('kategoriModal');åpneArkiv()" style="flex:1;font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.6875rem 0.5rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:0.375rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Arkiv</button>
+        <button onclick="lukkModal('kategoriModal');åpnePapirkurv()" style="flex:1;font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.6875rem 0.5rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:0.375rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Papirkurv</button>
       </div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button onclick="lukkModal('kategoriModal');åpneHovedFilter()" style="flex:1;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Hovedfilter</button>
-        <button onclick="lukkModal('kategoriModal');åpneBackup()" style="flex:1;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sikkerhetskopier</button>
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+        <button onclick="lukkModal('kategoriModal');åpneHovedFilter()" style="flex:1;font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.6875rem 0.5rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:0.375rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Hovedfilter</button>
+        <button onclick="lukkModal('kategoriModal');åpneBackup()" style="flex:1;font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.6875rem 0.5rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:0.375rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sikkerhetskopier</button>
       </div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="flex:1;font-size:12px;background:var(--aksent);color:var(--lys);border:none;border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
-        <button onclick="lukkModal('kategoriModal');åpnePrintTidslinje()" style="flex:1;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:11px 8px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Print</button>
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+        <button onclick="lukkModal('kategoriModal');åpneRapportVelger()" style="flex:1;font-size:0.75rem;background:var(--aksent);color:var(--lys);border:none;border-radius:var(--rs);padding:0.6875rem 0.5rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Rapport</button>
+        <button onclick="lukkModal('kategoriModal');åpnePrintTidslinje()" style="flex:1;font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.6875rem 0.5rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;">Print</button>
       </div>
     </div>
-    <div style="padding:14px 22px 8px;border-top:1px solid var(--linje);">
-      <div style="font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:10px;">Prosjekt</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-        <input type="text" id="innstProsjektNavn" oninput="oppdaterProsjektNavn(this.value)" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);" />
+    <div style="padding:0.875rem 1.375rem 0.5rem;border-top:1px solid var(--linje);">
+      <div style="font-size:0.625rem;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:0.625rem;">Prosjekt</div>
+      <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+        <input type="text" id="innstProsjektNavn" oninput="oppdaterProsjektNavn(this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);" />
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-        <label style="font-size:11px;color:var(--dempet);font-weight:600;white-space:nowrap;">Prosjektfarge</label>
-        <input type="color" id="innstProsjektFarge" oninput="oppdaterProsjektFarge(this.value)" style="width:32px;height:32px;border:1px solid var(--linje);border-radius:var(--rs);cursor:pointer;padding:2px;" />
-        <button onclick="lukkModal('kategoriModal');visNyttProsjektDialog()" style="margin-left:auto;font-size:12px;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:9px 14px;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;">+ Nytt prosjekt</button>
+      <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.625rem;">
+        <label style="font-size:0.6875rem;color:var(--dempet);font-weight:600;white-space:nowrap;">Prosjektfarge</label>
+        <input type="color" id="innstProsjektFarge" oninput="oppdaterProsjektFarge(this.value)" style="width:2rem;height:2rem;border:1px solid var(--linje);border-radius:var(--rs);cursor:pointer;padding:2px;" />
+        <button onclick="lukkModal('kategoriModal');visNyttProsjektDialog()" style="margin-left:auto;font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.5625rem 0.875rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;">+ Nytt prosjekt</button>
       </div>
-      <div id="innstProsjektListe" style="margin-top:10px;"></div>
+      <div id="innstProsjektListe" style="margin-top:0.625rem;"></div>
     </div>
-    <div style="padding:14px 22px 8px;border-top:1px solid var(--linje);">
-      <div style="font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:10px;">Siri-fangst</div>
-      <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span style="font-size:12px;color:var(--blekk);font-weight:600;flex:1;">Fangstprosjekt</span>
-        <select id="fangstProsjektSelect" onchange="settFangstProsjekt(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);cursor:pointer;max-width:55%;"></select>
+    <div style="padding:0.875rem 1.375rem 0.5rem;border-top:1px solid var(--linje);">
+      <div style="font-size:0.625rem;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:0.625rem;">Siri-fangst</div>
+      <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+        <span style="font-size:0.75rem;color:var(--blekk);font-weight:600;flex:1;">Fangstprosjekt</span>
+        <select id="fangstProsjektSelect" onchange="settFangstProsjekt(this.value)" style="font-size:0.75rem;padding:0.375rem 0.5rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);cursor:pointer;max-width:55%;"></select>
       </label>
-      <div style="font-size:11px;color:var(--dempet);line-height:1.5;margin-bottom:10px;">Alt du dikterer til Siri havner som to do her, uansett hvilken enhet du åpner appen fra.</div>
-      <button class="knapp-sek" onclick="kopierSiriNokkel()" style="width:100%;font-size:12px;">Kopier Siri-nøkkel</button>
+      <div style="font-size:0.6875rem;color:var(--dempet);line-height:1.5;margin-bottom:0.625rem;">Alt du dikterer til Siri havner som to do her, uansett hvilken enhet du åpner appen fra.</div>
+      <button class="knapp-sek" onclick="kopierSiriNokkel()" style="width:100%;font-size:0.75rem;">Kopier Siri-nøkkel</button>
     </div>
-    <div id="innstillingerBruker" style="display:none;padding:12px 22px 14px;border-top:1px solid var(--linje);align-items:center;gap:10px;">
-      <div style="width:32px;height:32px;border-radius:50%;background:var(--aksent-lys);border:1px solid var(--aksent-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <div id="innstillingerBruker" style="display:none;padding:0.75rem 1.375rem 0.875rem;border-top:1px solid var(--linje);align-items:center;gap:0.625rem;">
+      <div style="width:2rem;height:2rem;border-radius:50%;background:var(--aksent-lys);border:1px solid var(--aksent-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aksent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
-      <span id="innstillingerBrukerNavn" style="flex:1;font-size:13px;font-weight:600;color:var(--blekk);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-      <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:12px;padding:6px 12px;flex-shrink:0;">Logg ut</button>
+      <span id="innstillingerBrukerNavn" style="flex:1;font-size:0.8125rem;font-weight:600;color:var(--blekk);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button onclick="window._fbSignOut();lukkModal('kategoriModal')" class="knapp-sek" style="font-size:0.75rem;padding:0.375rem 0.75rem;flex-shrink:0;">Logg ut</button>
     </div>
     <div class="modal-footer" style="justify-content:flex-end;align-items:center;">
-      <span style="font-size:11px;color:var(--linje);font-family:var(--font-ui);letter-spacing:0.5px;margin-right:auto;" id="innstVersjon"></span>
+      <span style="font-size:0.6875rem;color:var(--linje);font-family:var(--font-ui);letter-spacing:0.5px;margin-right:auto;" id="innstVersjon"></span>
       <button class="knapp-sek" onclick="lukkModal('kategoriModal')">Lukk</button>
     </div>
   </div>
@@ -2501,8 +2509,8 @@
       <div class="modal-tittel">Kategorier</div>
       <button class="lukk-knapp" onclick="lukkModal('kategoriRedigerModal')">×</button>
     </div>
-    <div class="modal-body" id="kategoriModalBody" style="padding-top:8px;"></div>
-    <div style="padding:10px 22px 16px;">
+    <div class="modal-body" id="kategoriModalBody" style="padding-top:0.5rem;"></div>
+    <div style="padding:0.625rem 1.375rem 1rem;">
       <button class="knapp-primær" onclick="leggTilKategori()" style="width:100%;">+ Legg til kategori</button>
     </div>
     <div class="modal-footer">
@@ -2521,8 +2529,8 @@
       <button class="lukk-knapp" onclick="lukkModal('hovedFilterModal')">×</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:12px;color:var(--dempet);margin:0 0 12px;line-height:1.5;">Filtrer hele appen på kategori. «Alle» viser alt.</p>
-      <div id="hovedFilterKnapper" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+      <p style="font-size:0.75rem;color:var(--dempet);margin:0 0 0.75rem;line-height:1.5;">Filtrer hele appen på kategori. «Alle» viser alt.</p>
+      <div id="hovedFilterKnapper" style="display:flex;gap:0.3125rem;flex-wrap:wrap;"></div>
     </div>
     <div class="modal-footer">
       <div class="knapp-gruppe">
@@ -2540,7 +2548,7 @@
       <button class="lukk-knapp" onclick="lukkModal('papirkurvModal')">×</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:12px;color:var(--dempet);margin:0 0 12px;line-height:1.5;">Slettede elementer tas vare på her i 30 dager, og kan gjenopprettes.</p>
+      <p style="font-size:0.75rem;color:var(--dempet);margin:0 0 0.75rem;line-height:1.5;">Slettede elementer tas vare på her i 30 dager, og kan gjenopprettes.</p>
       <div id="papirkurvListe"></div>
     </div>
     <div class="modal-footer">
@@ -2560,7 +2568,7 @@
       <button class="lukk-knapp" onclick="lukkModal('backupModal')">×</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:12px;color:var(--dempet);margin:0 0 12px;line-height:1.5;">Appen tar automatisk vare på de 5 siste ulike tilstandene ved oppstart. Gjenopprett hele appen til et tidligere punkt om noe skulle gå galt.</p>
+      <p style="font-size:0.75rem;color:var(--dempet);margin:0 0 0.75rem;line-height:1.5;">Appen tar automatisk vare på de 5 siste ulike tilstandene ved oppstart. Gjenopprett hele appen til et tidligere punkt om noe skulle gå galt.</p>
       <div id="backupListe"></div>
     </div>
     <div class="modal-footer">
@@ -2579,14 +2587,14 @@
       <button class="lukk-knapp" onclick="lukkModal('printTidslinjeModal')">×</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:12px;color:var(--dempet);margin:0 0 14px;line-height:1.5;">Lager en liggende vektor-tidslinje for utskrift. Velg papir + «Landskap» i print-dialogen, og «Lagre som PDF» for å henge opp.</p>
+      <p style="font-size:0.75rem;color:var(--dempet);margin:0 0 0.875rem;line-height:1.5;">Lager en liggende vektor-tidslinje for utskrift. Velg papir + «Landskap» i print-dialogen, og «Lagre som PDF» for å henge opp.</p>
       <div class="felt">
         <label>Prosjekter</label>
-        <div id="printProsjektListe" style="display:flex;flex-direction:column;gap:6px;max-height:150px;overflow:auto;border:1px solid var(--linje);border-radius:var(--rs);padding:8px;"></div>
+        <div id="printProsjektListe" style="display:flex;flex-direction:column;gap:0.375rem;max-height:9.375rem;overflow:auto;border:1px solid var(--linje);border-radius:var(--rs);padding:0.5rem;"></div>
       </div>
       <div class="felt">
         <label>Dimensjoner</label>
-        <div id="printDimListe" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div id="printDimListe" style="display:flex;flex-direction:column;gap:0.375rem;"></div>
       </div>
       <div class="felt-rad">
         <div class="felt">
@@ -2629,16 +2637,16 @@
 
 <!-- Modal: Slett/Arkiver prosjekt -->
 <div class="modal-overlay" id="slettProsjektModal" style="z-index:300;">
-  <div class="modal" style="max-width:380px;">
+  <div class="modal" style="max-width:23.75rem;">
     <div class="modal-header">
-      <h2 id="slettProsjektTittel" style="font-size:15px;">Fjern prosjekt</h2>
+      <h2 id="slettProsjektTittel" style="font-size:0.9375rem;">Fjern prosjekt</h2>
       <button class="lukk-knapp" onclick="lukkModal('slettProsjektModal')">×</button>
     </div>
-    <div class="modal-body" style="padding:16px 22px;">
-      <p style="font-size:13px;color:var(--dempet);margin:0 0 16px;line-height:1.5;" id="slettProsjektBeskrivelse"></p>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+    <div class="modal-body" style="padding:1rem 1.375rem;">
+      <p style="font-size:0.8125rem;color:var(--dempet);margin:0 0 1rem;line-height:1.5;" id="slettProsjektBeskrivelse"></p>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;">
         <button id="slettProsjektSlettKnapp" class="knapp-blokk fare knapp-full"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Slett permanent</button>
-        <button onclick="lukkModal('slettProsjektModal')" class="knapp-sek" style="width:100%;font-size:12px;padding:10px 14px;">Avbryt</button>
+        <button onclick="lukkModal('slettProsjektModal')" class="knapp-sek" style="width:100%;font-size:0.75rem;padding:0.625rem 0.875rem;">Avbryt</button>
       </div>
     </div>
   </div>
@@ -2646,7 +2654,7 @@
 
 <!-- Modal: Arkiv -->
 <div class="modal-overlay" id="arkivModal">
-  <div class="modal" style="max-width:600px;">
+  <div class="modal" style="max-width:37.5rem;">
     <div class="modal-header">
       <div class="modal-tittel">Arkiv</div>
       <button class="lukk-knapp" onclick="lukkModal('arkivModal')">×</button>
@@ -2660,12 +2668,12 @@
 
 <!-- Modal: Rapport-velger -->
 <div class="modal-overlay" id="rapportVelgerModal">
-  <div class="modal" style="max-width:380px;">
+  <div class="modal" style="max-width:23.75rem;">
     <div class="modal-header">
       <div class="modal-tittel">Velg rapport</div>
       <button class="lukk-knapp" onclick="lukkModal('rapportVelgerModal')">×</button>
     </div>
-    <div class="modal-body" id="rapportVelgerBody" style="gap:8px;"></div>
+    <div class="modal-body" id="rapportVelgerBody" style="gap:0.5rem;"></div>
     <div class="modal-footer" style="justify-content:flex-end;">
       <button class="knapp-sek" onclick="lukkModal('rapportVelgerModal')">Avbryt</button>
     </div>
@@ -2679,15 +2687,15 @@
       <div class="modal-tittel">Rapport</div>
       <button class="lukk-knapp" onclick="lukkModal('rapportModal')">×</button>
     </div>
-    <div style="padding:10px 28px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+    <div style="padding:0.625rem 1.75rem 0;display:flex;gap:0.375rem;flex-wrap:wrap;align-items:center;">
       <button class="filter-pill aktiv rapportPeriodeKnapp" data-periode="uke" onclick="byttRapportPeriode('uke', this)">1 uke</button>
       <button class="filter-pill rapportPeriodeKnapp" data-periode="maaned" onclick="byttRapportPeriode('maaned', this)">1 måned</button>
       <button class="filter-pill rapportPeriodeKnapp" data-periode="kvartal" onclick="byttRapportPeriode('kvartal', this)">3 måneder</button>
       <button class="filter-pill rapportPeriodeKnapp" data-periode="egendefinert" onclick="visEgendefinertPeriode(this)">Egendefinert</button>
-      <span id="rapportEgendefinertDatoer" style="display:none;gap:4px;align-items:center;font-size:12px;color:var(--dempet);">
-        <input type="date" id="rapportEgenStart" style="font-size:11px;padding:3px 6px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);" onchange="oppdaterEgendefinertPeriode()">
+      <span id="rapportEgendefinertDatoer" style="display:none;gap:0.25rem;align-items:center;font-size:0.75rem;color:var(--dempet);">
+        <input type="date" id="rapportEgenStart" style="font-size:0.6875rem;padding:0.1875rem 0.375rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);" onchange="oppdaterEgendefinertPeriode()">
         <span>–</span>
-        <input type="date" id="rapportEgenSlutt" style="font-size:11px;padding:3px 6px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);" onchange="oppdaterEgendefinertPeriode()">
+        <input type="date" id="rapportEgenSlutt" style="font-size:0.6875rem;padding:0.1875rem 0.375rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);" onchange="oppdaterEgendefinertPeriode()">
       </span>
     </div>
     <div class="rapport-body" id="rapportBody"></div>
@@ -2744,19 +2752,19 @@
       </div>
       <div class="felt">
         <label>Frist</label>
-        <div style="display:flex;gap:6px;margin-bottom:8px;">
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settTodoFrist(1)">1 dag</button>
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settTodoFrist(3)">3 dager</button>
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settTodoFrist(7)">1 uke</button>
+        <div style="display:flex;gap:0.375rem;margin-bottom:0.5rem;">
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="settTodoFrist(1)">1 dag</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="settTodoFrist(3)">3 dager</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="settTodoFrist(7)">1 uke</button>
         </div>
         <input type="date" id="todoFeltFrist" />
       </div>
       <div class="felt">
         <label>Når gjør du den? (valgfritt)</label>
-        <div style="display:flex;gap:6px;margin-bottom:8px;">
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="document.getElementById('todoFeltPlanlagt').value=_datoOm(0)">I dag</button>
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="document.getElementById('todoFeltPlanlagt').value=_datoOm(1)">I morgen</button>
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="document.getElementById('todoFeltPlanlagt').value=_nesteUkedag(1)">Mandag</button>
+        <div style="display:flex;gap:0.375rem;margin-bottom:0.5rem;">
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="document.getElementById('todoFeltPlanlagt').value=_datoOm(0)">I dag</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="document.getElementById('todoFeltPlanlagt').value=_datoOm(1)">I morgen</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="document.getElementById('todoFeltPlanlagt').value=_nesteUkedag(1)">Mandag</button>
         </div>
         <input type="date" id="todoFeltPlanlagt" />
       </div>
@@ -2778,7 +2786,7 @@
       </div>
       <div class="felt">
         <label>Beskrivelse</label>
-        <textarea id="todoFeltBesk" style="min-height:64px;"></textarea>
+        <textarea id="todoFeltBesk" style="min-height:4rem;"></textarea>
       </div>
       <div class="felt">
         <label>Koble til leveranse</label>
@@ -2910,7 +2918,7 @@
       </div>
       <div class="felt">
         <label>Avhenger av (må være ferdig først)</label>
-        <select id="feltAvhengig" multiple size="4" style="height:auto;padding:4px;"></select>
+        <select id="feltAvhengig" multiple size="4" style="height:auto;padding:0.25rem;"></select>
       </div>
       <div class="felt">
         <label>Beskrivelse</label>
@@ -2953,14 +2961,14 @@
       </div>
       <div class="felt">
         <label>Frist</label>
-        <div style="display:flex;gap:6px;margin-bottom:8px;">
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settOppFrist(3)">3 dager</button>
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settOppFrist(7)">1 uke</button>
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="settOppFrist(30)">1 måned</button>
-          <button type="button" class="knapp-sek" style="flex:1;font-size:11px;padding:6px 4px;" onclick="toggleOppFristDato(this)">Velg dato</button>
+        <div style="display:flex;gap:0.375rem;margin-bottom:0.5rem;">
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="settOppFrist(3)">3 dager</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="settOppFrist(7)">1 uke</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="settOppFrist(30)">1 måned</button>
+          <button type="button" class="knapp-sek" style="flex:1;font-size:0.6875rem;padding:0.375rem 0.25rem;" onclick="toggleOppFristDato(this)">Velg dato</button>
         </div>
         <input type="date" id="oppFeltFrist" style="display:none;width:100%;" />
-        <div id="fristRelativInfo" style="font-size:12px;color:var(--dempet);margin-top:6px;display:none;"></div>
+        <div id="fristRelativInfo" style="font-size:0.75rem;color:var(--dempet);margin-top:0.375rem;display:none;"></div>
       </div>
       <div class="felt">
         <label>Gjenta</label>
@@ -2977,7 +2985,7 @@
       </div>
       <div class="felt">
         <label>Notater</label>
-        <textarea id="oppFeltNotat" style="min-height:64px;"></textarea>
+        <textarea id="oppFeltNotat" style="min-height:4rem;"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -3352,13 +3360,13 @@
     const kropp = document.createElement('div');
     kropp.className = 'modal-body';
     const info = document.createElement('div');
-    info.style.cssText = 'font-size:13px;color:var(--dempet);line-height:1.5;margin-bottom:12px;';
+    info.style.cssText = 'font-size:0.8125rem;color:var(--dempet);line-height:1.5;margin-bottom:0.75rem;';
     info.textContent = '«' + navn + '»' + (ekstra.length ? ' flyttes sammen med ' + ekstra.join(' og ') + '.' : ' flyttes.');
     kropp.appendChild(info);
     mål.forEach(p => {
       const rad = document.createElement('button');
       rad.className = 'knapp-sek';
-      rad.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;padding:11px 14px;font-size:13px;';
+      rad.style.cssText = 'display:flex;align-items:center;gap:0.625rem;width:100%;text-align:left;margin-bottom:0.5rem;padding:0.6875rem 0.875rem;font-size:0.8125rem;';
       const dot = document.createElement('span');
       dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${p.farge || 'var(--aksent)'};flex-shrink:0;`;
       rad.appendChild(dot);
@@ -3465,14 +3473,14 @@
     prosjekter.filter(p => !p.arkivert).forEach(p => {
       const rad = document.createElement('button');
       rad.className = 'knapp-sek';
-      rad.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;padding:11px 14px;font-size:13px;';
+      rad.style.cssText = 'display:flex;align-items:center;gap:0.625rem;width:100%;text-align:left;margin-bottom:0.5rem;padding:0.6875rem 0.875rem;font-size:0.8125rem;';
       const dot = document.createElement('span');
       dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${p.farge || 'var(--aksent)'};flex-shrink:0;`;
       rad.appendChild(dot);
       rad.appendChild(document.createTextNode(p.navn));
       if (p.id === aktivtProsjektId) {
         const sist = document.createElement('span');
-        sist.style.cssText = 'margin-left:auto;font-size:11px;color:var(--dempet);';
+        sist.style.cssText = 'margin-left:auto;font-size:0.6875rem;color:var(--dempet);';
         sist.textContent = 'sist brukt';
         rad.appendChild(sist);
       }
@@ -4303,7 +4311,7 @@
         yCell.style.cssText = `position:relative;width:${w}px;flex-shrink:0;display:flex;align-items:center;border-right:2px solid var(--linje);box-sizing:border-box;`;
         const yLabel = document.createElement('span');
         // Sticky left = labelBredde + litt margin, slik at teksten alltid er synlig mens man scroller gjennom året
-        yLabel.style.cssText = `position:sticky;left:${labelBredde + 8}px;font-size:11px;font-weight:700;font-family:var(--font-ui);color:var(--aksent);letter-spacing:1px;white-space:nowrap;pointer-events:none;`;
+        yLabel.style.cssText = `position:sticky;left:${labelBredde + 8}px;font-size:0.6875rem;font-weight:700;font-family:var(--font-ui);color:var(--aksent);letter-spacing:1px;white-space:nowrap;pointer-events:none;`;
         yLabel.textContent = w > 16 ? String(yr) : '';
         yCell.appendChild(yLabel);
         yearRad.appendChild(yCell);
@@ -4348,7 +4356,7 @@
         const erIDag = _lokalDatoStr(dagCursor) === _lokalDatoStr(iDag);
         const erSøndag = dagCursor.getDay() === 0;
         const dCelle = document.createElement('div');
-        dCelle.style.cssText = `width:${pxPerDag}px;flex-shrink:0;text-align:center;font-size:10px;font-weight:${erIDag?'800':'600'};color:${erIDag?'var(--fare)':'var(--dempet)'};padding:4px 0;border-right:1px solid ${erSøndag ? 'var(--linje)' : 'transparent'};`;
+        dCelle.style.cssText = `width:${pxPerDag}px;flex-shrink:0;text-align:center;font-size:0.625rem;font-weight:${erIDag?'800':'600'};color:${erIDag?'var(--fare)':'var(--dempet)'};padding:0.25rem 0;border-right:1px solid ${erSøndag ? 'var(--linje)' : 'transparent'};`;
         dCelle.textContent = d;
         dagRad.appendChild(dCelle);
         dagCursor.setDate(dagCursor.getDate() + 1);
@@ -4384,7 +4392,7 @@
 
     if (grupperKats.length === 0) {
       const tom = document.createElement('div');
-      tom.style.cssText = 'padding:32px;text-align:center;color:var(--dempet);font-size:13px;';
+      tom.style.cssText = 'padding:2rem;text-align:center;color:var(--dempet);font-size:0.8125rem;';
       tom.textContent = 'Legg til kategorier og leveranser for å se tidslinjen.';
       grid.appendChild(tom);
     } else {
@@ -4838,7 +4846,7 @@
     if (dagAkt.length === 0) {
       const tom = document.createElement('div');
       tom.className = 'tom-melding';
-      tom.style.cssText = 'padding:14px 20px;font-size:13px;';
+      tom.style.cssText = 'padding:0.875rem 1.25rem;font-size:0.8125rem;';
       tom.textContent = 'Ingen leveranser.';
       listEl.appendChild(tom);
     } else {
@@ -4849,7 +4857,7 @@
     if (dagOpp.length === 0) {
       const tom = document.createElement('div');
       tom.className = 'tom-melding';
-      tom.style.cssText = 'padding:14px 20px;font-size:13px;';
+      tom.style.cssText = 'padding:0.875rem 1.25rem;font-size:0.8125rem;';
       tom.textContent = 'Ingen milepæler.';
       listEl.appendChild(tom);
     } else {
@@ -5097,12 +5105,12 @@
           const fristStr = o.frist ? fristLabel(o.frist, false).tekst : '';
           oppEl.innerHTML = `<span style="color:var(--dempet);">↳</span>
             <span style="flex:1;">${escapeHtml(o.beskrivelse)}</span>
-            ${fristStr ? `<span style="font-size:11px;color:var(--dempet);">${fristStr}</span>` : ''}`;
+            ${fristStr ? `<span style="font-size:0.6875rem;color:var(--dempet);">${fristStr}</span>` : ''}`;
           const oppTodos = todos.filter(t => t.oppgaveId === o.id);
           if (oppTodos.length > 0) {
             const fullf = oppTodos.filter(t => t.fullfort).length;
             const badge = document.createElement('span');
-            badge.style.cssText = 'font-size:10px;color:var(--dempet);white-space:nowrap;';
+            badge.style.cssText = 'font-size:0.625rem;color:var(--dempet);white-space:nowrap;';
             badge.textContent = `${fullf}/${oppTodos.length}`;
             oppEl.appendChild(badge);
           }
@@ -5113,7 +5121,7 @@
             const todoEl = document.createElement('div');
             todoEl.className = 'kat-oversikt-oppgave';
             todoEl.style.paddingLeft = '44px';
-            todoEl.style.fontSize = '11px';
+            todoEl.style.fontSize = '0.6875rem';
             todoEl.onclick = () => { lukkModal('katOversiktModal'); åpneTodoInfo(t.id); };
             todoEl.innerHTML = `<span style="color:var(--aksent-mid);">◻</span> ${escapeHtml(t.tittel)}`;
             seksjon.appendChild(todoEl);
@@ -5149,7 +5157,7 @@
         oppEl.onclick = () => { lukkModal('katOversiktModal'); åpneOppgaveInfo(o.id); };
         const fristStr = o.frist ? fristLabel(o.frist, false).tekst : '';
         oppEl.innerHTML = `<span style="flex:1;">${escapeHtml(o.beskrivelse)}</span>
-          ${fristStr ? `<span style="font-size:11px;color:var(--dempet);">${fristStr}</span>` : ''}`;
+          ${fristStr ? `<span style="font-size:0.6875rem;color:var(--dempet);">${fristStr}</span>` : ''}`;
         seksjon.appendChild(oppEl);
       });
       body.appendChild(seksjon);
@@ -5170,7 +5178,7 @@
 
     // ── Tom kategori ──
     if (katAkt.length === 0 && katOpp.length === 0) {
-      body.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--dempet);">Ingen elementer i denne kategorien.</div>';
+      body.innerHTML = '<div style="padding:1rem;text-align:center;font-size:0.8125rem;color:var(--dempet);">Ingen elementer i denne kategorien.</div>';
     }
 
     document.getElementById('katOversiktModal').classList.add('vis');
@@ -5251,7 +5259,7 @@
 
     resDiv.innerHTML = '';
     if (!treff.length) {
-      resDiv.innerHTML = `<div style="text-align:center;color:var(--dempet);padding:24px 12px;font-size:13px;">Ingen treff på «${escapeHtml(_startSok)}»</div>`;
+      resDiv.innerHTML = `<div style="text-align:center;color:var(--dempet);padding:1.5rem 0.75rem;font-size:0.8125rem;">Ingen treff på «${escapeHtml(_startSok)}»</div>`;
       return;
     }
     treff.forEach(({ type, item, p }) => {
@@ -5305,7 +5313,7 @@
     const inp = document.createElement('input');
     inp.type = 'text';
     inp.value = gammel;
-    inp.style.cssText = "width:100%;font:inherit;padding:2px 4px;border:1px solid var(--aksent);border-radius:4px;background:var(--papir-lys);color:var(--blekk);";
+    inp.style.cssText = "width:100%;font:inherit;padding:2px 0.25rem;border:1px solid var(--aksent);border-radius:4px;background:var(--papir-lys);color:var(--blekk);";
     el.replaceWith(inp);
     inp.focus(); inp.select();
     let ferdig = false;
@@ -5739,17 +5747,17 @@
     // Egendefinert dato-rad
     if (_startFilter.periode === 'egendefinert') {
       const dateRow = document.createElement('div');
-      dateRow.style.cssText = 'display:flex;gap:8px;margin-bottom:10px;';
+      dateRow.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:0.625rem;';
       ['Fra', 'Til'].forEach((lbl, i) => {
         const wrap = document.createElement('div');
-        wrap.style.cssText = 'flex:1;display:flex;align-items:center;gap:6px;';
+        wrap.style.cssText = 'flex:1;display:flex;align-items:center;gap:0.375rem;';
         const label = document.createElement('span');
         label.textContent = lbl;
-        label.style.cssText = 'font-size:11px;color:var(--dempet);font-weight:600;';
+        label.style.cssText = 'font-size:0.6875rem;color:var(--dempet);font-weight:600;';
         const inp = document.createElement('input');
         inp.type = 'date';
         inp.value = i === 0 ? (_startEgStart || iDagStr) : (_startEgSlutt || '');
-        inp.style.cssText = "flex:1;font-size:12px;padding:6px 8px;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);";
+        inp.style.cssText = "flex:1;font-size:0.75rem;padding:0.375rem 0.5rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);";
         inp.oninput = () => {
           if (i === 0) _startEgStart = inp.value;
           else _startEgSlutt = inp.value;
@@ -5812,7 +5820,7 @@
 
     if (totalForfalt === 0 && totalPeriode === 0 && totalUtenFrist === 0 && venterTodos.length === 0) {
       kortCont.innerHTML = `<div class="tom-melding">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--aksent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--aksent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0.75rem;display:block;margin-left:auto;margin-right:auto;"><polyline points="20 6 9 17 4 12"/></svg>
         Alt er i rute!<br>Ingen aktive gjøremål
       </div>`;
     } else {
@@ -5955,7 +5963,7 @@
 
     // Velg alle / ingen
     const toppRad = document.createElement('div');
-    toppRad.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
+    toppRad.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:0.5rem;';
     ['Alle', 'Ingen'].forEach(lbl => {
       const b = document.createElement('button');
       b.textContent = lbl;
@@ -6048,7 +6056,7 @@
       { val: 'egendefinert', label: 'Egendefinert' }
     ];
     const btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+    btnRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.25rem;';
     const periodBtns = [];
 
     const oppdaterPeriodeBtns = () => {
@@ -6059,7 +6067,7 @@
     };
 
     const dateRow = document.createElement('div');
-    dateRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
+    dateRow.style.cssText = 'display:flex;gap:0.375rem;margin-top:0.5rem;';
     dateRow.style.display = _todoFilter.periode === 'egendefinert' ? 'flex' : 'none';
 
     let renderDebounce = null;
@@ -6114,7 +6122,7 @@
     const popup = document.createElement('div');
     popup.id = 'todoFilterPopup';
     popup.className = 'popup-boks';
-    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;min-width:240px;margin-top:6px;';
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;min-width:240px;margin-top:0.375rem;';
     popup.addEventListener('click', e => e.stopPropagation());
 
     _renderFilterSeksjonInnhold(popup);
@@ -6242,7 +6250,7 @@
     const popup = document.createElement('div');
     popup.id = popupId;
     popup.className = 'popup-boks';
-    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;min-width:220px;margin-top:6px;';
+    popup.style.cssText = 'position:absolute;top:100%;right:0;z-index:1000;min-width:220px;margin-top:0.375rem;';
     popup.addEventListener('click', e => e.stopPropagation());
 
     const pTittel = document.createElement('div');
@@ -6360,7 +6368,7 @@
                      oppgaverSnart.length === 0 && fullforte.length === 0;
     if (tomListe) {
       const tom = document.createElement('div');
-      tom.style.cssText = 'padding:24px;text-align:center;font-size:13px;color:var(--dempet);';
+      tom.style.cssText = 'padding:1.5rem;text-align:center;font-size:0.8125rem;color:var(--dempet);';
       tom.textContent = _aktivTag ? 'Ingen elementer med denne taggen.' : 'Ingen to do-elementer ennå.';
       container.appendChild(tom);
       return;
@@ -7379,7 +7387,7 @@
     });
 
     if (kategorier.length === 0) {
-      body.innerHTML = '<div style="font-size:13px;color:var(--dempet);padding:8px 0;">Ingen kategorier. Legg til en ny.</div>';
+      body.innerHTML = '<div style="font-size:0.8125rem;color:var(--dempet);padding:0.5rem 0;">Ingen kategorier. Legg til en ny.</div>';
     }
   }
 
@@ -7871,21 +7879,21 @@
     _papirkurvLagre(liste); // persister evt. auto-rydding
     document.getElementById('papirkurvTømKnapp').style.display = liste.length ? 'inline-flex' : 'none';
     if (!liste.length) {
-      container.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;color:var(--dempet);">Papirkurven er tom.</div>';
+      container.innerHTML = '<div style="padding:1.5rem;text-align:center;font-size:0.8125rem;color:var(--dempet);">Papirkurven er tom.</div>';
       return;
     }
     container.innerHTML = '';
     liste.slice().reverse().forEach(e => {
       const tittel = e.item.tittel || e.item.beskrivelse || '(uten tittel)';
       const rad = document.createElement('div');
-      rad.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--linje);';
+      rad.style.cssText = 'display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0;border-bottom:1px solid var(--linje);';
       rad.innerHTML = `<div style="flex:1;min-width:0;">
-          <div style="font-size:13px;color:var(--blekk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(tittel)}</div>
-          <div style="font-size:11px;color:var(--dempet);">${escapeHtml(_papirkurvNavn[e.type] || e.type)} · slettet ${escapeHtml(e.slettet || '')}</div>
+          <div style="font-size:0.8125rem;color:var(--blekk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(tittel)}</div>
+          <div style="font-size:0.6875rem;color:var(--dempet);">${escapeHtml(_papirkurvNavn[e.type] || e.type)} · slettet ${escapeHtml(e.slettet || '')}</div>
         </div>`;
       const btn = document.createElement('button');
       btn.className = 'knapp-sek';
-      btn.style.cssText = 'font-size:12px;padding:6px 12px;flex-shrink:0;';
+      btn.style.cssText = 'font-size:0.75rem;padding:0.375rem 0.75rem;flex-shrink:0;';
       btn.textContent = '↩ Gjenopprett';
       btn.onclick = () => _papirkurvGjenopprett(e.eid);
       rad.appendChild(btn);
@@ -8051,7 +8059,7 @@
     const leggTilTodoKnapp = document.createElement('button');
     leggTilTodoKnapp.className = 'ikon-knapp';
     leggTilTodoKnapp.title = 'Legg til to do';
-    leggTilTodoKnapp.style.cssText = `font-size:11px;font-weight:700;font-family:var(--font-ui);color:${knappFarge};padding:0 6px;width:auto;`;
+    leggTilTodoKnapp.style.cssText = `font-size:0.6875rem;font-weight:700;font-family:var(--font-ui);color:${knappFarge};padding:0 0.375rem;width:auto;`;
     leggTilTodoKnapp.textContent = '+ to do';
     leggTilTodoKnapp.onclick = e => {
       e.stopPropagation();
@@ -8064,7 +8072,7 @@
     leggTilOppgaveKnapp.className = 'ikon-knapp';
     leggTilOppgaveKnapp.textContent = '+';
     leggTilOppgaveKnapp.title = 'Legg til milepæl';
-    leggTilOppgaveKnapp.style.cssText = `font-size:18px;font-weight:400;color:${knappFarge};line-height:1;`;
+    leggTilOppgaveKnapp.style.cssText = `font-size:1.125rem;font-weight:400;color:${knappFarge};line-height:1;`;
     leggTilOppgaveKnapp.onclick = e => {
       e.stopPropagation();
       if (a._prosjektId && a._prosjektId !== aktivtProsjektId) byttProsjekt(a._prosjektId);
@@ -8511,12 +8519,12 @@
         const oTodos = todos.filter(t => t.oppgaveId === o.id);
         if (oTodos.length > 0) {
           const todoListe = document.createElement('div');
-          todoListe.style.cssText = 'margin:1px 0 7px 20px;border-left:2px solid var(--linje);padding-left:10px;';
+          todoListe.style.cssText = 'margin:1px 0 0.4375rem 1.25rem;border-left:2px solid var(--linje);padding-left:0.625rem;';
           oTodos.forEach(t => {
             const todoEl = document.createElement('div');
-            todoEl.style.cssText = `display:flex;align-items:center;gap:7px;padding:3px 0;font-size:12px;color:${t.fullfort ? 'var(--dempet)' : 'var(--blekk)'};`;
+            todoEl.style.cssText = `display:flex;align-items:center;gap:0.4375rem;padding:0.1875rem 0;font-size:0.75rem;color:${t.fullfort ? 'var(--dempet)' : 'var(--blekk)'};`;
             const sirk = document.createElement('span');
-            sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};`;
+            sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.5rem;color:${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};`;
             sirk.textContent = t.fullfort ? '✓' : '';
             const tekst = document.createElement('span');
             tekst.style.cssText = t.fullfort ? 'text-decoration:line-through;flex:1;opacity:0.7;' : 'flex:1;';
@@ -8525,7 +8533,7 @@
             todoEl.appendChild(tekst);
             if (t.frist && !t.fullfort) {
               const fristEl = document.createElement('span');
-              fristEl.style.cssText = 'font-size:11px;color:var(--dempet);white-space:nowrap;';
+              fristEl.style.cssText = 'font-size:0.6875rem;color:var(--dempet);white-space:nowrap;';
               fristEl.textContent = fmtDatoFra(t.frist);
               todoEl.appendChild(fristEl);
             }
@@ -8547,10 +8555,10 @@
         dtListe.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
         direkteTodos.forEach(t => {
           const el = document.createElement('div');
-          el.style.cssText = `display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--rs);background:var(--aksent-lys);font-size:12px;color:${t.fullfort ? 'var(--dempet)' : 'var(--blekk)'};cursor:pointer;`;
+          el.style.cssText = `display:flex;align-items:center;gap:0.4375rem;padding:0.3125rem 0.5rem;border-radius:var(--rs);background:var(--aksent-lys);font-size:0.75rem;color:${t.fullfort ? 'var(--dempet)' : 'var(--blekk)'};cursor:pointer;`;
           el.onclick = () => { lukkModal('aktivitetInfoModal'); åpneTodoInfo(t.id); };
           const sirk = document.createElement('span');
-          sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};`;
+          sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.5rem;color:${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};`;
           sirk.textContent = t.fullfort ? '✓' : '';
           const tekst = document.createElement('span');
           tekst.style.cssText = (t.fullfort ? 'text-decoration:line-through;opacity:0.7;' : '') + 'flex:1;';
@@ -8559,7 +8567,7 @@
           el.appendChild(tekst);
           if (t.frist && !t.fullfort) {
             const fristEl = document.createElement('span');
-            fristEl.style.cssText = 'font-size:11px;color:var(--dempet);white-space:nowrap;';
+            fristEl.style.cssText = 'font-size:0.6875rem;color:var(--dempet);white-space:nowrap;';
             fristEl.textContent = fmtDatoFra(t.frist);
             el.appendChild(fristEl);
           }
@@ -8572,16 +8580,16 @@
       const direkteTodosAlone = todos.filter(t => t.aktivitetId === a.id && !t.oppgaveId);
       if (direkteTodosAlone.length === 0) {
         const tom = document.createElement('div');
-        tom.style.cssText = 'margin-top:18px;font-size:13px;color:var(--dempet);';
+        tom.style.cssText = 'margin-top:1.125rem;font-size:0.8125rem;color:var(--dempet);';
         tom.textContent = 'Ingen milepæler knyttet til denne leveransen.';
         body.appendChild(tom);
       }
       direkteTodosAlone.forEach(t => {
         const el = document.createElement('div');
-        el.style.cssText = `display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--rs);background:var(--aksent-lys);font-size:12px;color:${t.fullfort ? 'var(--dempet)' : 'var(--blekk)'};cursor:pointer;margin-top:4px;`;
+        el.style.cssText = `display:flex;align-items:center;gap:0.4375rem;padding:0.3125rem 0.5rem;border-radius:var(--rs);background:var(--aksent-lys);font-size:0.75rem;color:${t.fullfort ? 'var(--dempet)' : 'var(--blekk)'};cursor:pointer;margin-top:0.25rem;`;
         el.onclick = () => { lukkModal('aktivitetInfoModal'); åpneTodoInfo(t.id); };
         const sirk = document.createElement('span');
-        sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};`;
+        sirk.style.cssText = `width:11px;height:11px;border-radius:50%;border:1.5px solid ${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.5rem;color:${t.fullfort ? 'var(--dempet)' : 'var(--aksent)'};`;
         sirk.textContent = t.fullfort ? '✓' : '';
         const tekst = document.createElement('span');
         tekst.style.cssText = (t.fullfort ? 'text-decoration:line-through;opacity:0.7;' : '') + 'flex:1;';
@@ -8590,7 +8598,7 @@
         el.appendChild(tekst);
         if (t.frist && !t.fullfort) {
           const fristEl = document.createElement('span');
-          fristEl.style.cssText = 'font-size:11px;color:var(--dempet);white-space:nowrap;';
+          fristEl.style.cssText = 'font-size:0.6875rem;color:var(--dempet);white-space:nowrap;';
           fristEl.textContent = fmtDatoFra(t.frist);
           el.appendChild(fristEl);
         }
@@ -8667,7 +8675,7 @@
       .sort((a,b) => b.dato.localeCompare(a.dato));
 
     if (fullforteMilepeler.length === 0 && tidligereAkt.length === 0) {
-      body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--dempet);font-size:13px;">Arkivet er tomt.</div>';
+      body.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--dempet);font-size:0.8125rem;">Arkivet er tomt.</div>';
       document.getElementById('arkivModal').classList.add('vis');
       return;
     }
@@ -8678,7 +8686,7 @@
       const d = new Date(a.dato + 'T00:00:00');
       const datoStr = d.getDate() + '. ' + MAANEDER[d.getMonth()] + ' ' + d.getFullYear();
       const el = document.createElement('div');
-      el.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--linje);cursor:pointer;';
+      el.style.cssText = 'display:flex;align-items:center;gap:0.625rem;padding:0.625rem 1.125rem;border-bottom:1px solid var(--linje);cursor:pointer;';
       el.classList.add('arkiv-rad');
       el.onclick = () => { lukkModal('arkivModal'); åpneAktivitetInfo(a.id); };
 
@@ -8696,14 +8704,14 @@
 
       const tekst = document.createElement('div');
       tekst.style.cssText = 'flex:1;min-width:0;';
-      tekst.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--blekk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.tittel)}</div>
-        <div style="font-size:11px;color:var(--dempet);">${datoStr}${ekstraInfo ? ' · ' + escapeHtml(ekstraInfo) : ''}</div>`;
+      tekst.innerHTML = `<div style="font-size:0.8125rem;font-weight:600;color:var(--blekk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.tittel)}</div>
+        <div style="font-size:0.6875rem;color:var(--dempet);">${datoStr}${ekstraInfo ? ' · ' + escapeHtml(ekstraInfo) : ''}</div>`;
       el.appendChild(tekst);
 
       if (knappTekst) {
         const knapp = document.createElement('button');
         knapp.className = 'knapp-sek';
-        knapp.style.cssText = 'font-size:11px;padding:4px 10px;flex-shrink:0;white-space:nowrap;';
+        knapp.style.cssText = 'font-size:0.6875rem;padding:0.25rem 0.625rem;flex-shrink:0;white-space:nowrap;';
         knapp.textContent = knappTekst;
         knapp.onclick = e => { e.stopPropagation(); knappOnClick(); };
         el.appendChild(knapp);
@@ -8713,7 +8721,7 @@
 
     if (fullforteMilepeler.length > 0) {
       const hdr = document.createElement('div');
-      hdr.style.cssText = 'padding:12px 18px 6px;font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);background:var(--aksent-lys);border-bottom:1px solid var(--linje);';
+      hdr.style.cssText = 'padding:0.75rem 1.125rem 0.375rem;font-size:0.625rem;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);background:var(--aksent-lys);border-bottom:1px solid var(--linje);';
       hdr.textContent = `◆ Fullførte resultater (${fullforteMilepeler.length})`;
       body.appendChild(hdr);
       fullforteMilepeler.forEach(a => {
@@ -8724,7 +8732,7 @@
 
     if (tidligereAkt.length > 0) {
       const hdr = document.createElement('div');
-      hdr.style.cssText = 'padding:12px 18px 6px;font-size:10px;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);background:var(--aksent-lys);border-bottom:1px solid var(--linje);border-top:1px solid var(--linje);';
+      hdr.style.cssText = 'padding:0.75rem 1.125rem 0.375rem;font-size:0.625rem;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);background:var(--aksent-lys);border-bottom:1px solid var(--linje);border-top:1px solid var(--linje);';
       hdr.textContent = `Tidligere aktiviteter (${tidligereAkt.length})`;
       body.appendChild(hdr);
       tidligereAkt.forEach(a => {
@@ -9594,17 +9602,17 @@
         </div>`;
         oppListe.filter(o => o.aktivitetId === a.id).forEach(o => {
           bruktOpp.add(o.id);
-          h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
+          h += `<div class="rapport-item" style="margin-left:0.875rem;border-left:2px solid var(--linje);padding-left:0.625rem;margin-top:2px;">
             <div style="flex:1;">
-              <div class="rapport-item-tittel" style="font-size:13px;">↳ ${escapeHtml(o.beskrivelse)}</div>
+              <div class="rapport-item-tittel" style="font-size:0.8125rem;">↳ ${escapeHtml(o.beskrivelse)}</div>
               <div class="rapport-item-meta">Milepæl · Frist ${fmtDatoFra(o.frist)}</div>
             </div>
           </div>`;
           todoListe.filter(t => t.oppgaveId === o.id).forEach(t => {
             bruktTodo.add(t.id);
-            h += `<div class="rapport-item" style="margin-left:28px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
+            h += `<div class="rapport-item" style="margin-left:1.75rem;border-left:2px solid var(--linje);padding-left:0.625rem;margin-top:2px;">
               <div style="flex:1;">
-                <div class="rapport-item-tittel" style="font-size:12px;">◻ ${escapeHtml(t.tittel)}</div>
+                <div class="rapport-item-tittel" style="font-size:0.75rem;">◻ ${escapeHtml(t.tittel)}</div>
                 <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
               </div>
             </div>`;
@@ -9613,9 +9621,9 @@
         // Todos koblet direkte til leveransen (uten via oppgave)
         todoListe.filter(t => t.aktivitetId === a.id && !bruktTodo.has(t.id)).forEach(t => {
           bruktTodo.add(t.id);
-          h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
+          h += `<div class="rapport-item" style="margin-left:0.875rem;border-left:2px solid var(--linje);padding-left:0.625rem;margin-top:2px;">
             <div style="flex:1;">
-              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${escapeHtml(t.tittel)}</div>
+              <div class="rapport-item-tittel" style="font-size:0.75rem;">◻ ${escapeHtml(t.tittel)}</div>
               <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
             </div>
           </div>`;
@@ -9633,9 +9641,9 @@
         </div>`;
         todoListe.filter(t => t.oppgaveId === o.id).forEach(t => {
           bruktTodo.add(t.id);
-          h += `<div class="rapport-item" style="margin-left:14px;border-left:2px solid var(--linje);padding-left:10px;margin-top:2px;">
+          h += `<div class="rapport-item" style="margin-left:0.875rem;border-left:2px solid var(--linje);padding-left:0.625rem;margin-top:2px;">
             <div style="flex:1;">
-              <div class="rapport-item-tittel" style="font-size:12px;">◻ ${escapeHtml(t.tittel)}</div>
+              <div class="rapport-item-tittel" style="font-size:0.75rem;">◻ ${escapeHtml(t.tittel)}</div>
               <div class="rapport-item-meta">To do · Frist ${fmtDatoFra(t.frist)}</div>
             </div>
           </div>`;
@@ -9779,7 +9787,7 @@
     pl.innerHTML = '';
     prosjekter.filter(p => !p.arkivert).forEach(p => {
       const lbl = document.createElement('label');
-      lbl.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;color:var(--blekk);cursor:pointer;';
+      lbl.style.cssText = 'display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--blekk);cursor:pointer;';
       lbl.innerHTML = `<input type="checkbox" class="printProsjektCb" value="${escapeHtml(p.id)}" ${p.id === aktivtProsjektId ? 'checked' : ''} style="width:15px;height:15px;accent-color:var(--aksent);"><span style="width:10px;height:10px;border-radius:2px;background:${_farge(p.farge)};display:inline-block;flex-shrink:0;"></span> ${escapeHtml(p.navn)}`;
       pl.appendChild(lbl);
     });
@@ -9795,7 +9803,7 @@
     dl.innerHTML = '';
     dims.forEach(d => {
       const lbl = document.createElement('label');
-      lbl.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;color:var(--blekk);cursor:pointer;';
+      lbl.style.cssText = 'display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--blekk);cursor:pointer;';
       lbl.innerHTML = `<input type="checkbox" class="printDimCb" value="${d.key}" ${d.on ? 'checked' : ''} style="width:15px;height:15px;accent-color:var(--aksent);"> ${d.navn}`;
       dl.appendChild(lbl);
     });
@@ -10018,7 +10026,7 @@
   function åpneRapportVelger() {
     const body = document.getElementById('rapportVelgerBody');
     body.innerHTML = '';
-    body.style.cssText = 'padding:18px 22px;display:flex;flex-direction:column;gap:8px;';
+    body.style.cssText = 'padding:1.125rem 1.375rem;display:flex;flex-direction:column;gap:0.5rem;';
 
     const lagValg = (label, sub, farge, onClick) => {
       const btn = document.createElement('button');
@@ -10113,7 +10121,7 @@
       // Tilbake-knapp
       if (prosjekter.length > 1) {
         const tilbake = document.createElement('button');
-        tilbake.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 2px;border:none;background:none;cursor:pointer;font-family:var(--font-body);font-size:12px;color:var(--dempet);margin-bottom:-4px;';
+        tilbake.style.cssText = 'display:flex;align-items:center;gap:0.375rem;padding:0.375rem 2px;border:none;background:none;cursor:pointer;font-family:var(--font-body);font-size:0.75rem;color:var(--dempet);margin-bottom:-4px;';
         tilbake.innerHTML = '‹ Tilbake til prosjekter';
         tilbake.onclick = visProsjektValg;
         body.appendChild(tilbake);
@@ -10382,11 +10390,11 @@
     if (aktive.length <= 1) return;
     aktive.forEach(p => {
       const rad = document.createElement('div');
-      rad.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;';
+      rad.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0;';
       const dot = document.createElement('span');
       dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:${p.farge};flex-shrink:0;`;
       const navn = document.createElement('span');
-      navn.style.cssText = 'flex:1;font-size:12px;color:var(--blekk);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+      navn.style.cssText = 'flex:1;font-size:0.75rem;color:var(--blekk);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
       navn.textContent = p.navn;
       const arkBtn = document.createElement('button');
       arkBtn.className = 'mini-knapp';
@@ -10509,19 +10517,19 @@
       antall++;
       const prosj = _parseSafe(entry.state['lp_prosjekter'], []) || [];
       const rad = document.createElement('div');
-      rad.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--linje);';
+      rad.style.cssText = 'display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0;border-bottom:1px solid var(--linje);';
       rad.innerHTML = `<div style="flex:1;min-width:0;">
-          <div style="font-size:13px;color:var(--blekk);">${_backupTidStr(entry.ts)}${i === 0 ? ' <span style="color:var(--dempet);font-size:11px;">(nyeste)</span>' : ''}</div>
-          <div style="font-size:11px;color:var(--dempet);">${prosj.length} prosjekt${prosj.length === 1 ? '' : 'er'}</div>
+          <div style="font-size:0.8125rem;color:var(--blekk);">${_backupTidStr(entry.ts)}${i === 0 ? ' <span style="color:var(--dempet);font-size:0.6875rem;">(nyeste)</span>' : ''}</div>
+          <div style="font-size:0.6875rem;color:var(--dempet);">${prosj.length} prosjekt${prosj.length === 1 ? '' : 'er'}</div>
         </div>`;
       const btn = document.createElement('button');
-      btn.className = 'knapp-sek'; btn.style.cssText = 'font-size:12px;padding:6px 12px;flex-shrink:0;';
+      btn.className = 'knapp-sek'; btn.style.cssText = 'font-size:0.75rem;padding:0.375rem 0.75rem;flex-shrink:0;';
       btn.textContent = '↺ Gjenopprett';
       btn.onclick = () => _gjenopprettBackup(i);
       rad.appendChild(btn);
       container.appendChild(rad);
     }
-    if (!antall) container.innerHTML = '<div style="padding:24px;text-align:center;font-size:13px;color:var(--dempet);">Ingen sikkerhetskopier ennå.</div>';
+    if (!antall) container.innerHTML = '<div style="padding:1.5rem;text-align:center;font-size:0.8125rem;color:var(--dempet);">Ingen sikkerhetskopier ennå.</div>';
   }
 
   function _gjenopprettBackup(slot) {
