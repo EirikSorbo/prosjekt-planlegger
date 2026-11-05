@@ -2382,7 +2382,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.4</div>
+<div class="versjon">Prosjekt-planlegger v6.5</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -3033,9 +3033,11 @@
     localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
     localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
   } else if (prosjekter.length === 0) {
-    // Helt ny bruker — opprett standard prosjekt
+    // Tom lokal kopi: ny bruker, ny nettleser eller slettede nettstedsdata.
+    // Prosjektet er en plassholder (auto) til innloggingen viser hva skyen har.
+    // Har skyen prosjekter, tas det bort så lenge det er tomt (v6.5).
     const nyId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prosjekter = [{ id: nyId, navn: 'Mitt prosjekt', farge: '#e8654a', opprettet: _lokalDatoStr() }];
+    prosjekter = [{ id: nyId, navn: 'Mitt prosjekt', farge: '#e8654a', opprettet: _lokalDatoStr(), auto: true }];
     aktivtProsjektId = nyId;
     localStorage.setItem('lp_prosjekter', JSON.stringify(prosjekter));
     localStorage.setItem('lp_aktivt_prosjekt', aktivtProsjektId);
@@ -10791,7 +10793,12 @@
     const pk = s => 'lp_' + pid + '_' + s;
     // Er prosjektet slettet (her eller på en annen enhet), skal en gammel
     // lokal kopi ikke gjenopprette dokumentet i skyen.
-    if (!((window._getProsjekter && window._getProsjekter()) || []).some(p => p && p.id === pid)) return true;
+    const prosjekt = ((window._getProsjekter && window._getProsjekter()) || []).find(p => p && p.id === pid);
+    if (!prosjekt) return true;
+    // En tom plassholder har ingenting å lagre og skal ikke bli et prosjekt i
+    // skyen. Har den fått innhold, blir den her et vanlig prosjekt.
+    if (_erTomPlassholder(prosjekt)) { localStorage.removeItem(pk('dirty')); return true; }
+    if (prosjekt.auto) _lokaleProsjekterForSky();
     if (!navigator.onLine) {
       visSynkStatus('Lagret lokalt, synkes når du er på nett', 'var(--varsel)', 4000);
       return false;   // dirty står: sendes ved 'online' eller neste lagring
@@ -10858,19 +10865,66 @@
   function _skrivProsjektBase(liste) {
     try { localStorage.setItem('lp_prosjekter_base', JSON.stringify(Array.isArray(liste) ? liste : [])); } catch (e) { /* union neste gang */ }
   }
+
+  // ── Plassholderen «Mitt prosjekt» (v6.5) ──
+  // Starter appen med tom lokal kopi (ny nettleser, slettede nettstedsdata),
+  // lages et tomt prosjekt med auto: true, så appen har noe å vise før
+  // innloggingen. Før ble det lagret som et vanlig prosjekt og stod som aktivt:
+  // appen så tom ut, og et tomt «Mitt prosjekt» ble liggende igjen i lista.
+  // Nå går det aldri til skyen mens det er tomt, og det tas bort når skyens
+  // prosjektliste er kjent og har prosjekter. Får det innhold, blir det et
+  // vanlig prosjekt.
+  function _erTomPlassholder(p) {
+    if (!(p && p.auto && p.id)) return false;
+    return _LISTER.every(([, n]) => {
+      let v = null;
+      try { v = JSON.parse(localStorage.getItem('lp_' + p.id + '_' + n) || 'null'); } catch (e) { v = null; }
+      return !Array.isArray(v) || v.length === 0;
+    });
+  }
+  // Lokal prosjektliste uten tomme plassholdere, når skyen har minst ett aktivt
+  // prosjekt. Plassholderen har aldri vært i skyen, så det er ingen sletting
+  // å formidle: den fjernes bare her.
+  function _utenPlassholdere(lokal, skyListe) {
+    if (!Array.isArray(lokal) || !Array.isArray(skyListe) || !skyListe.some(p => p && !p.arkivert)) return lokal;
+    const iSky = new Set(skyListe.map(p => p && p.id));
+    const fjern = lokal.filter(p => p && !iSky.has(p.id) && _erTomPlassholder(p));
+    if (!fjern.length) return lokal;
+    fjern.forEach(p => ['a','o','t','k','tl','fa','fo','base','dirty','flog'].forEach(s => localStorage.removeItem('lp_' + p.id + '_' + s)));
+    return lokal.filter(p => !fjern.includes(p));
+  }
+  // Prosjektlista slik den skal til skyen: uten tomme plassholdere. En
+  // plassholder med innhold mister auto-merket også lokalt, ellers ville den
+  // skilt seg fra skyens kopi og vunnet hver fletting.
+  function _lokaleProsjekterForSky() {
+    let lokal = [];
+    try { lokal = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]') || []; } catch (e) { lokal = []; }
+    if (lokal.some(p => p && p.auto && !_erTomPlassholder(p))) {
+      lokal = lokal.map(p => {
+        if (!(p && p.auto) || _erTomPlassholder(p)) return p;
+        const { auto, ...vanlig } = p;
+        return vanlig;
+      });
+      window._settProsjektFraSky(lokal, null);
+    }
+    return lokal.filter(p => !_erTomPlassholder(p));
+  }
+  window._plassholder = { _erTomPlassholder, _utenPlassholdere, _lokaleProsjekterForSky, _adopterProsjektliste };   // for test og feilsøking
+
   // Ta skyens prosjektliste inn med fletting. Er det aktive prosjektet slettet
-  // på en annen enhet, lastes appen på nytt på et gjenværende prosjekt, i stedet
-  // for å bli stående på (og ved neste lagring gjenopprette) et prosjekt som ikke
-  // finnes lenger.
-  function _adopterProsjektliste(skyListe) {
+  // på en annen enhet (eller var det en tom plassholder), lastes appen på nytt
+  // på et gjenværende prosjekt, helst skyens aktive, i stedet for å bli stående
+  // på (og ved neste lagring gjenopprette) et prosjekt som ikke finnes lenger.
+  function _adopterProsjektliste(skyListe, skyAktivt) {
     if (!Array.isArray(skyListe)) return false;
-    const lokal = (window._getProsjekter && window._getProsjekter()) || [];
+    const før = (window._getProsjekter && window._getProsjekter()) || [];
+    const lokal = _utenPlassholdere(før, skyListe);
     const ny = _flett3(_lesProsjektBase(), lokal, skyListe);
     _skrivProsjektBase(skyListe);
-    if (JSON.stringify(ny) === JSON.stringify(lokal)) return false;
+    if (JSON.stringify(ny) === JSON.stringify(før)) return false;
     const aktiv = window._getAktivtProsjektId();
     if (ny.length && !ny.some(p => p && p.id === aktiv)) {
-      const neste = ny.find(p => p && !p.arkivert) || ny[0];
+      const neste = ny.find(p => p && p.id === skyAktivt && !p.arkivert) || ny.find(p => p && !p.arkivert) || ny[0];
       window._settProsjektFraSky(ny, neste.id);
       location.reload();
       return true;
@@ -10885,7 +10939,7 @@
   // lest og skrevet i én transaksjon.
   async function _synkProsjektliste(userId, pid) {
     const ref = doc(db, 'brukere', userId);
-    const lokal = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
+    const lokal = _lokaleProsjekterForSky();
     const base = _lesProsjektBase();
     const flettet = await runTransaction(db, async tx => {
       const snap = await tx.get(ref);
@@ -10994,22 +11048,24 @@
   }
 
   // ── Last prosjektdata fra sky ──
+  // Returnerer true når den lokale kopien er i takt med serveren, false når
+  // bare cachen (eller ingenting) svarte.
   async function _lastProsjektFraSky(userId, prosjektId) {
     const pk = s => 'lp_' + prosjektId + '_' + s;
     // Usynkede lokale endringer: lagringen fletter dem med skyen og tar
     // samtidig inn det som er nytt der, så det er alt som trengs.
     if (localStorage.getItem(pk('dirty'))) {
-      try { await lagreTilSky(userId, prosjektId); } catch(e) { /* la dirty stå til neste forsøk */ }
-      return;
+      try { return await lagreTilSky(userId, prosjektId); } catch(e) { return false; /* la dirty stå til neste forsøk */ }
     }
-    let snap;
+    let snap, fraServer = true;
     try {
       snap = await getDocFromServer(doc(db, 'brukere', userId, 'prosjekter', prosjektId));
     } catch(e) {
+      fraServer = false;
       console.warn('[SYNK] Server-henting feilet for prosjekt', prosjektId, ':', e.code);
-      try { snap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', prosjektId)); } catch(e2) { return; }
+      try { snap = await getDoc(doc(db, 'brukere', userId, 'prosjekter', prosjektId)); } catch(e2) { return false; }
     }
-    if (!(snap && snap.exists())) return;
+    if (!(snap && snap.exists())) return fraServer;
     const data = snap.data();
     await _kjedet(prosjektId, async () => {
       // Flettingen bevarer en endring brukeren rakk å gjøre mens hentingen
@@ -11026,15 +11082,21 @@
     if (localStorage.getItem(pk('dirty'))) {
       try { await lagreTilSky(userId, prosjektId); } catch(e) { /* la dirty stå */ }
     }
+    return fraServer;
   }
 
   // ── Start lytter for aktivt prosjekt ──
-  function _startProsjektLytter(userId, prosjektId) {
+  // lastet = false: hentingen rett før nådde ikke serveren. Da tas lytterens
+  // første svar fra serveren inn, i stedet for å vente til noe endres.
+  function _startProsjektLytter(userId, prosjektId, lastet = true) {
     if (window._unsub) window._unsub();
     const pk = s => 'lp_' + prosjektId + '_' + s;
     let firstSnapshot = true;
     window._unsub = onSnapshot(doc(db, 'brukere', userId, 'prosjekter', prosjektId), snap => {
-      if (firstSnapshot) { firstSnapshot = false; return; }
+      if (firstSnapshot) {
+        firstSnapshot = false;
+        if (lastet || snap.metadata.fromCache) return;
+      }
       if (!snap.exists()) return;
       const data = snap.data();
       _kjedet(prosjektId, async () => {
@@ -11561,9 +11623,9 @@
     const uid = window._currentUid;
     const pid = window._getAktivtProsjektId();
     if (!uid || !pid) return;
-    await _lastProsjektFraSky(uid, pid);
+    const lastet = await _lastProsjektFraSky(uid, pid);
     _oppdaterAppFraSky();
-    _startProsjektLytter(uid, pid);
+    _startProsjektLytter(uid, pid, lastet);
   };
 
   // ── Ferskhenting (forgrunn + oppdater-knapp) ─────────────────────────────
@@ -11591,7 +11653,7 @@
         if (snap.exists()) {
           const data = snap.data();
           if (data.fangstProsjekt) localStorage.setItem('lp_fangstProsjekt', data.fangstProsjekt);
-          if (data.prosjekter) _adopterProsjektliste(data.prosjekter);
+          if (data.prosjekter) _adopterProsjektliste(data.prosjekter, data.aktivtProsjekt);
         }
       } catch(e) { /* offline: lokale data blir stående */ }
 
@@ -11650,9 +11712,10 @@
 
       // Hent prosjektliste fra sky
       console.log('[SYNK] Henter prosjektliste for uid:', bruker.uid);
-      let brukerSnap;
+      let brukerSnap, listeFraServer = false;
       try {
         brukerSnap = await getDocFromServer(doc(db, 'brukere', bruker.uid));
+        listeFraServer = true;
       } catch(e) {
         console.warn('[SYNK] Server-henting feilet, prøver cache:', e.code);
         try { brukerSnap = await getDoc(doc(db, 'brukere', bruker.uid)); } catch(e2) { /* ignore */ }
@@ -11696,7 +11759,8 @@
         } else if (brukerData.prosjekter) {
           // Ny struktur finnes i sky — synkroniser prosjektliste
           const skyProsjekter = brukerData.prosjekter;
-          const lokaleProsjekter = JSON.parse(localStorage.getItem('lp_prosjekter') || '[]');
+          // En tom plassholder fra en tom lokal kopi skal ikke bli med (v6.5).
+          const lokaleProsjekter = _utenPlassholdere(JSON.parse(localStorage.getItem('lp_prosjekter') || '[]'), skyProsjekter);
 
           // Flett mot grunnlaget: nye lokale prosjekter beholdes, prosjekter
           // slettet på en annen enhet forsvinner også her. (Uten grunnlag, første
@@ -11729,7 +11793,8 @@
           const lokalAktivt = window._getAktivtProsjektId();
           let nyttAktivt = lokalAktivt;
           if (!merged.find(p => p.id === lokalAktivt) && merged.length > 0) {
-            nyttAktivt = brukerData.aktivtProsjekt || merged[0].id;
+            const skyAktivt = merged.find(p => p.id === brukerData.aktivtProsjekt && !p.arkivert);
+            nyttAktivt = (skyAktivt || merged.find(p => !p.arkivert) || merged[0]).id;
           }
 
           window._settProsjektFraSky(merged, nyttAktivt);
@@ -11740,8 +11805,9 @@
 
       // Last aktivt prosjekt fra sky
       const pid = window._getAktivtProsjektId();
+      let prosjektLastet = true;
       if (pid) {
-        await _lastProsjektFraSky(bruker.uid, pid);
+        prosjektLastet = await _lastProsjektFraSky(bruker.uid, pid);
         visSynkStatus('✓ Hentet fra sky', 'var(--ok)');
       }
 
@@ -11760,7 +11826,7 @@
       }
 
       // Start lytter for aktivt prosjekt
-      if (pid) _startProsjektLytter(bruker.uid, pid);
+      if (pid) _startProsjektLytter(bruker.uid, pid, prosjektLastet);
 
       // De øvrige prosjektene har ingen lytter, men vises på Start.
       await _lastAndreProsjekterFraSky(bruker.uid, pid);
@@ -11773,13 +11839,19 @@
       _startDagsplanLytter(bruker.uid);
 
       // Lytt på endringer i prosjektlisten fra andre enheter
+      // Første svar er det oppstarten nettopp hentet. Nådde ikke hentingen
+      // serveren, tas lista inn så snart serveren svarer. Før ventet appen da
+      // til noe ble endret på en annen enhet, og sto tom i mellomtiden.
       let firstBrukerSnap = true;
       window._unsubBruker = onSnapshot(doc(db, 'brukere', bruker.uid), snap => {
-        if (firstBrukerSnap) { firstBrukerSnap = false; return; }
+        if (firstBrukerSnap) {
+          firstBrukerSnap = false;
+          if (listeFraServer || snap.metadata.fromCache) return;
+        }
         if (!snap.exists()) return;
         const data = snap.data();
         // Flett i stedet for å overskrive (et prosjekt laget her før synk består).
-        if (data.prosjekter) _adopterProsjektliste(data.prosjekter);
+        if (data.prosjekter) _adopterProsjektliste(data.prosjekter, data.aktivtProsjekt);
       });
 
     } else {
