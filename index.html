@@ -2382,7 +2382,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.5</div>
+<div class="versjon">Prosjekt-planlegger v6.6</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -11151,7 +11151,10 @@
   // eller flertydig navn gir null (elementet havner ukoblet, aldri feilkoblet).
   // Leveranser utføres før oppgaver og to-dos i samme sveip, så en plan kan
   // legges inn i én omgang og koblingene finner de nye leveransene.
-  // Ukjent eller manglende prosjektId faller tilbake til fangstprosjektet.
+  // Manglende prosjektId faller tilbake til fangstprosjektet. En prosjektId
+  // denne enheten ikke kjenner (ennå), og et mål for oppdater/fullfor som ikke
+  // finnes, får forespørselen til å stå til et senere sveip. Først når den er
+  // en uke gammel, går den til fangstprosjektet hhv. ryddes bort (v6.6).
   //
   // Hvorfor egne dokumenter og ikke direkte skriving i arrayene: lagreTilSky()
   // skriver HELE prosjektdokumentet fra localStorage. En enhet med utdatert
@@ -11205,13 +11208,28 @@
       const fangstPid = window._fangstProsjektId && window._fangstProsjektId();
       const kjente = new Set((window._getProsjekter && window._getProsjekter() || []).map(p => p && p.id));
 
-      // Grupper forespørslene per målprosjekt; ugyldig mål → fangstprosjektet.
+      // Under en uke gammel: det som ikke kan utføres ennå, får stå så lenge.
+      // Uten brukbar opprettet-dato regnes forespørselen som gammel.
+      const erUng = r => {
+        const alder = r.opprettet ? Date.now() - Date.parse(r.opprettet) : NaN;
+        return alder >= 0 && alder < 7 * 24 * 60 * 60 * 1000;
+      };
+
+      // Grupper forespørslene per målprosjekt; uten prosjekt → fangstprosjektet.
       // Uten noe gyldig mål i det hele tatt blir dokumentet stående til senere.
       const grupper = new Map();
       const dagsplanForesp = [];
       innboks.forEach(d => {
         const r = d.data() || {};
         if (r.type === 'dagsplan') { dagsplanForesp.push({ dokId: d.id, r }); return; }
+        // Ukjent prosjekt betyr som regel at prosjektlista ikke er hentet ennå
+        // (tom lokal kopi, oppstart uten nett). Før gikk forespørselen da til
+        // fangstprosjektet, der en oppdater/fullfor ikke fant målet og ble
+        // slettet uten å ha gjort noe (v6.6). Nå står den til et senere sveip.
+        if (r.prosjektId && !kjente.has(r.prosjektId) && erUng(r)) {
+          console.warn('[INNBOKS] Ukjent prosjekt', r.prosjektId + ', venter til prosjektlista er hentet:', d.id);
+          return;
+        }
         const pid = (r.prosjektId && kjente.has(r.prosjektId)) ? r.prosjektId : fangstPid;
         if (!pid) return;
         if (!grupper.has(pid)) grupper.set(pid, []);
@@ -11339,8 +11357,7 @@
           // enn denne appen kan. Da behandles den som ukjent type under.
           if (!['todo', 'oppgave', 'milepal', 'leveranse', 'fullfor', 'migrer', 'oppdater'].includes(type)
               || Number(r.krevNiva || 0) > KO_NIVA) {
-            const alder = r.opprettet ? Date.now() - Date.parse(r.opprettet) : NaN;
-            if (alder >= 0 && alder < 7 * 24 * 60 * 60 * 1000) {
+            if (erUng(r)) {
               console.warn('[INNBOKS] Ukjent type «' + type + '» — venter på at appen oppdateres:', dokId);
               continue;                          // står igjen, ikke behandlet
             }
@@ -11360,7 +11377,14 @@
             const arr = r.malType === 'leveranse' ? aktivL
                       : r.malType === 'oppgave'   ? oppgaverL : todosL;
             const item = arr.find(x => x && x.id === r.malId);
-            if (!item) { console.warn('[INNBOKS] oppdater: fant ikke', r.malId, 'i', pid); continue; }
+            if (!item) {
+              // Målet kan mangle bare her og nå (ikke synket ennå): står til et
+              // senere sveip, ryddes først når forespørselen er en uke gammel.
+              const ung = erUng(r);
+              if (ung) gruppeBehandlet.pop();    // dokId, lagt til rett over
+              console.warn('[INNBOKS] oppdater: fant ikke', r.malId, 'i', pid + (ung ? ', prøver igjen senere' : ', ryddes bort'));
+              continue;
+            }
             const nyTittel = typeof r.nyTittel === 'string' ? r.nyTittel.trim().slice(0, 300) : null;
             if (nyTittel) {
               if (r.malType === 'todo' || r.malType === 'leveranse') item.tittel = nyTittel;
@@ -11384,7 +11408,13 @@
             const erOppgave = r.malType === 'oppgave';
             const liste = erOppgave ? oppgaverL : todosL;
             const item = liste.find(x => x && x.id === r.malId);
-            if (!item) { console.warn('[INNBOKS] fullfor: fant ikke', r.malId, 'i', pid); continue; }
+            if (!item) {
+              // Som for oppdater: står til et senere sveip, inntil en uke.
+              const ung = erUng(r);
+              if (ung) gruppeBehandlet.pop();    // dokId, lagt til rett over
+              console.warn('[INNBOKS] fullfor: fant ikke', r.malId, 'i', pid + (ung ? ', prøver igjen senere' : ', ryddes bort'));
+              continue;
+            }
             if (item.fullfort) continue;         // allerede fullført: idempotent
             item.fullfort = true;
             item.fullfortDato = iDag;
