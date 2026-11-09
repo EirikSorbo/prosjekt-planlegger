@@ -5,7 +5,7 @@ Kobler Prosjekt-planlegger-dataene (Firestore-prosjektet
 Obsidian-vaulten «Jobb-hjernen»:
 
 - **Lesing:** `vault-synk.mjs` speiler alle prosjekter fra Firestore til
-  `Jobb-hjernen/projects/project-app/prosjekt-planlegger/` som markdown
+  `Jobb-hjernen/areas/prosjekt-planlegger/` som markdown
   (én vei, sky → filer), automatisk hvert kvarter via launchd, og på
   forespørsel når Claude jobber.
 - **Skriving:** `fangst.mjs` legger forespørsler i innbokskøen, som appen
@@ -76,7 +76,7 @@ Logg havner i `~/Library/Logs/prosjekt-planlegger-synk.log`. Jobben er ufarlig
 node "/Users/eiriks05/Documents/Eiriks Script/prosjekt-planlegger/tools/vault-synk.mjs"
 ```
 
-Sjekk at `Jobb-hjernen/projects/project-app/prosjekt-planlegger/` fikk
+Sjekk at `Jobb-hjernen/areas/prosjekt-planlegger/` fikk
 `oversikt.md` og ett notat per prosjekt.
 
 ```bash

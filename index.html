@@ -2194,6 +2194,65 @@
     .tema-prøve i { flex: 1; }
     .tema-navn { font-size: 0.8125rem; font-weight: 800; }
     .tema-om { font-size: 0.6875rem; color: var(--dempet); line-height: 1.3; }
+
+    /* ── Prosjekttyper og Status (v6.7) ─────────────────────────────────────
+       Sidepanelet grupperer prosjektene etter type. Status under Oversikt:
+       «Nærmer seg» (fire uker) og ett kort per prosjekt, gruppert etter type. */
+    .sp-type { margin-top: 1.125rem; font-size: 0.6875rem; }
+    .sp-neste.stille { color: var(--varsel); }
+    .status-band { margin: 0 0 2.75rem; }
+    .status-hode { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.875rem; }
+    .status-tittel { font-family: var(--font-ui); font-size: 1.625rem; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
+    .status-telling { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blå); white-space: nowrap; }
+    .status-om { font-size: 0.875rem; color: var(--dempet); margin: -0.375rem 0 1rem; }
+    .status-tom { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); padding: 0.875rem 1rem; border: 2px dashed var(--linje); }
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1.125rem; }
+    .status-kort {
+      background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge);
+      padding: 0.875rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0;
+    }
+    .status-kort-hode { display: flex; align-items: center; gap: 0.625rem; }
+    .status-prikk { width: 0.75rem; height: 0.75rem; flex-shrink: 0; background: var(--kat, var(--blekk)); }
+    .status-navn {
+      flex: 1; min-width: 0; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; color: var(--blekk);
+      font-family: var(--font-ui); font-size: 1.0625rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .status-navn:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .status-rediger {
+      flex-shrink: 0; width: 2rem; height: 2rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      background: none; border: 2px solid transparent; border-radius: var(--hjorne); color: var(--dempet); cursor: pointer;
+    }
+    .status-rediger:hover { border-color: var(--blekk); color: var(--blekk); background: var(--gul); }
+    .status-maal { font-size: 0.875rem; line-height: 1.45; color: var(--blekk); }
+    .status-etikett { display: block; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dempet); margin-bottom: 0.125rem; }
+    .status-steg { font-size: 0.9375rem; font-weight: 700; line-height: 1.4; color: var(--blekk); }
+    .status-linje { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); line-height: 1.5; }
+    .status-linje strong { color: var(--blekk); font-weight: 700; }
+    .status-linje.frist { color: var(--blå); font-weight: 700; }
+    .status-linje.over, .status-linje .over { color: var(--fare); font-weight: 700; }
+    .status-linje.stille { color: var(--varsel); font-weight: 700; }
+    .status-mangler {
+      align-self: flex-start; background: none; border: 0; padding: 0; cursor: pointer;
+      font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); text-decoration: underline; text-underline-offset: 3px;
+    }
+    .status-mangler:hover { color: var(--blekk); }
+    .status-kort .plan-stolpe { margin: 0.125rem 0 0; }
+    .status-frist-rad { display: grid; grid-template-columns: 5.25rem minmax(0, 1fr); column-gap: 0.5rem; font-size: 0.8125rem; line-height: 1.4; color: var(--blekk); padding: 0.125rem 0; }
+    .status-frist-rad.mp { font-weight: 700; }
+    .status-frist-dato { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; color: var(--dempet); white-space: nowrap; padding-top: 0.0625rem; }
+    .status-lev-merke {
+      width: 1.375rem; height: 1.375rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--kat, var(--blekk));
+    }
+    .pm-typer { display: flex; flex-direction: column; gap: 0.375rem; }
+    .felt label.pm-type {
+      display: grid; grid-template-columns: auto 1fr; column-gap: 0.625rem; align-items: start; cursor: pointer;
+      padding: 0.5rem 0.625rem; border: 1px solid var(--linje); border-radius: var(--hjorne); background: var(--papir-lys);
+      font-family: var(--font-body); font-size: 0.875rem; font-weight: 400; letter-spacing: normal; text-transform: none; color: var(--blekk);
+    }
+    .felt label.pm-type:has(input:checked) { border: var(--ramme); box-shadow: var(--skygge-liten); }
+    .pm-type input { grid-row: 1 / 3; margin-top: 0.1875rem; }
+    .pm-type-navn { font-size: 0.875rem; font-weight: 800; color: var(--blekk); }
+    .pm-type-om { font-size: 0.75rem; color: var(--dempet); line-height: 1.35; }
   </style>
 </head>
 <body>
@@ -2307,17 +2366,19 @@
   <!-- Kalender -->
   <div id="panel-kalender" class="panel">
     <div class="side-hode" id="sideHode-kalender"></div>
-    <div class="kalender-nav">
+    <div class="kalender-nav" id="kalenderNav" style="display:none;">
       <button class="nav-knapp" id="forrigeKnapp" onclick="forrigeManad()">&#8249;</button>
       <div class="maaned-tittel" id="maanedTittel"></div>
       <button class="nav-knapp" id="nesteKnapp" onclick="nesteManad()">&#8250;</button>
     </div>
     <div class="kal-visning-toggle">
-      <button id="toggleTidslinje" class="kal-toggle-knapp aktiv" onclick="byttKalVisning('tidslinje')">Tidslinje</button>
+      <button id="toggleStatus"    class="kal-toggle-knapp aktiv" onclick="byttKalVisning('status')">Status</button>
+      <button id="toggleTidslinje" class="kal-toggle-knapp"       onclick="byttKalVisning('tidslinje')">Tidslinje</button>
       <button id="toggleMaaned"    class="kal-toggle-knapp"       onclick="byttKalVisning('maaned')">Måned</button>
       <button id="toggleUke"       class="kal-toggle-knapp"       onclick="byttKalVisning('uke')">Uke</button>
     </div>
-    <div id="kalender-tidslinje-view">
+    <div id="kalender-status-view"></div>
+    <div id="kalender-tidslinje-view" style="display:none;">
       <div class="tidslinje-skala" id="tidslinjeSkalaRad">
         <button id="metaTidslinjeKnapp" class="tidslinje-skala-knapp" onclick="toggleMetaTidslinje()" style="display:none;">Meta</button>
         <div style="flex:1;"></div>
@@ -2382,7 +2443,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.6</div>
+<div class="versjon">Prosjekt-planlegger v6.7</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -2471,6 +2532,7 @@
       <div style="font-size:0.625rem;font-weight:700;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:0.8px;color:var(--dempet);margin-bottom:0.625rem;">Prosjekt</div>
       <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
         <input type="text" id="innstProsjektNavn" oninput="oppdaterProsjektNavn(this.value)" style="flex:1;font-size:0.8125rem;padding:0.5rem 0.625rem;border:1px solid var(--linje);border-radius:var(--rs);font-family:var(--font-body);background:var(--papir-lys);color:var(--blekk);" />
+        <button onclick="lukkModal('kategoriModal');åpneProsjektModal(aktivtProsjektId)" style="font-size:0.75rem;background:var(--papir-lys);color:var(--blekk);border:1px solid var(--linje);border-radius:var(--rs);padding:0.5625rem 0.875rem;font-family:var(--font-ui);font-weight:700;cursor:pointer;letter-spacing:0.3px;white-space:nowrap;">Type og mål</button>
       </div>
       <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.625rem;">
         <label style="font-size:0.6875rem;color:var(--dempet);font-weight:600;white-space:nowrap;">Prosjektfarge</label>
@@ -2636,6 +2698,44 @@
 </div>
 
 <!-- Modal: Slett/Arkiver prosjekt -->
+<!-- Prosjekt: navn, type, sluttdato, mål og neste steg (v6.7) -->
+<div class="modal-overlay" id="prosjektModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tittel" id="prosjektModalTittel">Prosjekt</div>
+      <button class="lukk-knapp" onclick="lukkModal('prosjektModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="felt">
+        <label for="pmNavn">Navn</label>
+        <input type="text" id="pmNavn" maxlength="80" />
+      </div>
+      <div class="felt">
+        <label>Type</label>
+        <div class="pm-typer" id="pmTyper"></div>
+      </div>
+      <div class="felt" id="pmSluttFelt">
+        <label for="pmSlutt">Sluttdato</label>
+        <input type="date" id="pmSlutt" />
+      </div>
+      <div class="felt">
+        <label for="pmMaal">Mål</label>
+        <textarea id="pmMaal" maxlength="400" placeholder="Hvorfor gjør du dette? Én setning er nok." style="min-height:3.5rem;"></textarea>
+      </div>
+      <div class="felt">
+        <label for="pmNeste">Neste steg</label>
+        <input type="text" id="pmNeste" maxlength="200" placeholder="Det neste konkrete du skal gjøre" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="knapp-gruppe">
+        <button class="knapp-sek" onclick="lukkModal('prosjektModal')">Avbryt</button>
+        <button class="knapp-primær" onclick="lagreProsjektModal()">Lagre</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="slettProsjektModal" style="z-index:300;">
   <div class="modal" style="max-width:23.75rem;">
     <div class="modal-header">
@@ -3130,9 +3230,14 @@
     if (window._currentUid && window._byttSkyProsjekt) window._byttSkyProsjekt();
   }
 
-  function opprettProsjekt(navn, farge) {
+  // ekstra: type, sluttdato, maal, nesteSteg (v6.7). Uten farge velges en fra
+  // paletten som ingen aktive prosjekter har ennå.
+  const _NYE_FARGER = ['#72c088', '#5b8def', '#e0a92b', '#c86bb0', '#4fb3bf', '#e8654a', '#8d7b6a', '#9490d4'];
+  function opprettProsjekt(navn, farge, ekstra) {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prosjekter.push({ id, navn: navn || 'Nytt prosjekt', farge: farge || '#72c088', opprettet: _lokalDatoStr() });
+    const brukt = new Set(prosjekter.filter(p => !p.arkivert).map(p => String(p.farge || '').toLowerCase()));
+    const ledig = _NYE_FARGER.find(f => !brukt.has(f)) || _NYE_FARGER[0];
+    prosjekter.push({ id, navn: navn || 'Nytt prosjekt', farge: farge || ledig, opprettet: _lokalDatoStr(), ...(ekstra || {}) });
     lagreProsjekter();
     byttProsjekt(id);
   }
@@ -3546,7 +3651,9 @@
     lyn:    '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
     lenke:  '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
     soppel: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>',
-    roter:  '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>'
+    roter:  '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+    blyant: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+    flagg:  '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>'
   };
   function _svgIkon(navn, sz) {
     sz = sz || 12;
@@ -3603,7 +3710,7 @@
     todo:     { tittel: () => 'Ting som skal skje.', under: 'Et ryddig blikk på det neste.' },
     oppgaver: { tittel: () => 'Tilstander å nå.', under: 'Milepælene, og hvor langt du er kommet mot hver av dem.' },
     liste:    { tittel: () => 'Det som skal leveres.', under: 'Aktiviteter og resultater, i rekkefølge.' },
-    kalender: { tittel: () => 'Hele bildet.', under: 'Tidslinje, måned og uke.' },
+    kalender: { tittel: () => 'Hele bildet.', under: 'Det som nærmer seg, hvor prosjektene står, og tidslinjen.' },
   };
   function _hilsen() {
     const t = new Date().getHours();
@@ -3683,6 +3790,58 @@
     return { forfalt, neste };
   }
 
+  // ── Prosjekttyper (v6.7) ─────────────────────────────────────────────────
+  // Hvert prosjekt er et ansvarsområde (løpende), et prosjekt med frist
+  // (sluttdato) eller et langsiktig prosjekt uten frist. I tillegg kan det ha
+  // et mål (hvorfor, én setning) og et neste steg. Feltene ligger i
+  // prosjektlista (type, sluttdato, maal, nesteSteg, endret) og synkes med den.
+  // Prosjekter uten type regnes som ansvarsområder.
+  const PROSJEKTTYPER = [
+    { id: 'ansvar',     navn: 'Ansvarsområde',         flertall: 'Ansvarsområder',       om: 'Løpende ansvar uten slutt i sikte.' },
+    { id: 'frist',      navn: 'Prosjekt med frist',    flertall: 'Prosjekter med frist', om: 'Har en sluttdato.' },
+    { id: 'langsiktig', navn: 'Langsiktig uten frist', flertall: 'Langsiktig',           om: 'Eget arbeid uten frist. Neste steg holder det i gang.' },
+  ];
+  function prosjektType(p) { return PROSJEKTTYPER.some(t => t.id === (p && p.type)) ? p.type : 'ansvar'; }
+  const _STILLE_DAGER = 30;   // langsiktige prosjekter som ikke er rørt på så lenge, markeres
+
+  // Siste dag noe skjedde i prosjektet: noe lagt til eller krysset av (også det
+  // som er ryddet bort, via fullført-loggen), eller type, mål og neste steg endret.
+  function _sistRørt(p) {
+    const d = p.id === aktivtProsjektId ? { todos, oppgaver } : _hentProsjektData(p.id);
+    let flog = [];
+    try { flog = JSON.parse(localStorage.getItem('lp_' + p.id + '_flog') || '[]') || []; } catch (e) { flog = []; }
+    let sist = '';
+    const ta = ds => { if (typeof ds === 'string' && /^\d{4}-\d{2}-\d{2}/.test(ds) && ds.slice(0, 10) > sist) sist = ds.slice(0, 10); };
+    ta(p.endret); ta(p.opprettet);
+    [...(d.todos || []), ...(d.oppgaver || [])].forEach(x => { if (x) { ta(x.opprettet); ta(x.fullfortDato); } });
+    flog.forEach(f => f && ta(f.dato));
+    return sist || null;
+  }
+  function _dagerFraIDag(ds) {
+    const i = new Date(); i.setHours(0, 0, 0, 0);
+    return Math.round((new Date(ds + 'T00:00:00') - i) / 86400000);
+  }
+  // «i dag», «for 3 dager siden», «for 6 uker siden», «for 4 måneder siden»
+  function _tidSiden(dager) {
+    if (dager <= 0) return 'i dag';
+    if (dager === 1) return 'i går';
+    if (dager < 14) return `for ${dager} dager siden`;
+    if (dager < 60) return `for ${Math.round(dager / 7)} uker siden`;
+    return `for ${Math.round(dager / 30.4)} måneder siden`;
+  }
+  // «i dag», «i morgen», «om 9 dager», «om 10 uker», «om 5 måneder»
+  function _tidTil(dager) {
+    if (dager === 0) return 'i dag';
+    if (dager === 1) return 'i morgen';
+    if (dager < 14) return `om ${dager} dager`;
+    if (dager < 90) return `om ${Math.round(dager / 7)} uker`;
+    return `om ${Math.round(dager / 30.4)} måneder`;
+  }
+  function _langDato(ds) {
+    const d = new Date(ds + 'T00:00:00');
+    return d.getDate() + '. ' + MAANEDER[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '');
+  }
+
   function renderSidepanel() {
     const sp = document.getElementById('sidepanel');
     if (!sp || getComputedStyle(sp).display === 'none') return;
@@ -3702,15 +3861,33 @@
       html += `<button class="sp-lenke sp-prosjekt${_alleAktiv() ? ' aktiv' : ''}" data-prosjekt="alle">`
             + '<span class="sp-prikk" style="background:transparent;border:2px solid currentColor;"></span><span class="sp-prosjekt-navn">Alle prosjekter</span></button>';
     }
-    aktive.forEach(p => {
-      const valgt = !_alleAktiv() && p.id === aktivtProsjektId;
-      const st = _prosjektStatus(p.id);
-      const neste = st.neste ? `<span class="sp-neste" title="Neste milepæl: ${escapeHtml(st.neste.beskrivelse || '')}">${_kortDato(st.neste.frist).replace(/^\S+ /, '')} · ${escapeHtml(st.neste.beskrivelse || '')}</span>` : '';
-      html += `<button class="sp-lenke sp-prosjekt${valgt ? ' aktiv' : ''}" data-prosjekt="${escapeHtml(p.id)}">`
-            + `<span class="sp-prikk" style="background:${_farge(p.farge, 'var(--blekk)')}"></span>`
-            + `<span class="sp-prosjekt-tekst"><span class="sp-prosjekt-navn">${escapeHtml(p.navn)}</span>${neste}</span>`
-            + (st.forfalt ? `<span class="sp-forfalt" title="${st.forfalt} forfalt">${st.forfalt}</span>` : '')
-            + '</button>';
+    // Gruppert etter type (v6.7). Linja under navnet: neste milepæl for
+    // ansvarsområder, sluttdatoen for prosjekter med frist, neste steg for de
+    // langsiktige (eller hvor lenge de har ligget stille).
+    const brukteTyper = PROSJEKTTYPER.filter(t => aktive.some(p => prosjektType(p) === t.id));
+    brukteTyper.forEach(t => {
+      if (brukteTyper.length > 1) html += `<div class="sp-gruppe sp-type">${escapeHtml(t.flertall)}</div>`;
+      aktive.filter(p => prosjektType(p) === t.id).forEach(p => {
+        const valgt = !_alleAktiv() && p.id === aktivtProsjektId;
+        const st = _prosjektStatus(p.id);
+        let neste = st.neste ? `<span class="sp-neste" title="Neste milepæl: ${escapeHtml(st.neste.beskrivelse || '')}">${_kortDato(st.neste.frist).replace(/^\S+ /, '')} · ${escapeHtml(st.neste.beskrivelse || '')}</span>` : '';
+        if (t.id === 'frist' && p.sluttdato) {
+          const igjen = _dagerFraIDag(p.sluttdato);
+          neste = `<span class="sp-neste${igjen < 0 ? ' stille' : ''}" title="Sluttdato ${escapeHtml(_langDato(p.sluttdato))}">Slutt ${escapeHtml(_langDato(p.sluttdato))} · ${igjen < 0 ? 'passert' : escapeHtml(_tidTil(igjen))}</span>`;
+        } else if (t.id === 'langsiktig') {
+          const sist = _sistRørt(p), siden = sist ? -_dagerFraIDag(sist) : null;
+          const stille = siden != null && siden >= _STILLE_DAGER;
+          const tittel = sist ? 'Sist rørt ' + _tidSiden(siden) : '';
+          neste = p.nesteSteg
+            ? `<span class="sp-neste${stille ? ' stille' : ''}" title="${escapeHtml(tittel)}">Neste: ${escapeHtml(p.nesteSteg)}</span>`
+            : (stille ? `<span class="sp-neste stille">Stille i ${escapeHtml(_tidSiden(siden).replace(/^for | siden$/g, ''))}</span>` : '');
+        }
+        html += `<button class="sp-lenke sp-prosjekt${valgt ? ' aktiv' : ''}" data-prosjekt="${escapeHtml(p.id)}">`
+              + `<span class="sp-prikk" style="background:${_farge(p.farge, 'var(--blekk)')}"></span>`
+              + `<span class="sp-prosjekt-tekst"><span class="sp-prosjekt-navn">${escapeHtml(p.navn)}</span>${neste}</span>`
+              + (st.forfalt ? `<span class="sp-forfalt" title="${st.forfalt} forfalt">${st.forfalt}</span>` : '')
+              + '</button>';
+      });
     });
     html += '<button class="sp-lenke sp-prosjekt sp-ny" data-nytt="1"><span class="sp-prikk" style="background:transparent;"></span><span>+ Nytt prosjekt</span></button>';
     sp.innerHTML = html;
@@ -3828,6 +4005,7 @@
     if (aktiv === 'panel-plan')     renderPlanside();
     if (aktiv === 'panel-liste')    renderListe();
     if (aktiv === 'panel-kalender' && kalVisning === 'maaned' && valgtDato) renderValgtDag(valgtDato);
+    if (aktiv === 'panel-kalender' && kalVisning === 'status') renderStatus();
     renderRamme();
   }
 
@@ -4097,16 +4275,17 @@
     if (id === 'plan')     renderPlanside();
     if (id === 'todo')     renderTodos();
     if (id === 'kalender') {
-      if (kalVisning === 'tidslinje') renderTidslinje();
-      else if (kalVisning === 'uke')  renderUke();
-      else                            renderKalender();
+      if (kalVisning === 'status')         renderStatus();
+      else if (kalVisning === 'tidslinje') renderTidslinje();
+      else if (kalVisning === 'uke')       renderUke();
+      else                                 renderKalender();
     }
     if (id === 'liste')    renderListe();
     if (id === 'oppgaver') renderOppgaver();
     renderRamme();
   }
 
-  let kalVisning = 'tidslinje'; // 'maaned' | 'uke' | 'tidslinje'
+  let kalVisning = 'status'; // 'status' | 'tidslinje' | 'maaned' | 'uke' (status fra v6.7)
   let ukeOffset  = 0; // uker relativt til i dag
   let tidslinjeMnd = null; // null = ikke initialisert; settes til korteste zoom på første render
   let _tidslinjeZoomInit = false;   // true etter at tidslinjeMnd er satt til prosjektets korteste zoom
@@ -4129,15 +4308,276 @@
 
   function byttKalVisning(visning) {
     kalVisning = visning;
+    document.getElementById('kalender-status-view').style.display    = visning === 'status'    ? '' : 'none';
     document.getElementById('kalender-maaned-view').style.display    = visning === 'maaned'    ? '' : 'none';
     document.getElementById('kalender-uke-view').style.display       = visning === 'uke'       ? '' : 'none';
     document.getElementById('kalender-tidslinje-view').style.display = visning === 'tidslinje' ? '' : 'none';
+    // Status har ingen måned å bla i.
+    document.getElementById('kalenderNav').style.display             = visning === 'status'    ? 'none' : '';
+    if (visning === 'status') document.getElementById('valgtDagPanel').classList.remove('vis');
+    document.getElementById('toggleStatus').classList.toggle('aktiv',    visning === 'status');
     document.getElementById('toggleMaaned').classList.toggle('aktiv',    visning === 'maaned');
     document.getElementById('toggleUke').classList.toggle('aktiv',       visning === 'uke');
     document.getElementById('toggleTidslinje').classList.toggle('aktiv', visning === 'tidslinje');
-    if (visning === 'maaned')    renderKalender();
-    else if (visning === 'uke')  renderUke();
-    else                         renderTidslinje();
+    if (visning === 'status')       renderStatus();
+    else if (visning === 'maaned')  renderKalender();
+    else if (visning === 'uke')     renderUke();
+    else                            renderTidslinje();
+  }
+
+  // ── Status (v6.7): det som nærmer seg, og hvor hvert prosjekt står ─────────
+  // Alle aktive prosjekter, uansett valgt prosjekt og filteret på Start.
+  // Nærmer seg: forfalt pluss fire kalenderuker fra og med denne. Kortene:
+  // prosjekter med frist (sluttdato, milepæler), langsiktige (neste steg, sist
+  // rørt) og ansvarsområder (de neste fristene).
+  function renderStatus() {
+    const cont = document.getElementById('kalender-status-view');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const iDag = new Date(); iDag.setHours(0, 0, 0, 0);
+    const iDagStr = _lokalDatoStr(iDag);
+    const aktive = prosjekter.filter(p => !p.arkivert);
+    const flere = aktive.length > 1;
+    const data = new Map(aktive.map(p => [p.id, p.id === aktivtProsjektId ? { todos, oppgaver, aktiviteter, kategorier } : _hentProsjektData(p.id)]));
+
+    const band = (tittel, telling) => {
+      const b = document.createElement('section');
+      b.className = 'status-band';
+      const h = document.createElement('div');
+      h.className = 'status-hode';
+      const t = document.createElement('h2'); t.className = 'status-tittel'; t.textContent = tittel;
+      h.appendChild(t);
+      if (telling) { const n = document.createElement('span'); n.className = 'status-telling'; n.textContent = telling; h.appendChild(n); }
+      b.appendChild(h);
+      cont.appendChild(b);
+      return b;
+    };
+
+    // ── Nærmer seg ──
+    const mandag = new Date(iDag); mandag.setDate(iDag.getDate() - ((iDag.getDay() + 6) % 7));
+    const uker = [0, 1, 2, 3].map(i => {
+      const fra = new Date(mandag); fra.setDate(mandag.getDate() + 7 * i);
+      const til = new Date(fra); til.setDate(fra.getDate() + 6);
+      return { i, fra: _lokalDatoStr(fra), til: _lokalDatoStr(til), nr: getUkeNr(fra), el: [] };
+    });
+    const sisteDag = uker[3].til;
+    const forfalt = [];
+    const rang = x => x._lev ? 1 : ('tittel' in x ? 2 : 0);   // milepæl, leveranse, to-do
+    aktive.forEach(p => {
+      const d = data.get(p.id);
+      const katF = id => (id && (d.kategorier || []).find(k => k.id === id)?.farge) || null;
+      const merk = (x, ekstra) => ({ ...x, ...ekstra, _prosjektId: p.id, _prosjektNavn: p.navn, _prosjektFarge: p.farge, _katFarge: katF(x.kategoriId) });
+      const legg = (dato, x) => { const u = uker.find(u => dato >= u.fra && dato <= u.til); if (u) u.el.push({ dato, x }); };
+      (d.todos || []).forEach(t => {
+        if (!t || t.fullfort || !t.frist) return;
+        if (t.frist < iDagStr) { if (!_venter(t)) forfalt.push({ dato: t.frist, x: merk(t) }); }
+        else if (t.frist <= sisteDag) legg(t.frist, merk(t));
+      });
+      (d.oppgaver || []).forEach(o => {
+        if (!o || o.fullfort || !o.frist) return;
+        if (o.frist < iDagStr) forfalt.push({ dato: o.frist, x: merk(o) });
+        else if (o.frist <= sisteDag) legg(o.frist, merk(o));
+      });
+      (d.aktiviteter || []).forEach(a => {
+        if (!a || !a.dato || (erResultatType(a) && a.fullfort)) return;
+        if (a.dato >= iDagStr && a.dato <= sisteDag) legg(a.dato, merk(a, { _lev: true }));
+      });
+    });
+    const sorter = arr => arr.sort((a, b) => a.dato.localeCompare(b.dato) || rang(a.x) - rang(b.x));
+
+    const levRad = x => {
+      const row = document.createElement('div');
+      row.className = 'todo-kort';
+      row.onclick = () => { if (x._prosjektId !== aktivtProsjektId) byttProsjekt(x._prosjektId); åpneAktivitetInfo(x.id); };
+      const merke = document.createElement('span');
+      merke.className = 'status-lev-merke';
+      merke.style.setProperty('--kat', _farge(x._prosjektFarge, 'var(--blekk)'));
+      merke.title = erResultatType(x) ? 'Resultat' : 'Leveranse';
+      merke.innerHTML = _svgIkon('flagg', 15);
+      const tekst = document.createElement('div');
+      tekst.className = 'start-tekst';
+      tekst.textContent = x.tittel || '(uten tittel)';
+      row.append(merke, tekst);
+      const fl = fristLabel(x.dato);
+      if (fl) {
+        const b = document.createElement('span');
+        b.className = `frist-tekst frist-${fl.nivå || 'senere'} start-merke`;
+        b.textContent = fl.tekst + (x.tid ? ' ' + x.tid : '');
+        row.appendChild(b);
+      }
+      if (flere) {
+        const chip = document.createElement('span');
+        chip.className = 'start-prosjekt';
+        chip.textContent = x._prosjektNavn;
+        chip.style.setProperty('--kat', _farge(x._prosjektFarge, 'var(--blekk)'));
+        row.appendChild(chip);
+      }
+      return row;
+    };
+
+    // Lange grupper viser de fem første; resten bak en knapp, så kortene under
+    // ikke forsvinner langt ned på siden.
+    const rader = (liste, elementer) => {
+      const lag = e => e.x._lev ? levRad(e.x) : _lagStartRad(e.x, iDag, iDagStr, flere);
+      const vis = elementer.length > 7 ? elementer.slice(0, 5) : elementer;
+      vis.forEach(e => liste.appendChild(lag(e)));
+      if (vis.length === elementer.length) return;
+      const mer = document.createElement('button');
+      mer.className = 'status-mangler';
+      mer.style.margin = '0.625rem 0 0';
+      mer.textContent = `Vis ${elementer.length - vis.length} til`;
+      mer.onclick = () => { const frag = document.createDocumentFragment(); elementer.slice(vis.length).forEach(e => frag.appendChild(lag(e))); mer.replaceWith(frag); };
+      liste.appendChild(mer);
+    };
+    const antallUker = uker.reduce((s, u) => s + u.el.length, 0);
+    const bN = band('Nærmer seg', 'Fire uker framover');
+    const liste = document.createElement('div');
+    liste.className = 'kort-container';
+    if (forfalt.length) {
+      const et = _gruppeEtikett('Forfalt', forfalt.length, forfalt.length === 1 ? 'punkt' : 'punkter', 'var(--fare)');
+      et.appendChild(_skyvAlleKnapp(forfalt.map(f => f.x)));
+      liste.appendChild(et);
+      rader(liste, sorter(forfalt));
+    }
+    uker.forEach(u => {
+      if (!u.el.length) return;
+      const navn = u.i === 0 ? 'Denne uka' : u.i === 1 ? 'Neste uke' : 'Uke ' + u.nr;
+      liste.appendChild(_gruppeEtikett(navn, u.el.length, u.el.length === 1 ? 'punkt' : 'punkter'));
+      rader(liste, sorter(u.el));
+    });
+    if (forfalt.length || antallUker) bN.appendChild(liste);
+    else bN.insertAdjacentHTML('beforeend', '<div class="status-tom">Ingen frister, milepæler eller leveranser de neste fire ukene.</div>');
+
+    // ── Kortene, gruppert etter type ──
+    const linje = (html, kl) => { const el = document.createElement('div'); el.className = 'status-linje' + (kl ? ' ' + kl : ''); el.innerHTML = html; return el; };
+    const mangler = (tekst, p) => {
+      const b = document.createElement('button');
+      b.className = 'status-mangler';
+      b.textContent = tekst;
+      b.onclick = () => åpneProsjektModal(p.id);
+      return b;
+    };
+    const kort = p => {
+      const type = prosjektType(p), d = data.get(p.id), st = _prosjektStatus(p.id);
+      const k = document.createElement('div');
+      k.className = 'status-kort';
+      const hode = document.createElement('div');
+      hode.className = 'status-kort-hode';
+      const prikk = document.createElement('span');
+      prikk.className = 'status-prikk';
+      prikk.style.setProperty('--kat', _farge(p.farge, 'var(--blekk)'));
+      const navn = document.createElement('button');
+      navn.className = 'status-navn';
+      navn.textContent = p.navn;
+      navn.title = 'Åpne to-do-ene i ' + p.navn;
+      navn.onclick = () => {
+        if (_alleModus) settAlleModus(false);
+        if (p.id !== aktivtProsjektId) byttProsjekt(p.id);
+        byttFane('todo');
+      };
+      const red = document.createElement('button');
+      red.className = 'status-rediger';
+      red.title = 'Type, mål og neste steg';
+      red.innerHTML = _svgIkon('blyant', 15);
+      red.onclick = () => åpneProsjektModal(p.id);
+      hode.append(prikk, navn, red);
+      k.appendChild(hode);
+
+      if (p.maal) {
+        const m = document.createElement('div');
+        m.className = 'status-maal';
+        m.textContent = p.maal;
+        k.appendChild(m);
+      }
+
+      if (type === 'frist') {
+        if (p.sluttdato) {
+          const igjen = _dagerFraIDag(p.sluttdato);
+          k.appendChild(igjen < 0
+            ? linje(`Sluttdatoen ${escapeHtml(_langDato(p.sluttdato))} er passert`, 'over')
+            : linje(`Slutt ${escapeHtml(_langDato(p.sluttdato))} · ${escapeHtml(_tidTil(igjen))}`, 'frist'));
+        } else k.appendChild(mangler('Legg til sluttdato', p));
+        const mp = (d.oppgaver || []).filter(Boolean);
+        if (mp.length) {
+          const nådd = mp.filter(o => o.fullfort).length;
+          const stolpe = document.createElement('div');
+          stolpe.className = 'plan-stolpe';
+          stolpe.innerHTML = `<span style="width:${Math.round(nådd / mp.length * 100)}%"></span>`;
+          k.appendChild(stolpe);
+          k.appendChild(linje(`${nådd} av ${mp.length} milepæler nådd`));
+        }
+      }
+
+      if (type === 'langsiktig') {
+        if (p.nesteSteg) {
+          const s = document.createElement('div');
+          s.innerHTML = '<span class="status-etikett">Neste steg</span>';
+          const tekst = document.createElement('div');
+          tekst.className = 'status-steg';
+          tekst.textContent = p.nesteSteg;
+          s.appendChild(tekst);
+          k.appendChild(s);
+        } else k.appendChild(mangler('Legg til neste steg', p));
+        const sist = _sistRørt(p);
+        if (sist) {
+          const siden = -_dagerFraIDag(sist);
+          k.appendChild(siden >= _STILLE_DAGER
+            ? linje(`Har ligget stille ${escapeHtml(_tidSiden(siden).replace(/^for /, 'i ').replace(/ siden$/, ''))}`, 'stille')
+            : linje(`Sist rørt ${escapeHtml(_tidSiden(siden))}`));
+        }
+      }
+
+      // Neste milepæl (frist) eller de neste fristene (ansvarsområder).
+      if (type === 'frist' && st.neste) {
+        k.appendChild(linje(`Neste milepæl: <strong>${escapeHtml(st.neste.beskrivelse || '')}</strong> · ${escapeHtml(_langDato(st.neste.frist))}, ${escapeHtml(_tidTil(_dagerFraIDag(st.neste.frist)))}`));
+      }
+      if (type === 'ansvar') {
+        const kommende = [
+          ...(d.oppgaver || []).filter(o => o && !o.fullfort && o.frist && o.frist >= iDagStr).map(o => ({ dato: o.frist, tekst: o.beskrivelse, mp: true })),
+          ...(d.todos || []).filter(t => t && !t.fullfort && t.frist && t.frist >= iDagStr).map(t => ({ dato: t.frist, tekst: t.tittel })),
+        ].sort((a, b) => a.dato.localeCompare(b.dato)).slice(0, 3);
+        if (kommende.length) {
+          const s = document.createElement('div');
+          s.innerHTML = '<span class="status-etikett">Neste frister</span>';
+          kommende.forEach(x => {
+            const r = document.createElement('div');
+            r.className = 'status-frist-rad' + (x.mp ? ' mp' : '');
+            r.innerHTML = `<span class="status-frist-dato">${escapeHtml(_kortDato(x.dato))}</span><span>${escapeHtml(x.tekst || '')}</span>`;
+            s.appendChild(r);
+          });
+          k.appendChild(s);
+        } else k.appendChild(linje('Ingen frister framover'));
+      }
+
+      const åpneT = (d.todos || []).filter(t => t && !t.fullfort).length;
+      const åpneM = (d.oppgaver || []).filter(o => o && !o.fullfort).length;
+      const deler = [`${åpneT} ${åpneT === 1 ? 'åpen to-do' : 'åpne to-dos'}`];
+      if (type !== 'frist' || !(d.oppgaver || []).length) deler.push(`${åpneM} ${åpneM === 1 ? 'milepæl' : 'milepæler'}`);
+      k.appendChild(linje(escapeHtml(deler.join(' · ')) + (st.forfalt ? ` · <span class="over">${st.forfalt} forfalt</span>` : '')));
+
+      if (!p.maal) k.appendChild(mangler('Legg til mål', p));
+      return k;
+    };
+
+    ['frist', 'langsiktig', 'ansvar'].forEach(typeId => {
+      const t = PROSJEKTTYPER.find(x => x.id === typeId);
+      const ps = aktive.filter(p => prosjektType(p) === typeId);
+      const b = band(t.flertall, ps.length ? String(ps.length).padStart(2, '0') : '');
+      if (ps.length) {
+        const grid = document.createElement('div');
+        grid.className = 'status-grid';
+        ps.forEach(p => grid.appendChild(kort(p)));
+        b.appendChild(grid);
+      } else {
+        b.insertAdjacentHTML('beforeend', `<div class="status-tom">Ingen ${typeId === 'ansvar' ? 'ansvarsområder' : typeId === 'frist' ? 'prosjekter med frist' : 'langsiktige prosjekter'} ennå.</div>`);
+      }
+      const ny = document.createElement('button');
+      ny.className = 'status-mangler';
+      ny.style.marginTop = '0.875rem';
+      ny.textContent = { frist: '+ Nytt prosjekt med frist', langsiktig: '+ Nytt langsiktig prosjekt', ansvar: '+ Nytt ansvarsområde' }[typeId];
+      ny.onclick = () => åpneProsjektModal(null, typeId);
+      b.appendChild(ny);
+    });
   }
 
   // Generer 2-4 logiske zoom-nivåer (måneder) basert på prosjektlengden
@@ -9049,7 +9489,8 @@
     if (aktiv === 'panel-start')    renderStartside();
     if (aktiv === 'panel-todo')     renderTodos();
     if (aktiv === 'panel-kalender') {
-      if (kalVisning === 'uke') renderUke();
+      if (kalVisning === 'status') renderStatus();
+      else if (kalVisning === 'uke') renderUke();
       else if (kalVisning === 'tidslinje') renderTidslinje();
       else { renderKalender(); if (valgtDato) renderValgtDag(valgtDato); }
     }
@@ -10369,9 +10810,73 @@
   }
 
   function visNyttProsjektDialog() {
-    const navn = prompt('Navn på nytt prosjekt:');
-    if (!navn || !navn.trim()) return;
-    opprettProsjekt(navn.trim());
+    åpneProsjektModal(null);
+  }
+
+  // ── Prosjektskjemaet (v6.7): navn, type, sluttdato, mål og neste steg ──
+  // pid = null lager et nytt prosjekt, med nyType ferdig valgt.
+  let _pmProsjektId = null;
+  function åpneProsjektModal(pid, nyType) {
+    const p = pid ? prosjekter.find(x => x.id === pid) : null;
+    if (pid && !p) return;
+    _pmProsjektId = p ? p.id : null;
+    const type = p ? prosjektType(p) : (nyType || 'frist');
+    document.getElementById('prosjektModalTittel').textContent = p ? 'Prosjekt' : 'Nytt prosjekt';
+    document.getElementById('pmNavn').value = p ? (p.navn || '') : '';
+    document.getElementById('pmSlutt').value = (p && p.sluttdato) || '';
+    document.getElementById('pmMaal').value = (p && p.maal) || '';
+    document.getElementById('pmNeste').value = (p && p.nesteSteg) || '';
+    const typer = document.getElementById('pmTyper');
+    typer.innerHTML = '';
+    PROSJEKTTYPER.forEach(t => {
+      const lbl = document.createElement('label');
+      lbl.className = 'pm-type';
+      const r = document.createElement('input');
+      r.type = 'radio'; r.name = 'pmType'; r.value = t.id; r.checked = t.id === type;
+      r.onchange = _pmVisSlutt;
+      const navn = document.createElement('span'); navn.className = 'pm-type-navn'; navn.textContent = t.navn;
+      const om = document.createElement('span'); om.className = 'pm-type-om'; om.textContent = t.om;
+      lbl.append(r, navn, om);
+      typer.appendChild(lbl);
+    });
+    _pmVisSlutt();
+    document.getElementById('prosjektModal').classList.add('vis');
+    setTimeout(() => document.getElementById(p ? 'pmNeste' : 'pmNavn').focus(), 50);
+  }
+  function _pmValgtType() {
+    return document.querySelector('#pmTyper input[name="pmType"]:checked')?.value || 'ansvar';
+  }
+  function _pmVisSlutt() {
+    document.getElementById('pmSluttFelt').style.display = _pmValgtType() === 'frist' ? '' : 'none';
+  }
+  function lagreProsjektModal() {
+    const navn = document.getElementById('pmNavn').value.trim();
+    if (!navn) { document.getElementById('pmNavn').focus(); return; }
+    const type = _pmValgtType();
+    const felt = {
+      type,
+      sluttdato: type === 'frist' ? (document.getElementById('pmSlutt').value || null) : null,
+      maal: document.getElementById('pmMaal').value.trim() || null,
+      nesteSteg: document.getElementById('pmNeste').value.trim() || null,
+    };
+    lukkModal('prosjektModal');
+    if (!_pmProsjektId) {
+      opprettProsjekt(navn, null, { ...felt, endret: _lokalDatoStr() });
+      return;
+    }
+    const p = prosjekter.find(x => x.id === _pmProsjektId);
+    if (!p) return;
+    const før = JSON.stringify([p.type || null, p.sluttdato || null, p.maal || null, p.nesteSteg || null]);
+    p.navn = navn;
+    Object.assign(p, felt);
+    if (JSON.stringify([felt.type, felt.sluttdato, felt.maal, felt.nesteSteg]) !== før) p.endret = _lokalDatoStr();
+    // Et prosjekt du har gitt type eller mål, er ikke lenger en tom plassholder.
+    delete p.auto;
+    lagreProsjekter();
+    if (p.id === aktivtProsjektId) oppdaterProsjektTittel();
+    if (window._currentUid && window._lagreTilSky) window._lagreTilSky(window._currentUid, p.id);
+    renderRamme();
+    if (_aktivFane() === 'kalender' && kalVisning === 'status') renderStatus();
   }
 
   function oppdaterProsjektNavn(navn) {

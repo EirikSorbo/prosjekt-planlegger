@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 
 const HER = dirname(fileURLToPath(import.meta.url));
 const NOKKEL_STI = join(HER, 'nokkel.json');
-const STANDARD_MAAL = '/Users/eiriks05/Library/Mobile Documents/iCloud~md~obsidian/Documents/Jobb-hjernen/projects/project-app/prosjekt-planlegger';
+const STANDARD_MAAL = '/Users/eiriks05/Library/Mobile Documents/iCloud~md~obsidian/Documents/Jobb-hjernen/areas/prosjekt-planlegger';
 
 const arg = process.argv.slice(2);
 const SOM_JSON = arg.includes('--json');
@@ -160,6 +160,23 @@ function seksjon(overskrift, rader) {
   return '\n## ' + overskrift + '\n\n' + rader.join('\n') + '\n';
 }
 
+// Prosjekttyper fra appen (v6.7). Uten type regnes prosjektet som ansvarsområde.
+const TYPER = [
+  ['ansvar', 'Ansvarsområde', 'Ansvarsområder'],
+  ['frist', 'Prosjekt med frist', 'Prosjekter med frist'],
+  ['langsiktig', 'Langsiktig uten frist', 'Langsiktig uten frist'],
+];
+const typeAv = p => (TYPER.find(t => t[0] === (p && p.type)) || TYPER[0]);
+
+// Type, sluttdato, mål og neste steg, slik de står i appen.
+function omProsjektet(p) {
+  const rader = ['- Type: ' + typeAv(p)[1]];
+  if (typeAv(p)[0] === 'frist' && p.sluttdato) rader.push('- Sluttdato: ' + p.sluttdato);
+  if (p.maal) rader.push('- Mål: ' + p.maal);
+  if (p.nesteSteg) rader.push('- Neste steg: ' + p.nesteSteg);
+  return seksjon('Om prosjektet', rader);
+}
+
 function prosjektNotat(p, data, created) {
   const todos    = data.todos || [];
   const oppgaver = data.oppgaver || [];
@@ -168,21 +185,32 @@ function prosjektNotat(p, data, created) {
   const apneO = oppgaver.filter(o => o && !o.fullfort);
   return frontmatter(p.navn + ' (Prosjekt-planlegger)', created, 'active') + '\n\n'
     + ADVARSEL + '\n'
+    + omProsjektet(p)
     + seksjon('To do (' + apneT.length + ' åpne)', todos.filter(Boolean).map(radTodo))
     + seksjon('Milepæler (' + apneO.length + ' åpne)', oppgaver.filter(Boolean).map(radOppgave))
     + seksjon('Leveranser', aktiv.filter(Boolean).map(radLeveranse));
 }
 
 function oversiktNotat(prosjekter, dataPerPid, innboksAntall, created) {
-  const rader = prosjekter.map(p => {
+  const rad = p => {
     const d = dataPerPid[p.id] || {};
     const apne = (d.todos || []).filter(t => t && !t.fullfort).length
                + (d.oppgaver || []).filter(o => o && !o.fullfort).length;
-    return '- [' + p.navn + '](' + slug(p.navn) + '.md): ' + apne + ' åpne punkter';
-  });
+    const ekstra = [];
+    if (typeAv(p)[0] === 'frist' && p.sluttdato) ekstra.push('slutt ' + p.sluttdato);
+    if (p.nesteSteg) ekstra.push('neste steg: ' + p.nesteSteg);
+    return '- [' + p.navn + '](' + slug(p.navn) + '.md): ' + apne + ' åpne punkter'
+      + (ekstra.length ? '; ' + ekstra.join('; ') : '')
+      + (p.maal ? '\n  - Mål: ' + p.maal : '');
+  };
+  // Gruppert etter type, som i appens sidepanel.
+  const grupper = TYPER.map(([id, , flertall]) => {
+    const ps = prosjekter.filter(p => typeAv(p)[0] === id);
+    return ps.length ? '### ' + flertall + '\n\n' + ps.map(rad).join('\n') : '';
+  }).filter(Boolean);
   return frontmatter('Oversikt over Prosjekt-planlegger', created, 'active') + '\n\n'
     + ADVARSEL + '\n\n'
-    + '## Prosjekter\n\n' + (rader.join('\n') || '- (ingen prosjekter)') + '\n\n'
+    + '## Prosjekter\n\n' + (grupper.join('\n\n') || '- (ingen prosjekter)') + '\n\n'
     + '## Status\n\n'
     + '- Sist synket: ' + naa() + '\n'
     + '- Siri-innboks: ' + innboksAntall + (innboksAntall === 1 ? ' fangst' : ' fangster') + ' venter på at appen åpnes\n';
