@@ -19,6 +19,15 @@
 //   node fangst.mjs --fullfor "Rapport" --milepael --prosjekt UiA  fullfør milepæl
 //   node fangst.mjs --migrer plan.json                         engangs strukturflytting
 //
+// Prosjekter (kønivå 4, appen v6.8 og nyere):
+//   node fangst.mjs --nytt-prosjekt "Navn" --type langsiktig --maal "..." --neste "..."
+//   node fangst.mjs --nytt-prosjekt "Navn" --type frist --sluttdato 2027-01-15
+//     --type: ansvar | frist | langsiktig. Finnes et aktivt prosjekt med samme
+//     navn, settes bare de oppgitte feltene på det (slik får et ansvarsområde mål).
+//   node fangst.mjs --slett-prosjekt "Navn eller id"
+//     Appen sletter bare et helt tomt prosjekt (ingen to-dos, milepæler eller
+//     leveranser). Flere med samme navn: oppgi id-en, som listes ved treff.
+//
 // Dagsplan med klokkeslett (vises øverst på Start i appen):
 //   node fangst.mjs --dagsplan .../areas/dagsplan/2026-10-30.md   send (eller erstatt) planen
 //   node fangst.mjs --dagsplan fil.md --vis                       bare vis hva som leses, send ingenting
@@ -53,8 +62,15 @@ let tittel = '', prosjektNavn = '', frist = '', url = '', fullforTittel = '', ka
 let under = '', notat = '', dato = '', datoTil = '', fil = '', migrerFil = '';
 let somMilepael = false, somAktivitet = false, somResultat = false;
 let dagsplanFil = '', dagsplanFjern = '', bareVis = false;
+let nyttProsjekt = '', slettProsjekt = '', pType = '', maal = '', neste = '', sluttdato = '';
 for (let i = 0; i < arg.length; i++) {
-  if (arg[i] === '--prosjekt') prosjektNavn = arg[++i] || '';
+  if (arg[i] === '--nytt-prosjekt') nyttProsjekt = arg[++i] || '';
+  else if (arg[i] === '--slett-prosjekt') slettProsjekt = arg[++i] || '';
+  else if (arg[i] === '--type') pType = arg[++i] || '';
+  else if (arg[i] === '--maal') maal = arg[++i] || '';
+  else if (arg[i] === '--neste') neste = arg[++i] || '';
+  else if (arg[i] === '--sluttdato') sluttdato = arg[++i] || '';
+  else if (arg[i] === '--prosjekt') prosjektNavn = arg[++i] || '';
   else if (arg[i] === '--frist') frist = arg[++i] || '';
   else if (arg[i] === '--url') url = arg[++i] || '';
   else if (arg[i] === '--fullfor') fullforTittel = arg[++i] || '';
@@ -82,12 +98,18 @@ const ekteDato = s => {
   return !isNaN(d) && d.toISOString().slice(0, 10) === s;
 };
 
-if (!fil && !migrerFil && !fullforTittel && !dagsplanFil && !dagsplanFjern && (!tittel || !tittel.trim())) {
+if (nyttProsjekt || slettProsjekt) {
+  if (nyttProsjekt && !nyttProsjekt.trim()) { console.error('--nytt-prosjekt trenger et navn.'); process.exit(1); }
+  if (pType && !['ansvar', 'frist', 'langsiktig'].includes(pType)) { console.error('--type må være ansvar, frist eller langsiktig:', pType); process.exit(1); }
+  if (sluttdato && !ekteDato(sluttdato)) { console.error('Ugyldig --sluttdato (bruk YYYY-MM-DD):', sluttdato); process.exit(1); }
+  if (sluttdato && pType && pType !== 'frist') { console.error('--sluttdato hører bare til --type frist.'); process.exit(1); }
+} else if (!fil && !migrerFil && !fullforTittel && !dagsplanFil && !dagsplanFjern && (!tittel || !tittel.trim())) {
   console.error('Bruk: node fangst.mjs "tekst" [--prosjekt N] [--kategori K] [--milepael] [--frist YYYY-MM-DD] [--under L] [--url U]');
   console.error('      node fangst.mjs "tittel" --aktivitet|--resultat --dato YYYY-MM-DD [--datoTil D] [--prosjekt N]');
   console.error('      node fangst.mjs --fullfor "tittel" [--milepael] [--prosjekt N]');
   console.error('      node fangst.mjs --fil plan.json   |   --migrer migrasjon.json');
   console.error('      node fangst.mjs --dagsplan ÅÅÅÅ-MM-DD.md [--vis]   |   --dagsplan-fjern ÅÅÅÅ-MM-DD');
+  console.error('      node fangst.mjs --nytt-prosjekt "Navn" [--type T] [--maal M] [--neste N] [--sluttdato D]   |   --slett-prosjekt "Navn eller id"');
   process.exit(1);
 }
 for (const [navn, verdi] of [['--frist', frist], ['--dato', dato], ['--datoTil', datoTil]]) {
@@ -304,6 +326,48 @@ async function prosjektIdFor(navn) {
     prosjekterCache = ((bruker && bruker.prosjekter) || []).filter(p => p && p.id && !p.arkivert);
   }
   return finnUnik(prosjekterCache, navn, 'prosjekter').id;
+}
+
+// ── Prosjekter ──────────────────────────────────────────────────────────────
+// Krever kønivå 4: en eldre app lar forespørselen ligge til den er oppdatert.
+if (nyttProsjekt || slettProsjekt) {
+  const felter = {
+    kilde: { stringValue: 'claude' },
+    opprettet: { stringValue: new Date().toISOString() },
+    krevNiva: { integerValue: '4' }
+  };
+  let melding;
+  if (nyttProsjekt) {
+    felter.type = { stringValue: 'prosjekt' };
+    felter.navn = { stringValue: nyttProsjekt.trim().slice(0, 80) };
+    if (pType)     felter.prosjektType = { stringValue: pType };
+    if (sluttdato) felter.sluttdato = { stringValue: sluttdato };
+    if (maal)      felter.maal = { stringValue: maal.trim().slice(0, 400) };
+    if (neste)     felter.nesteSteg = { stringValue: neste.trim().slice(0, 200) };
+    melding = 'Prosjektet «' + nyttProsjekt.trim() + '» lagt i køen' + (pType ? ' (' + pType + ')' : '') + ', lages når appen er åpen.';
+  } else {
+    // Id først, ellers navn blant ALLE prosjekter (også arkiverte): to med
+    // samme navn må skilles med id, så feil prosjekt aldri slettes.
+    const bruker = await hentDok(token, 'brukere/' + n.eierUid);
+    const alle = ((bruker && bruker.prosjekter) || []).filter(p => p && p.id);
+    let mål = alle.find(p => p.id === slettProsjekt);
+    if (!mål) {
+      const treff = alle.filter(p => String(p.navn || '').trim().toLowerCase() === slettProsjekt.trim().toLowerCase());
+      if (treff.length !== 1) {
+        console.error(treff.length ? 'Flere prosjekter heter «' + slettProsjekt + '». Oppgi id-en:' : 'Fant ikke prosjektet «' + slettProsjekt + '».');
+        (treff.length ? treff : alle).forEach(p => console.error('  ' + p.id + '  «' + p.navn + '»' + (p.arkivert ? ' (arkivert)' : '')));
+        process.exit(1);
+      }
+      mål = treff[0];
+    }
+    felter.type = { stringValue: 'slettProsjekt' };
+    felter.prosjektId = { stringValue: mål.id };
+    melding = 'Sletting av «' + mål.navn + '» (' + mål.id + ') lagt i køen. Appen sletter det bare hvis det er tomt.';
+  }
+  try { await sendForespørsel(token, felter); }
+  catch (e) { console.error('Skriving feilet:', e.message); process.exit(1); }
+  console.log(melding);
+  process.exit(0);
 }
 
 // ── Dagsplan ────────────────────────────────────────────────────────────────
