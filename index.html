@@ -1684,10 +1684,10 @@
     @media (min-width: 900px) {
       #sidepanel {
         display: block; width: 16.5rem; flex-shrink: 0; background: var(--sand);
-        border-right: 3px solid var(--blekk); padding: 2.25rem 1.125rem 2.5rem;
+        border-right: 3px solid var(--blekk); padding: 1.75rem 1rem 2.25rem;
         position: sticky; top: 4rem; height: calc(100vh - 4rem); overflow-y: auto;
       }
-      .oppsett > main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 2.75rem 3.25rem 5.625rem; }
+      .oppsett > main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 2rem 2.75rem 4.5rem; }
       #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 58.75rem; margin: 0; }
       /* Store skjermer: sidepanel og innhold står samlet midt på, og
          innholdet i toppstripen følger samme bredde. */
@@ -1695,39 +1695,39 @@
       body > header { padding-inline: max(1.375rem, calc((100% - var(--app-bredde)) / 2 + 1.375rem)); }
     }
 
-    .sp-gruppe { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dempet); margin: 0 0 0.75rem 1.375rem; }
+    .sp-gruppe { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dempet); margin: 0 0 0.5rem 1.125rem; }
     .sp-lenke {
       display: flex; align-items: center; justify-content: space-between; gap: 0.625rem; width: 100%;
-      padding: 0.875rem 1.375rem; margin-bottom: 0.25rem; border: 0; border-radius: var(--hjorne); background: none; cursor: pointer;
-      font-family: var(--font-ui); font-size: 1.0625rem; font-weight: 500; color: var(--blekk); text-align: left;
+      padding: 0.5rem 1.125rem; margin-bottom: 2px; border: 0; border-radius: var(--hjorne); background: none; cursor: pointer;
+      font-family: var(--font-ui); font-size: 1rem; font-weight: 500; color: var(--blekk); text-align: left;
     }
     .sp-lenke:hover { background: var(--hover-mork); }
     .sp-lenke.aktiv { background: var(--aksent); color: var(--lys); font-weight: 800; }
     .sp-tall { font-family: var(--font-mono); font-size: 0.875rem; color: var(--dempet); }
     .sp-lenke.aktiv .sp-tall { color: var(--lys-dempet); }
     .sp-pil { opacity: .7; }
-    .sp-skille { height: 2.875rem; }
-    .sp-prosjekt { justify-content: flex-start; gap: 1rem; padding: 0.75rem 1.375rem; }
+    .sp-skille { height: 1.75rem; }
+    .sp-prosjekt { justify-content: flex-start; gap: 0.875rem; padding: 0.4375rem 1.125rem; }
     .sp-prosjekt.aktiv { background: var(--blekk); color: var(--motfarge); }
     .sp-prikk { width: 0.6875rem; height: 0.6875rem; border-radius: 50%; flex-shrink: 0; background: var(--blekk); }
     .sp-prosjekt-navn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sp-prosjekt-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1875rem; text-align: left; }
+    .sp-prosjekt-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.125rem; text-align: left; }
     .sp-prosjekt-tekst .sp-prosjekt-navn { flex: none; }
     .sp-neste { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; color: var(--dempet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sp-prosjekt.aktiv .sp-neste { color: var(--motfarge-dempet); }
     .sp-forfalt { flex-shrink: 0; min-width: 1.375rem; padding: 2px 0.375rem; background: var(--fare); color: var(--lys); font: 700 0.75rem var(--font-mono); text-align: center; }
     .sp-ny { color: var(--dempet); font-size: 0.9375rem; }
 
-    /* ── Sidehode: dato, stor tittel, undertittel, handlinger ───────────── */
-    .side-hode { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.375rem; margin: 0 0 1.75rem; flex-wrap: wrap; }
+    /* ── Sidehode: dato, tittel og handlinger (v6.9: mindre, uten undertittel) */
+    .side-hode { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin: 0 0 1.25rem; flex-wrap: wrap; }
     .side-hode:empty { display: none; }
-    .side-dato { font-family: var(--font-mono); color: var(--blå); font-size: 0.8125rem; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 0.75rem; font-weight: 500; }
+    .side-dato { font-family: var(--font-mono); color: var(--blå); font-size: 0.6875rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 0.375rem; font-weight: 500; }
     .side-tittel {
       font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 72%); text-transform: var(--tittel-store, uppercase);
-      font-size: clamp(2.25rem, 6vw, 3.875rem); line-height: .92; letter-spacing: -0.035em; color: var(--blekk);
+      font-size: 1.875rem; line-height: 1.05; letter-spacing: -0.02em; color: var(--blekk);
     }
-    .side-under { color: var(--dempet); font-size: 1.0625rem; margin-top: 0.75rem; }
-    .side-handlinger { display: flex; gap: 0.875rem; flex-wrap: wrap; }
+    .side-handlinger { display: flex; gap: 0.625rem; flex-wrap: wrap; }
+    .side-handlinger .knapp-blokk { padding: 0.5rem 0.875rem; font-size: 0.8125rem; box-shadow: var(--skygge-liten); }
 
     /* ── Knapper: svart kant og hard skygge ─────────────────────────────── */
     .knapp-blokk, .knapp-primær, .knapp-sek, .legg-til-knapp, .todo-hurtig-knapp, .knapp-fare, .knapp-slett {
@@ -1750,69 +1750,69 @@
     .info-ikon-knapp:hover { background: var(--gul); }
 
     /* ── Verktøyrad: kategorier + filter ────────────────────────────────── */
-    .verktoy-rad { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1.375rem; flex-wrap: wrap; }
+    .verktoy-rad { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1rem; flex-wrap: wrap; }
     .verktoy-rad .kat-oversikt-rad { margin: 0; }
-    .kat-oversikt-rad { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .kat-oversikt-rad { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .kat-oversikt-knapp {
       border: var(--ramme); color: var(--blekk); background: var(--papir-lys); border-radius: var(--hjorne);
-      padding: 0.5625rem 1.0625rem; font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem;
-      display: inline-flex; align-items: center; gap: 0.5625rem; opacity: 1; cursor: pointer;
+      padding: 0.3125rem 0.6875rem; font-family: var(--font-ui); font-weight: 600; font-size: 0.8125rem;
+      display: inline-flex; align-items: center; gap: 0.4375rem; opacity: 1; cursor: pointer;
     }
-    .kat-oversikt-knapp::before { content: ''; width: 0.625rem; height: 0.625rem; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .kat-oversikt-knapp::before { content: ''; width: 0.5rem; height: 0.5rem; background: var(--kat, var(--blekk)); flex-shrink: 0; }
     .kat-oversikt-knapp:hover { background: var(--gul); opacity: 1; }
     .filtrer-knapp {
       background: none; border: 0; cursor: pointer; position: relative; padding: 0.5rem 0.25rem;
-      font-family: var(--font-ui); font-size: 1rem; color: var(--dempet); display: inline-flex; gap: 0.5rem; align-items: center;
+      font-family: var(--font-ui); font-size: 0.875rem; color: var(--dempet); display: inline-flex; gap: 0.5rem; align-items: center;
     }
     .filtrer-knapp:hover { color: var(--blekk); }
     .filtrer-knapp.aktiv { color: var(--aksent); font-weight: 700; }
 
     /* ── Hurtiginntasting ───────────────────────────────────────────────── */
-    .hurtig-todo-rad { position: relative; margin: 0 0 1.875rem; }
+    .hurtig-todo-rad { position: relative; margin: 0 0 1.25rem; }
     .hurtig-todo-rad input {
-      width: 100%; border: 2.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
-      padding: 1.3125rem 8.125rem 1.3125rem 1.625rem; font-family: var(--font-body); font-size: 1.125rem; color: var(--blekk);
+      width: 100%; border: 1.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
+      padding: 0.6875rem 6.25rem 0.6875rem 1rem; font-family: var(--font-body); font-size: 0.9375rem; color: var(--blekk);
     }
-    .hurtig-todo-rad input:focus { outline: none; border: 2.5px solid var(--blekk); box-shadow: var(--skygge); }
+    .hurtig-todo-rad input:focus { outline: none; border: 1.5px solid var(--blekk); box-shadow: var(--skygge-liten); }
     .hurtig-todo-rad input::placeholder { color: var(--plassholder); }
     .hurtig-todo-rad::after {
-      content: 'ENTER \21B5'; position: absolute; right: 1.625rem; top: 50%; transform: translateY(-50%);
-      font-family: var(--font-mono); color: var(--blå); font-size: 1rem; letter-spacing: .04em; pointer-events: none;
+      content: 'ENTER \21B5'; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+      font-family: var(--font-mono); color: var(--blå); font-size: 0.75rem; letter-spacing: .04em; pointer-events: none;
     }
     .start-sok-rad input {
-      border: 2.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
-      font-family: var(--font-body); font-size: 1rem; padding: 0.9375rem 1.25rem;
+      border: 1.5px solid var(--kant-sterk); border-radius: var(--hjorne); background: var(--papir-lys);
+      font-family: var(--font-body); font-size: 0.875rem; padding: 0.5625rem 0.875rem;
     }
-    .start-sok-rad input:focus { outline: none; border-color: var(--blekk); box-shadow: var(--skygge); }
+    .start-sok-rad input:focus { outline: none; border-color: var(--blekk); box-shadow: var(--skygge-liten); }
 
     /* ── Lister: gruppeoverskrift + rader ───────────────────────────────── */
     .kort-container { background: transparent; border: 0; box-shadow: none; border-radius: 0; overflow: visible; }
     .maaned-label.gruppe-etikett {
-      display: flex; align-items: center; gap: 1.375rem; margin: 1.875rem 0 0.25rem; padding: 0;
+      display: flex; align-items: center; gap: 0.75rem; margin: 1.5rem 0 0.25rem; padding: 0;
       background: none; border: 0; color: var(--blekk);
     }
     .kort-container > .gruppe-etikett:first-child { margin-top: 0.25rem; }
     .gruppe-navn {
-      background: var(--blekk); color: var(--motfarge); font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700;
-      letter-spacing: .2em; text-transform: uppercase; padding: 0.625rem 1.125rem; white-space: nowrap;
+      background: var(--blekk); color: var(--motfarge); font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase; padding: 0.3125rem 0.625rem; white-space: nowrap;
     }
-    .gruppe-strek { flex: 1; height: 2px; background: var(--blekk); min-width: 1.25rem; }
-    .gruppe-antall { font-family: var(--font-mono); font-size: 0.875rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+    .gruppe-strek { flex: 1; height: 1px; background: var(--linje); min-width: 1.25rem; }
+    .gruppe-antall { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; color: var(--dempet); }
 
     .todo-kort, .oppgave-kort {
-      background: transparent; border: 0; border-bottom: 2px solid var(--blekk); border-radius: 0;
-      padding: 1.25rem 0.625rem; gap: 1.125rem; align-items: center;
+      background: transparent; border: 0; border-bottom: 1px solid var(--linje); border-radius: 0;
+      padding: 0.5625rem 0.5rem; gap: 0.75rem; align-items: center;
     }
-    .oppgave-kort { border-left: 0; padding-left: 0.875rem; }
+    .oppgave-kort { border-left: 0; padding-left: 0.75rem; }
     /* Hvert kort ligger alene i sin sveip-beholder, så en eldre :last-child-regel
        fjernet streken på alle. */
-    .todo-kort:last-child, .oppgave-kort:last-child { border-bottom: 2px solid var(--blekk); }
+    .todo-kort:last-child, .oppgave-kort:last-child { border-bottom: 1px solid var(--linje); }
     .todo-kort:hover, .oppgave-kort:hover, .oppgave-kort[class*="stripe-"]:hover { background: var(--hover); }
     .sveip-innhold { background: var(--papir); }
-    .todo-tittel, .oppgave-besk { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); line-height: 1.3; }
-    .todo-meta, .oppgave-meta { margin-top: 0.375rem; gap: 0.5rem; }
+    .todo-tittel, .oppgave-besk { font-size: 0.9375rem; font-weight: 500; letter-spacing: 0; color: var(--blekk); line-height: 1.35; }
+    .todo-meta, .oppgave-meta { margin-top: 0.25rem; gap: 0.375rem; }
     .todo-cb, .oppgave-kort .checkbox {
-      width: 1.625rem; height: 1.625rem; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk));
+      width: 1.125rem; height: 1.125rem; border-radius: var(--hjorne); border: 2px solid var(--kat, var(--blekk));
       background: transparent; flex-shrink: 0;
     }
     .todo-cb.sjekket, .oppgave-kort .checkbox.sjekket { background: var(--kat, var(--blekk)); border-color: var(--kat, var(--blekk)); color: var(--lys); }
@@ -1820,15 +1820,15 @@
     .viktig-stjerne svg { stroke-width: 1.6; }
 
     /* ── Frister som merker ─────────────────────────────────────────────── */
-    .frist-tekst { display: inline-block; font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 0.1875rem 0.5625rem; line-height: 1.35; }
+    .frist-tekst { display: inline-block; font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 0.125rem 0.4375rem; line-height: 1.35; }
     .frist-forfalt { background: var(--fare); color: var(--lys); }
     .frist-idag    { background: var(--aksent); color: var(--lys); }
     .frist-snart   { background: var(--laks); color: var(--lys); }
-    .frist-senere  { padding: 0.1875rem 0; font-family: var(--font-mono); font-weight: 500; text-transform: none; color: var(--dempet); letter-spacing: 0; }
+    .frist-senere  { padding: 0.125rem 0; font-family: var(--font-mono); font-weight: 500; text-transform: none; color: var(--dempet); letter-spacing: 0; }
     .tilknyttet-chip { border-radius: var(--hjorne); border-width: 1.5px; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: .02em; padding: 2px 0.4375rem; }
     /* ── Tom liste ── */
     /* ── Seksjonsoverskrifter i Milepæler/Leveranser (tittelen står i sidehodet) */
-    .tom-melding { font-size: 1rem; color: var(--dempet); border: 2px dashed var(--linje); background: transparent; padding: 2.125rem 1.25rem; }
+    .tom-melding { font-size: 0.875rem; color: var(--dempet); border: 2px dashed var(--linje); background: transparent; padding: 1.5rem 1rem; }
 
     /* ── Vinduer ────────────────────────────────────────────────────────── */
     .modal-overlay { background: var(--overlay); }
@@ -1865,39 +1865,32 @@
       .start-pille { padding: 0.4375rem 0.6875rem; font-size: 0.8125rem; }
       .filtrer-knapp { font-size: 0.875rem; padding: 0.25rem 2px; }
       .plan-kort { padding: 0.25rem 0.875rem 0.625rem; }
-      .plan-tittel { font-size: 1.375rem; }
-      .aktivitet-kort, .aktivitet-kort:last-child { padding: 0.875rem 0.25rem; gap: 0.625rem; flex-wrap: wrap; }
+      .aktivitet-kort, .aktivitet-kort:last-child { padding: 0.75rem 0.25rem; gap: 0.625rem; flex-wrap: wrap; }
       .type-badge { min-width: 0; }
-      .aktivitet-tittel { font-size: 1rem; }
       body > header .fane.aktiv { box-shadow: inset 0 -3px 0 var(--aksent); }
       .avatar-knapp, #sokKnapp { display: none; }
       .oppsett > main, main { padding: 1.25rem 0.875rem 4.5rem; max-width: 40rem; margin: 0 auto; }
       .side-hode { margin-bottom: 1.25rem; gap: 0.875rem; }
-      .side-dato { font-size: 0.6875rem; letter-spacing: .14em; margin-bottom: 0.5rem; }
-      .side-under { font-size: 0.9375rem; margin-top: 0.5rem; }
       .side-handlinger { width: 100%; }
-      .side-handlinger .knapp-blokk { flex: 1; padding: 0.75rem 0.625rem; font-size: 0.875rem; }
-      .hurtig-todo-rad input { font-size: 1rem; padding: 1.0625rem 6.875rem 1.0625rem 1.125rem; }
-      .hurtig-todo-rad::after { right: 1.125rem; font-size: 0.875rem; }
-      .todo-tittel, .oppgave-besk { font-size: 1rem; }
-      .todo-kort, .oppgave-kort { padding: 1rem 0.375rem; gap: 0.875rem; }
-      .gruppe-navn { font-size: 0.75rem; padding: 0.5rem 0.75rem; letter-spacing: .16em; }
-      .gruppe-antall { font-size: 0.75rem; }
-      .maaned-label.gruppe-etikett { gap: 0.75rem; margin-top: 1.5rem; }
+      .side-handlinger .knapp-blokk { flex: 1; padding: 0.625rem 0.5rem; font-size: 0.8125rem; }
+      .hurtig-todo-rad input { font-size: 1rem; padding: 0.75rem 5.5rem 0.75rem 0.875rem; }
+      .start-sok-rad input { font-size: 1rem; }
+      .hurtig-todo-rad::after { right: 0.875rem; font-size: 0.6875rem; }
+      .todo-kort, .oppgave-kort { padding: 0.75rem 0.25rem; gap: 0.75rem; }
     }
 
     /* ── Start: filterpiller, dagens plan og rader ──────────────────────── */
-    .start-filterrad { display: flex; flex-wrap: wrap; gap: 0.625rem; margin: 0 0 1.375rem; }
+    .start-filterrad { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 0 0 1rem; }
     .start-pille {
       border: var(--ramme); background: var(--papir-lys); color: var(--blekk); border-radius: var(--hjorne);
-      padding: 0.5rem 0.9375rem; font-family: var(--font-ui); font-weight: 700; font-size: 0.875rem; cursor: pointer;
+      padding: 0.3125rem 0.6875rem; font-family: var(--font-ui); font-weight: 600; font-size: 0.8125rem; cursor: pointer;
       display: inline-flex; align-items: center; gap: 0.375rem;
     }
     .start-pille:hover { background: var(--aksent-lys); }
     .start-pille.aktiv { background: var(--gul); }
-    .plan-kort { background: var(--papir-lys); border: var(--ramme); box-shadow: var(--skygge); padding: 0.375rem 1.125rem 0.75rem; margin: 0 0 1.875rem; }
+    .plan-kort { background: var(--papir-lys); border: var(--ramme); box-shadow: var(--skygge); padding: 0.375rem 1.125rem 0.75rem; margin: 0 0 1.375rem; }
     .plan-hode { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; margin: 0.625rem 0 0.5rem; }
-    .plan-tittel { font-family: var(--font-ui); font-size: 1.625rem; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
+    .plan-tittel { font-family: var(--font-ui); font-size: 1.25rem; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
     .plan-telling { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blå); white-space: nowrap; }
     .plan-stolpe { height: 0.375rem; background: var(--linje); margin: 0 0 0.25rem; }
     .plan-stolpe > span { display: block; height: 100%; background: var(--blå); transition: width .3s; }
@@ -1907,7 +1900,7 @@
     .plan-tom { display: flex; align-items: center; flex-wrap: wrap; gap: 0.375rem; margin: 0 0 1.625rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); }
     .plan-tom svg { width: 0.875rem; height: 0.875rem; }
     .plan-knapp {
-      flex-shrink: 0; width: 2rem; height: 2rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; width: 1.75rem; height: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;
       background: none; border: 2px solid transparent; border-radius: var(--hjorne); color: var(--dempet); cursor: pointer;
     }
     .plan-knapp:hover { border-color: var(--blekk); color: var(--blekk); background: var(--gul); }
@@ -1915,17 +1908,17 @@
     .login-tittel { font-family: var(--font-ui); font-weight: 900; font-stretch: var(--tittel-bredde, 72%); text-transform: var(--tittel-store, uppercase); font-size: 2.5rem; letter-spacing: -0.02em; line-height: .95; color: var(--blekk); }
     .login-under { font-size: 0.9375rem; color: var(--dempet); margin-top: 0.5rem; }
     .login-knapp { display: inline-flex; align-items: center; gap: 0.625rem; }
-    .plan-rad { display: flex; align-items: center; gap: 0.875rem; padding: 0.625rem 0; border-bottom: 1px solid var(--linje); cursor: pointer; }
+    .plan-rad { display: flex; align-items: center; gap: 0.75rem; padding: 0.4375rem 0; border-bottom: 1px solid var(--linje); cursor: pointer; }
     .plan-rad:last-child { border-bottom: none; }
     /* Timeplan fra løytnanten (v5.8): tid | hva | prosjekt, pågående blokk i gult */
     .tp { margin: 0 0 0.25rem; font-family: var(--font-body); }
-    .tp-rad { display: grid; grid-template-columns: 1.375rem 6.5rem minmax(0, 1fr) auto; align-items: center; column-gap: 0.875rem; padding: 0.625rem 0.5rem; margin: 0 -0.5rem; border-bottom: 1px solid var(--linje); }
+    .tp-rad { display: grid; grid-template-columns: 1.125rem 6rem minmax(0, 1fr) auto; align-items: center; column-gap: 0.75rem; padding: 0.4375rem 0.5rem; margin: 0 -0.5rem; border-bottom: 1px solid var(--linje); }
     .tp-rad:not(.pause) { cursor: pointer; }
     .tp-rad:last-child { border-bottom: none; }
     .tp-hake, .tp-hake-tom { grid-column: 1; align-self: center; }
-    .tp-hake-tom { width: 1.375rem; }
-    .tp-tid { grid-column: 2; font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; color: var(--blå); white-space: nowrap; }
-    .tp-hva { grid-column: 3; font-size: 1rem; font-weight: 600; color: var(--blekk); }
+    .tp-hake-tom { width: 1.125rem; }
+    .tp-tid { grid-column: 2; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--blå); white-space: nowrap; }
+    .tp-hva { grid-column: 3; font-size: 0.9375rem; font-weight: 500; color: var(--blekk); }
     .tp-prosjekter { grid-column: 4; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 0.75rem; }
     .tp-rad.gjort .tp-hva { text-decoration: line-through; color: var(--dempet); font-weight: 500; }
     .tp-rad.gjort .start-prosjekt { opacity: .45; }
@@ -1953,17 +1946,17 @@
     .plan-tom-melding svg { vertical-align: -2px; }
     /* Stripen på Start som fører til Dagens plan (v6.1) */
     .plan-stripe {
-      display: flex; align-items: center; gap: 0.875rem; width: 100%; margin: 0 0 1.625rem; padding: 0 0.875rem 0 0; text-align: left;
+      display: flex; align-items: center; gap: 0.75rem; width: 100%; margin: 0 0 1.125rem; padding: 0 0.875rem 0 0; text-align: left;
       background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge-liten);
       color: var(--blekk); font-family: var(--font-body); cursor: pointer; overflow: hidden;
     }
     .plan-stripe:hover { background: var(--hover); }
     .plan-stripe-etikett {
-      align-self: stretch; display: flex; align-items: center; gap: 0.5rem; padding: 0.6875rem 0.875rem; background: var(--blekk); color: var(--motfarge);
+      align-self: stretch; display: flex; align-items: center; gap: 0.5rem; padding: 0.4375rem 0.75rem; background: var(--blekk); color: var(--motfarge);
       font: 700 0.6875rem var(--font-mono); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
     }
     .plan-stripe.naa .plan-stripe-etikett { background: var(--gul); color: var(--blekk); }
-    .plan-stripe-tekst { flex: 1; min-width: 0; padding: 0.6875rem 0; font-size: 0.9375rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .plan-stripe-tekst { flex: 1; min-width: 0; padding: 0.4375rem 0; font-size: 0.875rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .plan-stripe-merke { flex-shrink: 0; font: 700 0.75rem var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--blå); white-space: nowrap; }
     .plan-stripe > svg { flex-shrink: 0; color: var(--dempet); }
     @media (max-width: 600px) {
@@ -1974,13 +1967,13 @@
     }
     .start-hake.sjekket, .slett-sirkel, .fullfor-sirkel { color: var(--lys); }
     .start-hake {
-      width: 1.375rem; height: 1.375rem; border-radius: var(--hjorne); border: 2.5px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
+      width: 1.125rem; height: 1.125rem; border-radius: var(--hjorne); border: 2px solid var(--kat, var(--blekk)); flex-shrink: 0; cursor: pointer;
       display: flex; align-items: center; justify-content: center; transition: background .12s;
     }
     .start-hake-mp { border-radius: 50%; }
     .start-hake:hover { background: var(--gul); }
     .start-hake.sjekket { background: var(--kat, var(--blekk)); }
-    .start-tekst { flex: 1; min-width: 0; font-size: 1rem; font-weight: 600; color: var(--blekk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .start-tekst { flex: 1; min-width: 0; font-size: 0.9375rem; font-weight: 500; color: var(--blekk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .start-merke { flex-shrink: 0; white-space: nowrap; font-size: 0.75rem; }
     .start-prosjekt {
       flex-shrink: 0; max-width: 6.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1991,26 +1984,26 @@
     .aktivitet-meta .start-prosjekt { margin-right: 0.625rem; vertical-align: 1px; }
 
     /* ── Kategoripiller på Milepæler og Leveranser ──────────────────────── */
-    .verktoy-rad .filter-rad { margin: 0; gap: 0.75rem; }
+    .verktoy-rad .filter-rad { margin: 0; gap: 0.5rem; }
     .filter-pill.filter-pill {
       border: var(--ramme); color: var(--blekk); background: var(--papir-lys); border-radius: var(--hjorne);
-      padding: 0.5625rem 1.0625rem; font-size: 0.9375rem; letter-spacing: 0; display: inline-flex; align-items: center; gap: 0.5625rem;
+      padding: 0.3125rem 0.6875rem; font-size: 0.8125rem; letter-spacing: 0; display: inline-flex; align-items: center; gap: 0.4375rem;
     }
-    .filter-pill.filter-pill::before { content: ''; width: 0.625rem; height: 0.625rem; background: var(--kat, var(--blekk)); flex-shrink: 0; }
+    .filter-pill.filter-pill::before { content: ''; width: 0.5rem; height: 0.5rem; background: var(--kat, var(--blekk)); flex-shrink: 0; }
     .filter-pill.filter-pill:hover { background: var(--aksent-lys); }
     .filter-pill.filter-pill[class*="aktiv"] { background: var(--gul); color: var(--blekk); border-color: var(--blekk); }
     .filter-pill.filter-pill.ekskluder { opacity: .45; text-decoration: line-through; }
 
     /* ── Leveranser ─────────────────────────────────────────────────────── */
     .aktivitet-kort, .aktivitet-kort:last-child {
-      background: transparent; border: 0; border-bottom: 2px solid var(--blekk); border-radius: 0;
-      padding: 1.125rem 0.625rem; gap: 1rem; align-items: center;
+      background: transparent; border: 0; border-bottom: 1px solid var(--linje); border-radius: 0;
+      padding: 0.5625rem 0.5rem; gap: 0.75rem; align-items: center;
     }
     .aktivitet-kort:hover, .aktivitet-kort[class*="hover-"]:hover { background: var(--hover); }
-    .aktivitet-tittel { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.01em; color: var(--blekk); }
-    .aktivitet-meta { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--dempet); margin-top: 0.25rem; }
+    .aktivitet-tittel { font-size: 0.9375rem; font-weight: 500; letter-spacing: 0; color: var(--blekk); }
+    .aktivitet-meta { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); margin-top: 0.25rem; }
     .type-badge { border-radius: var(--hjorne); border-width: 2px; font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: .04em; padding: 0.1875rem 0.5rem; min-width: 7.75rem; text-align: center; }
-    .aktivitet-kort .ikon-knapp { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk) !important; height: 1.875rem; min-width: 1.875rem; }
+    .aktivitet-kort .ikon-knapp { border: var(--ramme); border-radius: var(--hjorne); background: var(--papir-lys); color: var(--blekk) !important; height: 1.625rem; min-width: 1.625rem; }
     .aktivitet-kort .ikon-knapp:hover { background: var(--gul); border-color: var(--blekk); }
 
     /* ── Datomeny, infoblokker, gruppehandling (v5.1) ───────────────────── */
@@ -2054,7 +2047,7 @@
     }
 
     /* ── Hurtigfeltets tolkning og gjentakelse (v5.2) ───────────────────── */
-    .hurtig-tolkning { display: none; flex-wrap: wrap; gap: 0.5rem; margin: -1.25rem 0 1.625rem; }
+    .hurtig-tolkning { display: none; flex-wrap: wrap; gap: 0.5rem; margin: -0.75rem 0 1.125rem; }
     .hurtig-tolkning.vis { display: flex; }
     .tolk-chip { font-family: var(--font-mono); font-size: 0.75rem; color: var(--blå); border: 1.5px solid var(--blå); padding: 0.1875rem 0.5rem; background: var(--papir-lys); }
     .tolk-chip b { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-right: 0.25rem; }
@@ -2198,24 +2191,24 @@
     /* ── Prosjekttyper og Status (v6.7) ─────────────────────────────────────
        Sidepanelet grupperer prosjektene etter type. Status under Oversikt:
        «Nærmer seg» (fire uker) og ett kort per prosjekt, gruppert etter type. */
-    .sp-type { margin-top: 1.125rem; font-size: 0.6875rem; }
+    .sp-type { margin-top: 0.875rem; font-size: 0.6875rem; }
     .sp-neste.stille { color: var(--varsel); }
-    .status-band { margin: 0 0 2.75rem; }
+    .status-band { margin: 0 0 2rem; }
     .status-hode { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.875rem; }
-    .status-tittel { font-family: var(--font-ui); font-size: 1.625rem; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
+    .status-tittel { font-family: var(--font-ui); font-size: 1.25rem; font-weight: 900; font-stretch: var(--tittel-bredde, 70%); text-transform: var(--tittel-store, uppercase); letter-spacing: -0.01em; color: var(--blekk); }
     .status-telling { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blå); white-space: nowrap; }
     .status-om { font-size: 0.875rem; color: var(--dempet); margin: -0.375rem 0 1rem; }
     .status-tom { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); padding: 0.875rem 1rem; border: 2px dashed var(--linje); }
-    .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1.125rem; }
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 0.875rem; }
     .status-kort {
       background: var(--papir-lys); border: var(--ramme); border-radius: var(--hjorne); box-shadow: var(--skygge);
-      padding: 0.875rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0;
+      padding: 0.75rem 0.875rem 0.875rem; display: flex; flex-direction: column; gap: 0.4375rem; min-width: 0;
     }
     .status-kort-hode { display: flex; align-items: center; gap: 0.625rem; }
     .status-prikk { width: 0.75rem; height: 0.75rem; flex-shrink: 0; background: var(--kat, var(--blekk)); }
     .status-navn {
       flex: 1; min-width: 0; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; color: var(--blekk);
-      font-family: var(--font-ui); font-size: 1.0625rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .status-navn:hover { text-decoration: underline; text-underline-offset: 3px; }
     .status-rediger {
@@ -2223,9 +2216,9 @@
       background: none; border: 2px solid transparent; border-radius: var(--hjorne); color: var(--dempet); cursor: pointer;
     }
     .status-rediger:hover { border-color: var(--blekk); color: var(--blekk); background: var(--gul); }
-    .status-maal { font-size: 0.875rem; line-height: 1.45; color: var(--blekk); }
+    .status-maal { font-size: 0.8125rem; line-height: 1.45; color: var(--blekk); }
     .status-etikett { display: block; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dempet); margin-bottom: 0.125rem; }
-    .status-steg { font-size: 0.9375rem; font-weight: 700; line-height: 1.4; color: var(--blekk); }
+    .status-steg { font-size: 0.875rem; font-weight: 600; line-height: 1.4; color: var(--blekk); }
     .status-linje { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dempet); line-height: 1.5; }
     .status-linje strong { color: var(--blekk); font-weight: 700; }
     .status-linje.frist { color: var(--blå); font-weight: 700; }
@@ -2443,7 +2436,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.8</div>
+<div class="versjon">Prosjekt-planlegger v6.9</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
@@ -3744,12 +3737,12 @@
   // prosjektbytte. Sidepanelet vises bare på brede skjermer (CSS); på mobil
   // står fanene i toppstripen.
   const _SIDEHODER = {
-    start:    { tittel: () => _hilsen(), under: 'Dette skjer i dag og de nærmeste dagene.' },
-    plan:     { tittel: () => 'Slik blir dagen.', under: 'Timeplanen og to-do-ene du har valgt for i dag.' },
-    todo:     { tittel: () => 'Ting som skal skje.', under: 'Et ryddig blikk på det neste.' },
-    oppgaver: { tittel: () => 'Tilstander å nå.', under: 'Milepælene, og hvor langt du er kommet mot hver av dem.' },
-    liste:    { tittel: () => 'Det som skal leveres.', under: 'Aktiviteter og resultater, i rekkefølge.' },
-    kalender: { tittel: () => 'Hele bildet.', under: 'Det som nærmer seg, hvor prosjektene står, og tidslinjen.' },
+    start:    { tittel: () => _hilsen() },
+    plan:     { tittel: () => 'Slik blir dagen.' },
+    todo:     { tittel: () => 'Ting som skal skje.' },
+    oppgaver: { tittel: () => 'Tilstander å nå.' },
+    liste:    { tittel: () => 'Det som skal leveres.' },
+    kalender: { tittel: () => 'Hele bildet.' },
   };
   function _hilsen() {
     const t = new Date().getHours();
@@ -3792,7 +3785,6 @@
     el.innerHTML = `<div class="side-tekst">
         <div class="side-dato">${escapeHtml(dato)}${telling ? ' &nbsp;/&nbsp; ' + telling : ''}</div>
         <h1 class="side-tittel">${escapeHtml(def.tittel())}</h1>
-        <div class="side-under">${escapeHtml(def.under)}</div>
       </div>`;
     if (fane === 'todo' || fane === 'oppgaver' || fane === 'liste') {
       const h = document.createElement('div');
