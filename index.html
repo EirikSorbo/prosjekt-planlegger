@@ -1688,6 +1688,8 @@
         position: sticky; top: 4rem; height: calc(100vh - 4rem); overflow-y: auto;
       }
       .oppsett > main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 2rem 2.75rem 4.5rem; }
+      /* Fanene står i sidepanelet; toppstripen har dem bare på mobil. */
+      body > header .faner { display: none; }
       #panel-start, #panel-todo, #panel-liste, #panel-oppgaver { max-width: 58.75rem; margin: 0; }
       /* Store skjermer: sidepanel og innhold står samlet midt på, og
          innholdet i toppstripen følger samme bredde. */
@@ -2436,7 +2438,7 @@
 </div>
 
 <!-- Synlig versjonsnummer (bump ved hver endring, samme nummer som commit-tittelen) -->
-<div class="versjon">Prosjekt-planlegger v6.9</div>
+<div class="versjon">Prosjekt-planlegger v6.10</div>
 
 <!-- Modal: Kategorioversikt -->
 <div class="modal-overlay" id="katOversiktModal">
